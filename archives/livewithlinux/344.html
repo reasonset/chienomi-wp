@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-11-05T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-11-05T00:00:00+09:00" />
+    <title>MageiaからManjaroへ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>MageiaからManjaroへ</h1></header>
+        <article id="MainArticle">
+<h3>Manjaroのセットアップ</h3><p>Mageiaのパッケージ管理ツールのまずさというのが、「削除がうまくいかない」ことにある。Wineインストール時に一度選択して、その後選択解除するとごっそりパッケージを抜かれる。そして、もう一度選択しても抜くパッケージを選択してくれない。</p><p>わかっていたのにやってしまった。KDEやKDMなどがごっそり抜かれ、修復困難な状態に。動かない、ということはないのだが、グラフィカルスクリーンを立ち上げることができないため、諦めたほうが早い。</p><p>翌日（今日）がopenSUSE 13.2のリリースdayだったので、1日待ってopenSUSE 13.2にしようかとも思ったのだが、まずはManjaroに挑戦してみることにした。「あっ、やっちゃった」と思ってリブート前にManjaro Linux 0.8.10 XFce JPを焼いておいた。これは、以前のものからはちょっと更新されているほか、以前はライブCDの部屋のCinnamon日本語版だったが、今回はManjaro JPのものにした。</p><p>以前はGPGキーリングの問題が出てインストールできなくなってしまっていたが、今回はバージョンを上げて再チャレンジ。</p><p>しかし、以前のものはとりあえずXが落ちるところまではいくのだが、UEFIブートだとnomodeset, nokmsbootでもブートスプラッシュまで行かない。USBからのブート(BIOS)なら行くし、Xが落ちる。しかし、オプションなしではシステムが落ちる。</p><p>UEFIの場合、グラフィックタイプ別のmodeset設定がされており、それを消せばnoXまでは行く。しかし、CUI testingインストーラではいまいちうまくインストールできない。CUI stableインストーラでBIOSブート、というのも悔しいのでいろいろ試していると、nokmsboot+nomodeset+non-free driversでいける、ということがわかった。これであればライブ起動するため、「普通に」インストールできる。</p><p>「普通に」UEFIブートでGPT使ってインストールしたところ、UEFIのブートメニューにmanjaroという項目が登場する。これであとは起動時にブートオプションをつけることを忘れなければ（eキーでeditし、linuxの行にnomodeset,nokmsbootの2項目を追加）普通に起動できる。が、アップデートできない(!)</p><p>gnupg cannot locally signのエラーが出るのだ。これは以前と同じ問題。ここで躓いてしまうと諦めるしかない。調べると、答えが載っていた！（以前はなかった）</p><p><a href="https://forum.manjaro.org/index.php?topic=12968.0" alt="Manjaroフォーラムの情報">Manjaroフォーラムの情報</a>に従い</p><samp style="display: block;white-space: pre-wrap" class="shell"># <kbd>mv /etc/pacman.d/gnupg /etc/pacman.d/gnupgold</kbd>
+# <kbd>pacman-key --init</kbd>
+# <kbd>pacman-key --populate archlinux manjaro</kbd>
+# <kbd>pacman-key --refresh</kbd>
+</samp><p>とすることで進む（--initはかなり時間がかかる）。が、やはり検証できない鍵があり、アップデートに失敗する。</p><p><a href="http://forums.netrunner-os.com/showthread.php?pid=23305" alt="ネットランナー">ネットランナー</a>の記事を参考に</p><samp style="display: block;white-space: pre-wrap" class="shell"># <kbd>sudo pacman-key -r 604F8BA2</kbd>
+# <kbd>sudo pacman-key --lsign-key 604F8BA2</kbd>
+# <kbd>sudo pacman-key -r AC97B894</kbd>
+# <kbd>sudo pacman-key --lsign-key AC97B894</kbd>
+</samp><p>とすると通った。</p><p>あとは以前の通り、<a href="https://forum.manjaro.org/index.php?topic=13658.0" alt="Forumの情報">Forumの情報</a>にしたがって</p><samp style="display: block;white-space: pre-wrap" class="shell"># <kbd>pacman -Syu</kbd>
+# <kbd>aticonfig --initial</kbd>
+# <kbd>mhwd-kernel -i linux314</kbd>
+</samp><p>でいける。314でなくても良い気もするが、とりあえず314にしておいた。これでCatalystで起動してくれる。</p><p>Manjaroは比較的豊富なパッケージを導入している。encfs, ecryptfs, btrfs, LVMなども最初から入れており、比較的難なく継続利用することができる。</p><p>ただし、UIDが1000、GID(users)が100を割り当てるため、互換性に乏しい。ここは統一ルールとして</p><ul><li>一般ユーザーのUIDは1000から始める</li><li>usersグループのGIDは500にする</li></ul><p>というルールを設けて<tt class="puredoc_cmdname">vipw</tt>及び<tt class="puredoc_cmdname">vigr</tt>で編集する。</p><p>さらにホールディレクトリの設定は不十分だったので、これも改善しておく。基本的に共有される部分が<tt class="puredoc_pathname">~/share</tt>にマウントされるサブボリュームであり、ホームディレクトリ直下で使われるものについてはシンボリックリンクで対応する。</p><p><tt class="puredoc_idname">home-aki-share</tt>サブボリュームはすでに用意されているが、これまで<tt class="puredoc_idname">home</tt>サブボリュームに自身のホームディレクトリが含まれていた。homeサブボリュームを新たに作り、従来のhomeサブボリュームは「Mageiaのhome」と理解する。また、統一ルールのため、従来のshareサブボリュームについては、<code>chown -R aki:users /mnt/4</code>することで修正する。もちろん、「Mageiaのhome」に未整理のまま取り残されているファイルも存在する。だが、ホーム直下に置き去りにすることはあまりないので影響は少ない、はずだ。こういう時のために<tt class="puredoc_pathname">~/home/share/jumble</tt>ディレクトリでも用意しておこうか。（本来はshare直下にそれをする予定だった）</p><p>基本的なものは揃っているが、zsh, git, ruby, sox, fetchmail, claws-mailがないためそのままでは動かない（vlcに関してはMageiaで作りこんだ仕様よりも気持ちよく動く）。これらをインストール。また、mikutterのためにはbundlerをインストールした上でbundleする必要がある。また、iron(SRWare iron)はライブラリがないため動かないし、ironはAURにもない。ただし、MaxthonやOpera developerはAURに存在する。</p><p>AURにはlvとnkfもあるので、これも導入しておく。</p><p>fontconfigに関してはlocal.confもUserconfも反映してくれない。優先度を99にしても反映されない。これについてはわからないのでpending.</p><p>次にオーディオ設定だが、デフォルトでpulseaudioに依存したシステムを組んでいるのでなかなかややこしい。pulseaudioを消すことはできるが、そうするとそのままでは鳴らないプログラムもあるかもしれない。</p><p>pulseaudioがなぜ嫌かというと、まぁ、強制的に16bit/48Khzにするからであり、音が悪いからなのだ。USBオーディオインターフェイスを使っている(24bit/92kHz)私としては「なんとももったいない」。ただし、実際はハイレゾ音源なんて制作以外で扱うことは滅多にないし、pulseaudioを外したところで快適なプレイヤーで再生する状況ではないので、わざわざpulseaudioをパージしなくても、どうしても聴きたい時だけalsaplayerだと思うが。</p><p>pulseaudioとはなにかというと、簡単に言えばオーディオドライバに対する高レベルAPI（サウンドサーバー）だ。pulseaudioを経由してesound, oss, alsaといったサウンドサーバー、サウンドドライバーから音を出すことができ、扱いやすく統一した取り扱いを提供する。つまり、プログラマ的、コンピュータ的な論理化、抽象化を提供するレイヤーというわけだ。もしかしたらpulseaudio-jackなんてものもあるかもしれない。だが、確実に鳴らすために16bit/48kHzに変換するし、そこで遅延が生じるし音も悪くなる、という。</p><p>ALSAでがんばってみたのだが、Audio4DJは4chあり、Cahnnel B(Headphone monitor)から出したいのだが、ALSAだとChannel Aから出てしまう。結局諦めて、pulseaudio-managerの設定でデバイスを設定（デバイスごとに出力チャンネルが選べるので、Amarok起動状態でAudio4DJのチャンネルをBにし、Amarokの出力をAudio4DJにする）することでAmarokでスピーカーが鳴らせるようになった。</p><p>AmarokはGstreamer backendでPulseaudio経由の設定でビルドされている。Xine backendのほうが音がいいのに…Pulseaudioの音はちょっと平べったいけれど、割とスムーズなのと、従来(AmarokでPhononがAudio4DJを出力デバイスにする）はフォーマットが異なる場合などに音が鳴らないままシークが進み、音がバグるトラブルがあったが、それがない。I doというmp3の音源はまともに再生できなかった、ということも解消された。遅延はあるにせよコントロールはしっかりしているので、必ずしも「音が悪い」とは言えないかもしれない。ちゃんと安定して演奏できることは大事だろう。「いい音で聴きたい音楽のみAmarokを使うことで確実にAudio4DJ+Sonyスピーカーから出て、他の音はlogicoolスピーカーから出る、という扱いの良さや意図した通り環境によらず鳴ってくれる点を含めてもしかしたら結構いいのかもしれない。</p><h3>Manjaro XFce JPの使い心地</h3><p>ManjaroはManjaro+Arch+AURのリポジトリを使う。AURのパッケージはかなり多く、UbuntuやopenSUSEに匹敵するパッケージがある。また、AURに集約されているため、レベルの高いユーザーの成果物がダイレクトに利用できるというのが非常に大きな魅力となっている。</p><p>ただし、もともとArchは最低限のパッケージを導入して使うものなので、それを色々入れて「初心者向け」にしていることの破綻はある。</p><p>まず、パッケージインストーラが「ひとつずつインストールを選択する」ことや、「最低限の依存パッケージをchoiceしようとする」ということがまず多くの、そして完成された高機能なソフトウェアシステムを求める人にとっては環境づくりのハードルが高いし、あまり色々いれるともともとあれもこれも入れて選択するような使い方を推奨していないのでトラブルの原因にもなる。「どのパッケージが必要か」分かっている人が余計なものは入れない方向で使うようにしないと機能しないシステムが出来上がりそうだ。</p><p>全体にはパッケージは早いがFedoraほどは早くない。それに、パッチ当てなどにあまり熱心でない（必要なら自分でやれ、というのもある）ので、性能や機能面で劣る場合もある。速さはあまりない。また、日本では人気はそれなりにあるが、日本語環境はかなり悪く（それでもMageiaよりはかなりマシだが）、パッケージやオプションが日本での使用に適さないこともある。Archは必要ならABSを使って調整するものなので、あまり余計なものを入れているといろいろ苦しい。</p><p>さらに、Japanese Fontを入れようとしたらAURにあるものはかなりがビルドに失敗する（理由は提示されない）ということもあるし、システムへの理解が足りない初心者には決して易しくない、と思う。それでいえばChakraのほうがいいのではないか。パッケージはかなり少ないし日本語は絶望的だが。</p><p>Manjaroの情報は少ないが、Forumに結構情報があるし、ベースのArchのwiki（極めて充実している）がほとんどそのまま適用できるため、総合的には情報はむしろ多い。configuration toolの類は少なく、Manjaroが調整を入れているパッケージはあまり多くない。Ubuntuもその点はあまり変わらないが、openSUSEのような「あまりわからなくてもなんとかなる」要素は希薄。</p><p>XFceはかなり進化していて、使い心地は非常に良い。のだが、細かな設定ができず使いにくい面もある。例えば、デスクトップのエッジでは4方向に（コーナーはない）最大化してくれるが、ワークスペースを使っていると、ワークスペースとつながっている部分はそのまま通り抜けてしまうようになっている。この点について、とおりぬけるかどうかの設定はない。Notify-sendの対応も悪くはないのだが、邪魔になることがある。また、KDEのようにテーマを容易に導入することもできない。</p><p>ファミリーアプリの貧弱さに関しては、最低限のインストールができるようになっているために、kateやgwenview, amarokなどを使うこともできる。ただし、この場合はkdelibがロードされるためメモリーは必要になる。とはいえパッケージでごちゃごちゃすることは回避できる。</p><p>KDEを使うこともできるが、使用するパッケージが多く依存関係も深いため、システムのメンテナンスはおそらくかなり大変になる。KDEは好きだが、そこまでするかどうかは悩みどころ。どちらかといえばAwesomeやXmonadを入れたほうがいいだろう。</p><p>XFceは使うことは想定した調整になっているが、システム音がないなど作りこまれているという感じではない。</p>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

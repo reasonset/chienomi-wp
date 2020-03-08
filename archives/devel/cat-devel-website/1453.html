@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-08T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-08T00:00:00+09:00" />
+    <title>Mimir Yokohamaに用語集機能 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Mimir Yokohamaに用語集機能</h1></header>
+        <article id="MainArticle">
+<p><a href="https://www.mimir.yokohama">Mimir Yokohamaに用語集機能が追加された。</a></p>
+<p>用語集機能はACCS(PureBuilderに取り込まれる以前の)やAki PHP Content Collection時代に実装されていた。</p>
+<p>シンプルにACCSではJavaScript+Ruby/CGIで、本文エレメント(テキストノード)を探索し、文字列を送信してRubyで置き変えたものを返してもらい、innerHTMLを置き換える方式だった。</p>
+<p>APCCでは単純に力技で置換えていた。</p>
+<p>PureBuilderではこの機能を実現していなかった。 正確には一時期実装していたこともあるが、十分な質でなかったのだ。</p>
+<p>そしてついに復活した用語集機能。</p>
+<p>Pre Pluginsで処理することも考えたが、Post PluginsでRubyで処理している。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co"># Grosarry Support plugin</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co"># Replace article element with &lt;span title=&quot;description&quot; class=&quot;pb-dictentry&quot;&gt;word&lt;/span&gt;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co"># Target should be in article elemnt.</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co"># dictionary is .grossary.rb in PBSimply root.</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co">#</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="co"># Sample:</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="co"># GROSSARY = {</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="co">#   &quot;tech&quot; =&gt; {</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="co">#     &quot;hack&quot; =&gt; &quot;It&#39;s beautiful things.&quot;,</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co">#     &quot;luser&quot; =&gt; &quot;It&#39;s bogus.&quot;</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="co">#   }</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="co"># }</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="co">#</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="co"># and set frontmatter</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="co"># grossaries:</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co">#   - tech</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20">require <span class="st">&#39;yaml&#39;</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="co"># Get frontmatter</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23">frontmatter = <span class="dt">YAML</span>.load(<span class="dt">ENV</span>[<span class="st">&quot;pbsimply_doc_frontmatter&quot;</span>])</a>
+<a class="sourceLine" id="cb1-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="kw">if</span> !(frontmatter[<span class="st">&quot;grossaries&quot;</span>]) || frontmatter[<span class="st">&quot;grossaries&quot;</span>].empty?</a>
+<a class="sourceLine" id="cb1-26" data-line-number="26">    <span class="dt">ARGF</span>.each {|i| print i }</a>
+<a class="sourceLine" id="cb1-27" data-line-number="27">    exit <span class="dv">0</span></a>
+<a class="sourceLine" id="cb1-28" data-line-number="28"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb1-30" data-line-number="30">dict = {}</a>
+<a class="sourceLine" id="cb1-31" data-line-number="31"></a>
+<a class="sourceLine" id="cb1-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb1-33" data-line-number="33">load <span class="st">&#39;./.grossary.rb&#39;</span></a>
+<a class="sourceLine" id="cb1-34" data-line-number="34"></a>
+<a class="sourceLine" id="cb1-35" data-line-number="35">frontmatter[<span class="st">&quot;grossaries&quot;</span>].each <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb1-36" data-line-number="36">    <span class="kw">if</span> <span class="dt">GROSSARY</span>.key?(i)</a>
+<a class="sourceLine" id="cb1-37" data-line-number="37">        dict.merge! <span class="dt">GROSSARY</span>[i]</a>
+<a class="sourceLine" id="cb1-38" data-line-number="38">    <span class="kw">else</span></a>
+<a class="sourceLine" id="cb1-39" data-line-number="39">        <span class="dt">STDERR</span>.puts <span class="st">&quot;WARNING: Grossary Support: No category ${i}&quot;</span></a>
+<a class="sourceLine" id="cb1-40" data-line-number="40">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-41" data-line-number="41"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-42" data-line-number="42"></a>
+<a class="sourceLine" id="cb1-43" data-line-number="43">pattern = <span class="dt">Regexp</span>.compile dict.keys.sort_by {|i| -i.length }.map {|i| <span class="dt">Regexp</span>.escape i }.join(<span class="st">&quot;|&quot;</span>)</a>
+<a class="sourceLine" id="cb1-44" data-line-number="44"></a>
+<a class="sourceLine" id="cb1-45" data-line-number="45"><span class="dt">ARGF</span>.each <span class="kw">do</span> |line|</a>
+<a class="sourceLine" id="cb1-46" data-line-number="46">    <span class="kw">if</span>(line =~ <span class="ot">/&lt;article/</span> .. line =~ <span class="ot">/&lt;\/article/</span>)</a>
+<a class="sourceLine" id="cb1-47" data-line-number="47">        <span class="co"># in article</span></a>
+<a class="sourceLine" id="cb1-48" data-line-number="48">        line.gsub!(<span class="ot">/&lt;[^&gt;]*&gt;|[^&lt;]*/</span>) <span class="kw">do</span> |element|</a>
+<a class="sourceLine" id="cb1-49" data-line-number="49">            <span class="kw">if</span> element[<span class="dv">0</span>] == <span class="st">&quot;&lt;&quot;</span></a>
+<a class="sourceLine" id="cb1-50" data-line-number="50">                <span class="co"># Tag</span></a>
+<a class="sourceLine" id="cb1-51" data-line-number="51">                <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb1-52" data-line-number="52">            <span class="kw">else</span></a>
+<a class="sourceLine" id="cb1-53" data-line-number="53">                <span class="co"># Text</span></a>
+<a class="sourceLine" id="cb1-54" data-line-number="54">                element.gsub!(pattern) <span class="kw">do</span> |matchword|</a>
+<a class="sourceLine" id="cb1-55" data-line-number="55">                    sprintf(<span class="st">&#39;&lt;span title=&quot;%s&quot; class=&quot;pb-dictentry&quot;&gt;%s&lt;/span&gt;&#39;</span>, dict[matchword], matchword)</a>
+<a class="sourceLine" id="cb1-56" data-line-number="56">                <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-57" data-line-number="57">            <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-58" data-line-number="58">            element</a>
+<a class="sourceLine" id="cb1-59" data-line-number="59">        <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-60" data-line-number="60">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-61" data-line-number="61"></a>
+<a class="sourceLine" id="cb1-62" data-line-number="62">    print line</a>
+<a class="sourceLine" id="cb1-63" data-line-number="63"><span class="kw">end</span></a></code></pre></div>
+<p>「辞書をワード長が長い順に並べ替えて<code>|</code>で結合し、正規表現としてコンパイルして置き換える」という手法はかつてのコードで考えたものである。</p>
+<p>用語集のページも単純な手法でMarkdownを生成している。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">load <span class="st">&#39;./.grossary.rb&#39;</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">puts &lt;&lt;<span class="kw">EOF</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="ot">title: 用語集</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="ot">date: 2018-07-08</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="ot">author: Mimir Yokohama</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="ot">last_update: #{</span><span class="dt">Time</span>.now.strftime(<span class="st">&quot;%Y-%m-%d&quot;</span>)<span class="ot">}</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="ot">accs: no</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="ot">pickage: yes</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="ot">EOF</span></a>
+<a class="sourceLine" id="cb2-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb2-16" data-line-number="16"><span class="ot">GROSSARY.each do |cat, incat|</span></a>
+<a class="sourceLine" id="cb2-17" data-line-number="17"><span class="ot">    puts &#39;# &#39; + cat</span></a>
+<a class="sourceLine" id="cb2-18" data-line-number="18"><span class="ot">    puts</span></a>
+<a class="sourceLine" id="cb2-19" data-line-number="19"><span class="ot">    incat.each.sort_by {|k, v| k}.each do |k,v|</span></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="ot">        puts &#39;## &#39; + k</span></a>
+<a class="sourceLine" id="cb2-21" data-line-number="21"><span class="ot">        puts</span></a>
+<a class="sourceLine" id="cb2-22" data-line-number="22"><span class="ot">        puts v</span></a>
+<a class="sourceLine" id="cb2-23" data-line-number="23"><span class="ot">        puts</span></a>
+<a class="sourceLine" id="cb2-24" data-line-number="24"><span class="ot">    end</span></a>
+<a class="sourceLine" id="cb2-25" data-line-number="25"><span class="ot">end</span></a></code></pre></div>
+<p>で、今回もライブラリなしのPureJSで処理している。 今回は44行ほどだが、18行は共有化できるものなので、もう少し短くすることも可能だ。 DHTMLのお手本のような初歩的なものである。</p>
+<p><code>Event.stopPropagation()</code>を<code>Event.stopPropagation</code>と書いて悩むはめになったけど。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

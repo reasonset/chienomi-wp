@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-09-09T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-09-09T00:00:00+09:00" />
+    <title>Mail Virtual Alias @ CentOS 6 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Mail Virtual Alias @ CentOS 6</h1></header>
+        <article id="MainArticle">
+<p>メールサーバーの本運用は通常virtualであるはずだ。メールアカウントの数だけユーザーアカウントがあるというのは考えられない。</p><p>ただし、私の場合はサブドメインをバーチャルエイリアスにするため、バーチャルドメインが必要になる。</p><p>新しいDovecotに関する情報がなく苦労したが、<a href="http://vogel.at.webry.info/201312/article_10.html" alt="http://vogel.at.webry.info/201312/article_10.html">http://vogel.at.webry.info/201312/article_10.html</a>の通りにやってみた。大体これでうまくいったのだが、私の場合はいくつかひっかかった点があった。</p><p>まず、<code>hown -R mailuser ~mailuser</code>をちゃんと実行しておかなくてはいけないこと。vmailboxファイルは最後に/をつけ忘れるとmbox形式になってしまうこと。</p><p>しかしこれではPOPの認証がfailedとなる。調べてみると、このサイトにはデフォルトでコメントアウトしているauth-passwdfile.conf.extのロードをしていない。</p><samp style="display: block;white-space: pre-wrap">[root@server ~]# grep -R auth-passwd /etc/dovecot
+/etc/dovecot/conf.d/10-auth.conf:#!include auth-passwdfile.conf.ext
+</samp><p>さらに、パスワードファイル認証も無効化されている。</p><samp style="display: block;white-space: pre-wrap">[root@server ~]# grep disable /etc/dovecot/conf.d/10-auth.conf 
+#disable_plaintext_auth = no 
+# Authentication cache size (e.g. 10M). 0 means it's disabled. Note that
+# 0 disables caching them completely.
+# NOTE: See also disable_plaintext_auth setting.
+</samp><p>この2点を修正したが、それでもエラーになる。原因はパスワードファイルのファイル名（設定ではなくファイル自体）が間違っていたためのNo such file or directoryだった。</p><p>さらにPostfixからのDovecot認証の利用は情報が錯綜してよくわからない状態だったが、結局のところ<tt class="pure_pathname">/etc/dovecot/conf.d/10-master.conf</tt>のPostfixから利用するコメントアウトをはずすだけでエラーは出なくなった。しかしながら、認証自体がうまくいかない。userとgroupの設定を追加したが、元々666なのだから、効果はなかった。明らかに問題はPostfixにあり、Dovecotはこれでいいだろう。</p><p>telnetを打ってみると25番ポートが反応しない。ここでOP25Bによるものだと気付いた。</p><p>submissionの設定を探してみると、master.cfにsubmissionの項目があり、このコメントアウトをはずせばsubmissionは機能する。しかしながら</p><samp style="display: block;white-space: pre-wrap">submission inet n       -       n       -       -       smtpd
+#  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+#  -o milter_macro_daemon_name=ORIGINATING
+</samp><p>TLSを強制するとTLSが機能しない。とりあえず、TLSは要求しないことにした（<tt class="pure_idname">encrypt</tt>でなく<tt class="pure_idname">may</tt>にしておく）。</p><p>しかし、それでも544 host access deniedという応答で送ることができない。調べてみると、さらに別のパラメータを設定する必要があるようだ。main.cfに記述する。</p><samp style="display: block;white-space: pre-wrap">smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_client_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_relay_restricions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+broken_sasl_auth_clients = yes
+</samp><p>さらにスペルミスにもひっかかってしまったが、これでうまく通った。TLSが上手く動かない以外は正常だ。</p><p>TLSについて調べてみると、どうも鍵にパスフレーズがかかっていると使えない、ということだ。そこで、次のようにして問題の解決を図る。</p><samp style="display: block;white-space: pre-wrap">[root@sesrver]# openssl genrsa -aes128 1024  server.key
+Generating RSA private key, 1024 bit long modulus
+.++++++
+.........................++++++
+e is 65537 (0x10001)
+Enter pass phrase:           #ここでは普通にパスフレーズを入力する
+Verifying - Enter pass phrase:
+[root@dti-vps-srv71 certs]# openssl rsa -in server.key -out server.key #これによってパスフレーズを消滅させる
+Enter pass phrase for server.key:
+writing RSA key
+[root@dti-vps-srv71 certs]# openssl req -new -x509 -key server.key -days 3650 -out server.crt # certファイルを作る
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:JP #カントリーコード
+State or Province Name (full name) []:Kanagawa #神奈川
+Locality Name (eg, city) [Default City]:Yokohama #横浜
+  p {[
+    "さらにスペルミスにもひっかかってしまったが、これでうまく通った。TLSが上手く動かない以外は正常だ。",
+    "TLSについて調べてみると、どうも鍵にパスフレーズがかかっていると使えない、ということだ。そこで、次のようにして問題の解決を図る。"
+  ]}
+  
+  sb { -END
+[root@sesrver]# openssl genrsa -aes128 1024  server.key
+Organization Name (eg, company) [Default Company Ltd]:HarukaSound #組織名
+Organizational Unit Name (eg, section) []: #部署はない
+Common Name (eg, your name or your server's hostname) []:reasonset.net #FQDN
+Email Address []:master@reasonset.net #メールアドレス
+[root@dti-vps-srv71 certs]# openssl x509 -in server.crt -outform der -out server.der # derファイルの生成
+</samp><p>これで鍵の生成は完了。ファイル名が若干変わったので、main.cfを修正。さらに、DovecotのSSLが設定されていなかったので、<tt class="pure_pathname">/etc/dovecot/conf.d/10-ssl.conf</tt>を修正（<samp>ssl = yes</samp>のコメントアウトをはずし、ファイル名を修正）。</p><p>そして<tt class="pure_pathname">master.cf</tt>を<samp>encrypt</samp>に戻して完了。STARTTLSが正しく働くようになった。</p>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-02-21T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-02-21T00:00:00+09:00" />
+    <title>Mimir Yokohama ウェブサイトの「タグ機能」の仕組み - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Mimir Yokohama ウェブサイトの「タグ機能」の仕組み</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p><a href="https://www.mimir.yokohama">Mimir Yokohamaのウェブサイト</a>にこっそりとタグ機能が追加された。</p>
+<p>だが、PureBuilder Simply自体にはタグ機能がない。 この実現方法は発想力勝負な部分があった。</p>
+<h2 id="ドキュメントにデータを持たせる">ドキュメントにデータを持たせる</h2>
+<p>「記事情報」でも行われている方法として、Markdown YAML Frontmatter内に情報をもたせ、Pandocテンプレートで存在する場合だけエレメントを生成するような手法を取っている。</p>
+<p>例えば<a href="https://www.mimir.yokohama/useful/hard-0001-bandwidth.html">帯域</a>においては</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">title:</span><span class="at"> 帯域</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="fu">date:</span><span class="at"> 2018-02-19</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="fu">category:</span><span class="at"> さくっと読み解く パソコン・スマホの機械とコトバ</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="fu">accs:</span><span class="at"> yes</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="fu">author:</span><span class="at"> Masaki Haruka</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="fu">difficulty:</span><span class="at"> 2</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="fu">required_know:</span><span class="at"> 1</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="fu">lod:</span><span class="at"> 2</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="fu">pickable:</span><span class="at"> no</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="fu">target_readers:</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">  <span class="kw">-</span> 一般パソコンユーザー</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">  <span class="kw">-</span> 一般スマートフォンユーザー</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">  <span class="kw">-</span> パソコンに詳しくない人</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="fu">tags:</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">  <span class="kw">-</span> パソコン</a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">  <span class="kw">-</span> スマホ</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">  <span class="kw">-</span> 用語</a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">  <span class="kw">-</span> 通信</a></code></pre></div>
+<p>というYAML Frontmatterが書かれている。 記事情報などは自動的に生成することができないため記事ごとにかかれており、若干執筆コストを上げている面もあるが、 なにしろMimir Yokohamaには力が入っているのでそれくらいどうということはない。 基本的なフォーマットをコピペしてしまえばそれほど難しくない部分でもある。</p>
+<p>ちなみに、Pandocテンプレートで</p>
+<pre class="pandoctpl"><code>$if(pickable)$
+Something
+$endif$</code></pre>
+<p>とした場合、<code>pickable: no</code> (つまりfalse)ならばここは生成されない。</p>
+<p>この追加情報として<code>tags</code>が加わったのである。</p>
+<h2 id="問題は検索">問題は検索</h2>
+<p>タグを表示することは簡単だが、普通に考えればタグから同一タグの記事を辿りたいし、タグで検索もしたい。</p>
+<p>単純な方法としてGoogleを使うこともできるのだが、それは必ずしもタグつきの記事が上位にくるわけではなく、思ったようには動作しない。 ちゃんと検索機能を用意する必要があったのだが、できればPureBuilder Simplyの枠組みの中で行いたいところである。</p>
+<p>PureBuilder Simplyは原則として「MarkdownまたはReST文書から生成する」という前提になっており、 ACCSもindexデータベースからMarkdownドキュメントを生成し、このあとはPandocで処理している。</p>
+<p>なのでPureBuilder Simplyの枠組みで処理するためにはMarkdownドキュメントを生成しなくてはいけない。</p>
+<p>それなら全てのindexを探し回ってタグを集めればいいじゃない。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">require <span class="st">&#39;date&#39;</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">require <span class="st">&#39;yaml&#39;</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="dt">$tags</span> = <span class="dt">Hash</span>.new {|h,k| h[k] = [] }</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">accs = <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="dt">ARGV</span>.each <span class="kw">do</span> |arg|</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">  <span class="kw">if</span>(<span class="dt">File</span>.exist?(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/.accs.yaml&quot;</span>))</a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">    accs = <span class="dt">YAML</span>.load(<span class="dt">File</span>.read(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/.accs.yaml&quot;</span>))</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">  <span class="kw">else</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">    accs = <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">  <span class="dt">Marshal</span>.load(<span class="dt">File</span>.read arg).each <span class="kw">do</span> |k,v|</a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">    <span class="kw">if</span> v.key?(<span class="st">&quot;tags&quot;</span>)</a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">      v[<span class="st">&quot;tags&quot;</span>].each <span class="kw">do</span> |tag|</a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">        <span class="dt">$tags</span>[tag].push({</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">          <span class="st">title: </span>v[<span class="st">&quot;title&quot;</span>],</a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">          <span class="st">path: </span>(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/&quot;</span> + k.sub(<span class="ot">/\.md$/</span>, <span class="st">&quot;.html&quot;</span>)),</a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">          <span class="st">date: </span>v[<span class="st">&quot;date&quot;</span>],</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">          <span class="st">corner: </span>( accs &amp;&amp; accs[<span class="st">&quot;title&quot;</span>]),</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">          <span class="st">category: </span>v[<span class="st">&quot;category&quot;</span>]</a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">        })</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-27" data-line-number="27"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb3-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb3-30" data-line-number="30"><span class="dt">$tags</span>.each <span class="kw">do</span> |tag, v|</a>
+<a class="sourceLine" id="cb3-31" data-line-number="31">  <span class="dt">File</span>.open(<span class="st">&quot;tags/</span><span class="ot">#{</span>tag<span class="ot">}</span><span class="st">.md&quot;</span>, <span class="st">&quot;w&quot;</span>) <span class="kw">do</span> |f|</a>
+<a class="sourceLine" id="cb3-32" data-line-number="32">    f.puts &lt;&lt;-<span class="kw">EOF</span></a>
+<a class="sourceLine" id="cb3-33" data-line-number="33"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb3-34" data-line-number="34"><span class="ot">title: &#39;タグ &quot;\##{</span>tag<span class="ot">}&quot; の検索&#39;</span></a>
+<a class="sourceLine" id="cb3-35" data-line-number="35"><span class="ot">date: #{</span><span class="dt">Date</span>.today<span class="ot">}</span></a>
+<a class="sourceLine" id="cb3-36" data-line-number="36"><span class="ot">pagetype: accsindex</span></a>
+<a class="sourceLine" id="cb3-37" data-line-number="37"><span class="ot">indexpage: yes</span></a>
+<a class="sourceLine" id="cb3-38" data-line-number="38"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb3-39" data-line-number="39"></a>
+<a class="sourceLine" id="cb3-40" data-line-number="40"><span class="ot">  EOF</span></a>
+<a class="sourceLine" id="cb3-41" data-line-number="41"><span class="ot">    v.sort_by {|i| [i[:date], i[:corner].to_s, i[:category].to_s, i[:title]] }.reverse.each do |i|</span></a>
+<a class="sourceLine" id="cb3-42" data-line-number="42"><span class="ot">      if i[:path] !~ %r:^/:</span></a>
+<a class="sourceLine" id="cb3-43" data-line-number="43"><span class="ot">        i[:path] = &quot;/&quot; + i[:path]</span></a>
+<a class="sourceLine" id="cb3-44" data-line-number="44"><span class="ot">      end</span></a>
+<a class="sourceLine" id="cb3-45" data-line-number="45"><span class="ot">      f.printf(&quot;* [%s](%s) \\\n  %s%s @%s\n&quot;, i[:title], i[:path], i[:corner].to_s, (i[:category] &amp;&amp; &quot;/&quot; + i[:category]).to_s, i[:date])</span></a>
+<a class="sourceLine" id="cb3-46" data-line-number="46"><span class="ot">    end</span></a>
+<a class="sourceLine" id="cb3-47" data-line-number="47"><span class="ot">  end</span></a>
+<a class="sourceLine" id="cb3-48" data-line-number="48"><span class="ot">end</span></a>
+<a class="sourceLine" id="cb3-49" data-line-number="49"></a>
+<a class="sourceLine" id="cb3-50" data-line-number="50"><span class="ot">File.open(&quot;tags/index.md&quot;, &quot;w&quot;) do |f|</span></a>
+<a class="sourceLine" id="cb3-51" data-line-number="51"><span class="ot">  f.puts &lt;&lt;-EOF</span></a>
+<a class="sourceLine" id="cb3-52" data-line-number="52"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb3-53" data-line-number="53"><span class="ot">title: &#39;タグ一覧&#39;</span></a>
+<a class="sourceLine" id="cb3-54" data-line-number="54"><span class="ot">date: #{</span><span class="dt">Date</span>.today<span class="ot">}</span></a>
+<a class="sourceLine" id="cb3-55" data-line-number="55"><span class="ot">pagetype: accsindex</span></a>
+<a class="sourceLine" id="cb3-56" data-line-number="56"><span class="ot">indexpage: yes</span></a>
+<a class="sourceLine" id="cb3-57" data-line-number="57"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb3-58" data-line-number="58"></a>
+<a class="sourceLine" id="cb3-59" data-line-number="59"><span class="ot">EOF</span></a>
+<a class="sourceLine" id="cb3-60" data-line-number="60"><span class="ot">  $tags.keys.sort.each do |k|</span></a>
+<a class="sourceLine" id="cb3-61" data-line-number="61"><span class="ot">    f.puts &quot;* [#{</span>k<span class="ot">}](/tags/#{</span>k<span class="ot">}.html) (#{</span><span class="dt">$tags</span>[k].length<span class="ot">})&quot;</span></a>
+<a class="sourceLine" id="cb3-62" data-line-number="62"><span class="ot">  end</span></a>
+<a class="sourceLine" id="cb3-63" data-line-number="63"><span class="ot">end</span></a></code></pre></div>
+<p><code>ARGV.each</code>しているので、全ての<code>.indexes.rbm</code>を指定すれば良い。 あとはpbsimply-pandocで処理できるが、タグに登場した<code>.indexes.rbm</code>は実際に記事が存在しているものではなく拾ってほしくないので消しておく。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">#!/usr/bin/zsh</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw">setopt</span> EXTENDED_GLOB</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">pbsimply-pandoc.rb <span class="kw">.</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">ruby .tagcloud.rb **/.indexes.rbm~tags/.indexes.rbm</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">pbsimply-pandoc.rb tags</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="kw">rm</span> tags/.indexes.rbm</a></code></pre></div>
+<p>.indexes.rbmとして書き出すようにした意図の一部に、このように外部からドキュメントデータにアクセスするというものがあった。</p>
+<p>これによってドキュメント解析しなくてもメタデータを利用して機能拡張してページに含むことができる。</p>
+<h2 id="テンプレートにとうとう限界が">テンプレートにとうとう限界が</h2>
+<p>だいぶ魔改造されているPandocテンプレートだが、今回は限界が垣間見えた。</p>
+<p>タグクラウドらしくエントリ数の多いタグを大きく表示したいのだが、Pandocテンプレートに計算機能や比較機能がなく、CSSにもないため、 Pandocテンプレートだけでは実現できない。MarkdownにHTMLを直接書くという方法はあるが(Markdown自体はRubyで生成しているため)。</p>
+<p>また、URIエンコーディングをする方法はデータを二重に持たせる以外になく、それでもふたつの値を同時にとるイテレータがPandocテンプレートにないため、URIだけでURIエンコーディングをおこなう方法がない。</p>
+<p>eRubyを使ってもいいのだが、できれば使いたくない。 現時点ではタグクラウドの大きさ分けはしておらず、URIもURIエンコーディングせずに使用している。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

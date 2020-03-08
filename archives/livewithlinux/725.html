@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-09-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-09-17T00:00:00+09:00" />
+    <title>hp Z400 ( Intel Xeon W3565 + nVIDIA Quadro 2000 ) Manjaro Linux - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>hp Z400 ( Intel Xeon W3565 + nVIDIA Quadro 2000 ) Manjaro Linux</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">経緯</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">暫定的な対応</a></li>
+  <li><a href="#section-2" id="markdown-toc-section-2">対策の候補</a></li>
+  <li><a href="#hp-z400-workstation" id="markdown-toc-hp-z400-workstation">hp Z400 Workstation</a></li>
+  <li><a href="#xeon" id="markdown-toc-xeon">Xeonについて</a></li>
+  <li><a href="#quadro" id="markdown-toc-quadro">Quadroについて</a></li>
+  <li><a href="#z400" id="markdown-toc-z400">Z400の内部とシステム</a></li>
+  <li><a href="#section-3" id="markdown-toc-section-3">メモリ増設</a></li>
+  <li><a href="#hdd" id="markdown-toc-hdd">HDD</a></li>
+  <li><a href="#linux" id="markdown-toc-linux">Linux上での性能</a></li>
+  <li><a href="#quadro-2000--linux" id="markdown-toc-quadro-2000--linux">Quadro 2000 と Linux</a></li>
+  <li><a href="#section-4" id="markdown-toc-section-4">結論</a></li>
+</ul>
+
+<h3 id="section">経緯</h3>
+
+<p>事はデスクトップPCが壊れたことに端を発する。</p>
+
+<p>起動不能となり、配線のチェックなども行ったものの解決せず、結局秋葉原まで持ち込み修理に出してきた。</p>
+
+<p>BUYMORE秋葉原本店で購入したものであるため、Unicom秋葉原サポートセンターに持ち込み。
+事前に、ケースが不要であることを確認し、電源と、マザーボード+メモリ+APUの状態で持ち込んだ。</p>
+
+<p>ちなみに、台風のため(甚大な被害を出したあの雨だ)、翌日の持ち込みとなった。</p>
+
+<p>秋葉原サポートセンターは非常にわかりづらい場所にある。随分探しまわってしまった。
+総武本線の高架下沿いで、JRの駅からは中央通りをはさんで反対側、御茶ノ水方向で、KFCの向かいだが表ではなく裏側の向かい、マウスコンピューターの地下1階で、しかもその階段はサービスカウンター沿いの奥にある。</p>
+
+<p>とりあえず持ち込んだはいいが、なんといっても台湾送りのため、1ヶ月程度はかかるもよう。その間仕事ができないというのは、とても困る。</p>
+
+<h3 id="section-1">暫定的な対応</h3>
+
+<p>とりあえずは、ProLiant MicroserverのSlaveディスク4台を抜き出し、Masterディスク4台を投入、Masterのキーファイルを入れ、Masterをマウントできるようにする。</p>
+
+<p>SlaveをMasterに昇格させると数日分の作業データを失うこととなる。
+基本的にはSlaveはMasterディスクの損失に対する存在だ。</p>
+
+<p>これによってProLiant MicroServerで本来のデータが扱えるようになり、sshfsでアクセスすることでデータにはアクセスできるようになった。</p>
+
+<p>だが、環境に関するデータは結構困る。
+FUSEやNFSでマウントしているデータへのアクセスはかなり制限される。FUSE環境だとアクセスできるのが所有者に限られるためsudoが使えない、という程度はわかるが、なんとSpamassassinがちゃんと動かない。ちなみに、<code>sudo</code>でも<code>su -c</code>でも動かないが、<code>su -</code>なら動く。</p>
+
+<p>細かく様々制約され、「なんだか変な挙動」「なぜか動かない」が蓄積し、作業効率を大幅に下げる。</p>
+
+<p>問題はそれだけではない。それをドライブする端末がないのだ。
+ThinkPad e440は異常なまでに不安定であり、作業効率は10%も出ない。1分ごとにXが落ちて、その再起動に30秒程度かかるなど話にならない。</p>
+
+<p>ちなみに、e440はWindowsの初期状態でもかなり不安定な挙動を見せる。もう、Lenovoのことはだいぶ嫌いになっている。</p>
+
+<p>かといってとProLiant MicroServerの直接利用も性能的にも厳しいし、映像出力系にトラブルがあり、難しい。</p>
+
+<h3 id="section-2">対策の候補</h3>
+
+<p>いずれにせよ、必要だと分かっていた冗長系投入を遅延させていたのが問題であり、冗長系を投入するのが妥当だろう。
+窮状にあって苦しいが、やむを得ない。</p>
+
+<p>候補は以下だ</p>
+
+<ul>
+  <li>直近の将来の要求である4k x3モニターが可能なメイン系(現行を冗長系へ) (14万円)</li>
+  <li>あくまでも冗長系の新品AMD A4マシン (3万円)</li>
+  <li>あくまでも冗長系の中古マシン (2万円)</li>
+  <li>活用可能な中古マシン (4万円)</li>
+</ul>
+
+<p>4k x3を可能にするのは、Quadro K1200が最低ラインのようだ。K620に関しては、DP Hubによる分岐もFQHDまでしかサポートしない。そのため、結構な額になった。なお、全体はSkylakeで構成することを想定した。</p>
+
+<p>やはり、額が大きいことと、これからSkylakeも安くなっていくだろうし、USB CやDDR4メモリなど新規格が続々の中ではなかなか筋が悪い。</p>
+
+<p>新品AMDマシンは構成が近いため、冗長環境を作りやすいが、既に問題が大量にあり、しかも十分なパフォーマンスがないというのに、さらに下位のものを選ぶのはなかなか厳しい。</p>
+
+<p>さらに、メーカーが非常に評判が悪く、保証どころか修理すら預けられない感じであったため、それならば中古のほうが良いと判断し、最初に消去した。</p>
+
+<p>2万円はCore i7-870、4GB RAM、GeForce 250GTマシン、4万円はXeon W3565, 4GB RAM, Quadro 2000マシンだった。</p>
+
+<p>Windows的に、そしてベンチマーク的に測ればおそらく大差ない。実際<a href="http://cpubenchmark.net/cpu_lookup.php?cpu=Intel+Xeon+W3565+%40+3.20GHz">ベンチマーク</a>を見るとXeon W3565が6,093、i7 870が5,480で、7700kは5,247となっている。</p>
+
+<p>Skylake i7のベスト(i7-6700k)は10,957、4770kでも10,184ということを見れば、やはりふるさは否めない。
+一方で逆の見方をすればそれで最新のKaveriよりも上なのだから、ハイエンドってすごいなぁ、とも思う。</p>
+
+<p>GeForce GTS250は随分数字が小さいことに不安を覚えたが、この時は全世代のハイエンドである9800 GTX+(上から2番目)の名前だけを変えたのがGTS 250で、このシリーズでは上から6番目、下から4番目、とのことだ。</p>
+
+<p>古いので、最新ゲームは結構きつそう。時代を感じる。</p>
+
+<p>もっとも、もうこの世代になるとGeForceはOpenGLを切る方向だった。
+LinuxはDirectXを使わないし、安定性を求めるならQuadroのほうがいい。nVidiaはQuadroに関してはLinuxのサポートも手厚い。</p>
+
+<p>Windows上での性能は差が小さいが、私が使う上での価値はかなり差が開いている。妥当な価格差だ。</p>
+
+<p>これだけの性能があれば、何かの時に助けてくれる気がする…ということで、hp Z400 workstationを購入した。</p>
+
+<h3 id="hp-z400-workstation">hp Z400 Workstation</h3>
+
+<p>2009年に投入された前期型型Z400ワークステーションは、CPUはXeon W3520からW3580までで、これら対して5250円の水冷オプションがある。</p>
+
+<p>グラフィックスボードを持たない最小構成で22万円程度、Quadro FX1800を含むと27万円程度とのこと。</p>
+
+<p>後期型はW3520はそのままだが、W3565, W3680, W3690とプロセッサが変更され、グラフィックスのラインナップも一新、QuadroだけでなくFireProも加わっている。
+また、メモリスロットを4から6に増やし、最大24GBメモリをサポートするようになった。チップセットはintel X58とのことだ。</p>
+
+<p>最小構成+水冷を99,750円で提供していたらしいが、最初構成で買う人がいたのだろうか？</p>
+
+<p>SASモデルもある。SASモデルでなくてよかった。</p>
+
+<p>私が購入したモデルは、Xeon W3565プロセッサ, 4GB RAM, Quadro 2000の水冷モデル。
+SATA仕様で、電源は475Wブロンズ、X58チップセットの後期型だ。</p>
+
+<p>光学ドライブを搭載している。DVD-ROMドライブやBDドライブもあったようだが、DVDスーパーマルチドライブだった。</p>
+
+<h3 id="xeon">Xeonについて</h3>
+
+<p>Intel XeonはIntelのワークステーション/サーバー向けのCPUである。</p>
+
+<p>ワークステーション向けは処理性能が高く、サーバー向けはコア数が多くて発熱が抑えられている。</p>
+
+<p>Xeonのワークステーション向けの下位モデルは、民生用で最上位のCore i7 Extreameシリーズと同等品となり、またそれ以上のモデルが用意されている。</p>
+
+<p>基本的には民生用のCoreシリーズと比べると高性能だが、それだけでなくECCメモリーへの対応や、CPUあたり6本のメモリスロット、マルチCPUのサポートなどより高度な性能要求や安定性に耐える仕様となっている。</p>
+
+<p>その分各部品は割高だ。マザーボードも非常に高価だが、ECCメモリーなども地味に痛い。</p>
+
+<h3 id="quadro">Quadroについて</h3>
+
+<p>nVIDIA Quadroは、nVIDIAの映像処理向けグラフィックスボードだ。</p>
+
+<p>民生用のGeForceがDirectXに特化した「ゲーム用」であるのに対し、3Dグラフィックデザイナー、CADアーティスト、映像クリエイターなどに向けてOpenGLに特化した仕様としている。</p>
+
+<p>また、安定性もかなり高められており、他画面出力にも強くトレーダーにも適している。</p>
+
+<p>nVIDIAはQuadroについてパッケージにLinuxへの対応を明記している。</p>
+
+<p>ドライバーサポートはnVIDIAのほうが全体に手厚い。
+ただし、ビデオドライバのパフォーマンスは、Windowsはおろか、FreeBSDと比べてもはるかに低いのが残念なところだ。</p>
+
+<h3 id="z400">Z400の内部とシステム</h3>
+
+<p>配線は余り過ぎない長さになっており、さらにそれがまとめられた上にカバーまでかけられている。</p>
+
+<p>カバーはメモリも覆うようになっていて、放熱上不利に見えるが、もしかしたらエアーコントロールによってむしろメモリ放熱が考えられているのかもしれない。</p>
+
+<p>5インチオープンベイが3つ、3.5インチシャドウベイが2つ、3.5インチオープンベイに見えるが実際は使いみちのない塞がれたベイがひとつある。</p>
+
+<p>SATAコネクタは6で、SATA 2.0 3Gbps。
+ただし、SATA電源コネクタは5。空きの4ピンがふたつあり、電源増設は可能。</p>
+
+<p>PCI関連は</p>
+
+<ul>
+  <li>PCI e2 x8</li>
+  <li>PCI e2 x16</li>
+  <li>PCI e x8</li>
+  <li>PCI e2 x16</li>
+  <li>PCI</li>
+  <li>PCI</li>
+</ul>
+
+<p>となっている。</p>
+
+<p>メモリスロットは6、最大搭載可能量は24GB。標準では2GBx2が積まれていた。トリプルチャンネル仕様。</p>
+
+<p>おそらくはスタビライザーとして昨日するのであろう緑色のステーがQuadroに向かって伸びている。</p>
+
+<p>基本的には緑色の部分は工具なしで操作できる部分だ。パネル自体はハンドル式になっており、必要な工具は増設時のトルクスのみか。</p>
+
+<p>BIOS式でUEFIなし。</p>
+
+<p>BIOSは、起動ロック、ディスクの暗号化に対応。また、RAIDコントローラを持ち、RAID構築が可能。</p>
+
+<p>WoLに対応。ハイパースレッディングのOn/Offが可能。カバーセンサーについては有効・無効を設定可能。</p>
+
+<p>設定項目は非常に少ない。</p>
+
+<p>ブートデバイスの選択は、Optical, USB, Diskのみ。WindowsとLinuxの切り替えは基本的にはデバイスの起動順序を利用する必要がある。</p>
+
+<p>また、Opticalを指定すればOptical Driveを読みにはいくのだが、ブータブルなCDを入れていてもスルーされてしまうことが結構あった。</p>
+
+<p>OSはWindows 7 Professional。ちなみに、この個体はhpのデフォルトではなく、ショップで入れて認証したものが入っている。</p>
+
+<p>Windowsエクスペリエンスでは、だいたい7.0から7.5。ディスクだけは5.9にとどまった。Windowsのディスクは250GB HDDである。UEFIをサポートしないため、ブートディスクの容量は2.2TBが上限となる。</p>
+
+<h3 id="section-3">メモリ増設</h3>
+
+<p>あとから知ったのだが、hpは</p>
+
+<ul>
+  <li>DDR3-1366 DIMM ECC Unbufferedのみ対応</li>
+  <li>hp以外のメモリは使用不可</li>
+  <li>ECCとNon-ECCを併用すると、メモリエラーとなり起動しない</li>
+</ul>
+
+<p>と言っている。また、調べてみると</p>
+
+<ul>
+  <li>ECCとNon-ECCを混ぜることはできない</li>
+  <li>BIOSで有効・無効が切り替えられるのなら、無効にすればNon-ECCメモリが使用できる。常に有効であるなら使用できない。いずれにせよ混ぜることはできない</li>
+  <li>否、無効にしてしまえば混ぜてもNon-ECCとして動く</li>
+</ul>
+
+<p>とある。</p>
+
+<p>CFD ELIXIR W3U1600HQ-4Gを追加した。</p>
+
+<p>「おそらくはNon-ECCの、DDR3-1600メモリの4GBx2」である。</p>
+
+<p>メモリチェックはちゃんと通ったし、LinuxもWindowsも問題なく機能する。
+よくわからないが、とりあえず気にしないことにした。人には勧めない。</p>
+
+<p>なお、最初から1366のメモリが積んであるにもかかわらず、1066で動作している。</p>
+
+<h3 id="hdd">HDD</h3>
+
+<p>完全にデスクトップを代替しようとすると、Windowsは「音楽系ソフトを入れる別なディスクが必要」となる。</p>
+
+<p>ディスクは6、マウントは5でいいと思ったのだが、実際はディスクは7、マウントが6必要であることに気がついた。</p>
+
+<p>これは、Windows + Windows DATAで2台、Linuxシステムで1台、btrfsプールで4台だ。
+PCIeカードでコネクタは間に合うし、電源はなんとかするとしてもマウントがない。</p>
+
+<p>1台はSSDなので、適当に固定すれば良いのだが、HDDはそうもいかない。しかも、光学ドライブがあるため、マウントはさらにもうひとつ必要なのだ。</p>
+
+<p>結局は、全てHDDに充てることで解決したが、実は方法はあった。</p>
+
+<p>マウントに関しては<a href="http://www.century.co.jp/products/pc/mobile-rack/bpn-de230ss.html">iStar USA BPN-DE</a>を利用した。</p>
+
+<p>これは、5.25インチベイに固定するHDDラックで、5インチベイx2に対して3.5inch HDDx3を固定できる。
+ガシャポン式で、コネクタはSATA 6Gbps。トレイなし、ホットスワップ非対応だ。</p>
+
+<p>このラックは、SATAコネクタは3本（当然）必要だが、電源コネクタは2つでまかなえる。そのため、これを使うと電源増設が不要だ。</p>
+
+<p>WindowsのHDDの割り当てが1台しかないため、音楽をこちらに移すことは諦めたが、このラックを使って入れ替えれば可能であることに気がついた。</p>
+
+<p>それどころか、入れ替える前提であるならば光学ドライブを残すことすら可能だ。</p>
+
+<p>しかし、どの程度抜き差しして大丈夫なものか、よくわからないため、しょっちゅう交換する使い方は不安がある。</p>
+
+<p>なお、これらの固定方法はやや特殊。ドライブ自体にまずガイドネジを取り付け、ベイ開口部から挿入する、という形だ。
+5インチベイのラックについては、上段が若干ネジ穴位置が低く、ネジを入れてしまうとガイドを通らなかったので、下段のみにネジを入れて固定した。</p>
+
+<p>ネジはシャーシに固定されている。これはProLiant Microserverと同様だ。マイナスドライバーも受け付けるが、基本的にはトルクス。これはProLiant Microserverと規格が同じで、レンチが流用できた。</p>
+
+<h3 id="linux">Linux上での性能</h3>
+
+<p>まず、この通り</p>
+
+<pre><code>$ cpupower frequency-info
+analyzing CPU 0:
+driver: acpi-cpufreq
+CPUs which run at the same hardware frequency: 0
+CPUs which need to have their frequency coordinated by software: 0
+maximum transition latency: 10.0 us.
+hardware limits: 1.60 GHz - 3.19 GHz
+			available frequency steps: 3.19 GHz, 3.19 GHz, 3.06 GHz, 2.93 GHz, 2.79 GHz, 2.66 GHz, 2.53 GHz, 2.39 GHz, 2.26 GHz, 2.13 GHz, 2.00 GHz, 1.86 GHz, 1.73 GHz, 1.60 GHz
+available cpufreq governors: ondemand, performance
+current policy: frequency should be within 1.60 GHz and 3.19 GHz.
+				The governor "ondemand" may decide which speed to use
+				within this range.
+current CPU frequency is 1.60 GHz.
+boost state support:
+	Supported: yes
+	Active: yes
+	25500 MHz max turbo 4 active cores
+	25500 MHz max turbo 3 active cores
+	25500 MHz max turbo 2 active cores
+	25500 MHz max turbo 1 active cores
+</code></pre>
+
+<p>ここで躓かれても困るが。ただ、<code>ondemand</code>と<code>performance</code>しかないのか。</p>
+
+<p>ハイパースレッディングをONにした状態だと、</p>
+
+<pre><code>$ nproc
+8
+</code></pre>
+
+<p>これも当たり前。</p>
+
+<p>実際、感覚としてはA10-7700Kとはまるで違う。
+A10-7700Kは3.4GHzだというのだが、実際に動かしているとほとんどの場合、2.4GHzで動作する。負荷がめいいっぱい高い状態でも2.6GHz、2.8GHzがせいぜいで、フリーズするような状態になってもそんなものだ。</p>
+
+<p>ベンチマークなどで見る性能には、はるか届いていない。というか、モバイル用Celeronのほうがさくさく動く始末だ。</p>
+
+<p>それに対して、Xeonは圧倒的に速い。細かく停止するようなトラブルもない。</p>
+
+<p>メモリは4GBでは圧倒的に足りない。yaourtでビルドできないパッケージが結構ある。
+<code>/etc/yaourtrc</code>で設定すれば回避できるが、結局メモリが足りないという問題の解決にはなっていない。</p>
+
+<p>12GBあれば日常的には問題ない。
+ただし、一時的であれtmpfsに大きなファイルを置くと圧迫される可能性がある。
+とはいえ、実際に使われる範囲としては、6GB前後というのが私の感覚なので、tmpfsに半分とられてもswapもあるし、12GBというのは、おおよそ問題ない気がする。</p>
+
+<p>ただ、そもそも圧迫されている状態になった時にバッファとして使える領域が非常に少ないため、16GBあったほうが安心ではある。</p>
+
+<p>Xeonがとにかく速く、メモリを増設した時のパフォーマンスは本当に感心する。
+それだけ良いようだと、最新のワークステーションはどれほどのものなのか…</p>
+
+<h3 id="quadro-2000--linux">Quadro 2000 と Linux</h3>
+
+<p>さて、問題のQuadroだ。</p>
+
+<p>AMD A10-K7700はAMD R7グラフィックス相当だが、Catalystドライバを使っていても</p>
+
+<ul>
+  <li>セカンダリディスプレイのマウスカーソルが歪む</li>
+  <li>VDPAU/VA-APIともに使用できない</li>
+  <li>Xのパフォーマンスが非常に悪い。描画のもたつき、プチフリーズが多い</li>
+  <li>Chrome系ブラウザが動作しない。画面が表示されたり消えたりする。プロセスが増えるとまずダメ</li>
+  <li>Skypeで画面が歪む。変色し、緑色の線が入る</li>
+  <li>マルチデスクトップは正常に機能しない</li>
+</ul>
+
+<p>これなら安定して動作するIntelグラフィックスのほうがいいのではないか…と思ってしまう。パフォーマンスも非常に悪い。</p>
+
+<p>対するQuadroは、これらの問題が見事なまでに発生しない。
+100時間以上を費やし、動作しない理由の究明に勤しんだVDPAU/VA-APIも、いともあっさりと動いた。動画再生は非常に快適だ。</p>
+
+<p>ただし、VLCで「DRM経由のVA-API」にすると動作しない。「XのVA-API」にする必要がある。</p>
+
+<p>驚いたのはImageMagickの処理が飛躍的に高速化したことだ。
+従来1分は余裕でかかっていた処理が3秒以内に完了する。おそらく、数時間かかっていたmogrifyの負担も著しく軽減されるだろう。</p>
+
+<p>とにかく安定している。問題らしき問題が発生すること自体稀だ。</p>
+
+<p>ただし、デスクトップで動作していたOpera Devloperは動作しない。フリーズしてしまう。また、Chrome系のChromiumなどは動作はするものの、入力に対する反応が著しく遅い。Blinkの神経質さが気になる。</p>
+
+<p>Blink系ブラウザではMaxthonが正常に動作するが、Maxthonは現在AURから落ちてしまっている。旧リポジトリから入手可能だ。</p>
+
+<p>これからは事実上Blink以外の選択肢が失われていくように思うのだが、Blinkの動作の不安定さは非常に気になる。WebKit系は動作するが、非常にもっさりだ。</p>
+
+<h3 id="section-4">結論</h3>
+
+<p>LinuxのグラフィックスボードはQuadro。</p>
+
+<p>AMDのCPUのパフォーマンスが出ない理由はよくわからない。ビデオもCPUも、Windowsではそれほど悪くないように感じるのだ。</p>
+
+<p>ただし、Windowsではオーディオデバイスのほうが見事に落ちまくる。ASIOドライバを使うようなデバイスは、やはりIntelのほうが最適化されているのだろう。AMD CPU不可というものもあるくらいだし、完全な互換性はないのか。</p>
+
+<p>で、AMD APUのパフォーマンスはWindowsの時よりもはるかにしょうもないものに見える。非常にストレスフルな性能だ。</p>
+
+<p>結局のところ、Intel CPU + Quadroという、普通の組み合わせ(Quadroは普通ではないが、Linux的にはむしろ妥当だ)が一番いいようだ。</p>
+
+<p>愛着のある、はじめての自作PCとの比較がこのようなことになって、とても残念だが、だが、このような蓄積は仕事上必要だと思うことにしよう。</p>
+
+<p>高度なことを求める人にLinuxを動かすハードウェアとしてAMD APUは勧められない。</p>
+
+<p>VDPAU/VAAPIが動作しないのは、ディストリビューション的な事情かもしれないが、少なくともマウスカーソルが歪むという問題はディストリビューション問わず発生した。Skypeに関しても同様だ。</p>
+
+<p>これが、Radeon全般の問題なのか、7700K固有の問題なのか、はたまた私の7700Kの問題なのか、あるいはCatalystの問題で将来的に解決されるのか…といったことはわからない。
+ただ、マウスカーソルが歪む問題は、やはりRadeon * CatalystにおいてWindowsでも報告されている。</p>
+
+<p>スペックだけをみればAMDの製品はLinuxのほうを向いているかのようだが、事実はそうではないらしい。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

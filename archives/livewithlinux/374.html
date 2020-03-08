@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-11-15T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-11-15T00:00:00+09:00" />
+    <title>btrfs, その他Manjaroのセッティング - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>btrfs, その他Manjaroのセッティング</h1></header>
+        <article id="MainArticle">
+<h3>btrfs</h3><p>先日のトラブルを乗り越えてbtrfsの作業を完了。</p><p>今回は開いている<tt class="puredoc_pathname">/dev/sdb1</tt>をまずaddし、そして<tt class="puredoc_pathname">/dev/sdd2</tt>をdelete、<tt class="puredoc_pathname">/dev/sdd</tt>をblastして<tt class="puredoc_pathname">/dev/sdd1</tt>をadd、というように繰り返していき、これまで<tt class="puredoc_pathname">/dev/sdd2</tt>, <tt class="puredoc_pathname">/dev/sde2</tt>, <tt class="puredoc_pathname">/dev/sdf2</tt>という構成だったところを、<tt class="puredoc_pathname">/dev/sdb1</tt>, <tt class="puredoc_pathname">/dev/sdd1</tt>, <tt class="puredoc_pathname">/dev/sde1</tt>, <tt class="puredoc_pathname">/dev/sdf1</tt>という構成に変更した。これにより、2TBx3だった3TB RAID1ボリュームは、3TBx4の6TB RAID1ボリュームへと倍増した。この増強により、データ格納もだいぶ安心できる状態になったと言っていいだろう。なお、このあとさらに<code>btrfs filesystem balance /home</code>したあと、念の為<code>btrfs scrub start /home</code>しておいた。</p><p>balanceを<code>watch -n 15 btrfs filesystem show /home</code>しているとかなりおもしろいことがわかる。バラバラにバランスをとるように移動していくのだが、100GBあたりでsdbとsdd、sdeとsdfの容量が同じになり、sdbとsddが同時に減少、sdeとsdfが同時に増加する。つまり、奇数の不均一な容量のディスクが使われている状況では、どこにどうデータがはいっているかというのは入り乱れているのだが、4台でバランスすると、sdbとsdd、sdeとsdfをそれぞれミラーした構成にしたことになる。btrfsはそのようにする必要はないが、可能ならそうしようとする、ということだろう。</p><p>LVMの場合、リバランスはできないし、ZFSでも容量が一定でない奇数のディスクをミラーする、ということ自体ができない。このミラーリングの器用さはbtrfsの大きな魅力だ。対障害性も結構高い。ただ、機能面で安定しない部分があるようだ。普通に使う分には十分安定していると思うが、何かの操作で障害が起きる場合がある。現状、まだバックアップはしておいたほうがよさそうだ。クラウドストレージのほうがいいかもしれないが、TB単位のデータをバックアップすると転送に時間がかかりすぎるだろう。ちなみに、当家のFTTH回線の速度は、下りで300kbps、上りは50kbps程度である。ナロードバンドというやつだ。しかも、何時間も接続できなかったりする。</p><h3>Claws mail or Sylpheed</h3><p>Sylpheedから派生したClaws Mailだが、見た目かなり似ている。何が違うのかよくわからなかったりする。</p><p>もともとはClaws Mailは外部MDAについて新規フォルダを検索すれば自動でサマリを更新してくれたのだが、設定をいじってもフォルダはみつけるがメッセージをみつけない（設定をいじらないとフォルダもみつけない）だが、再構築すると時間がかかるし、しかもClaws Mailは再構築するとフォルダを最後にもっていってしまい、ローカルフォルダが他にもあるとデフォルトのsentやdraftフォルダは最初にあるものが使われてしまう。</p><p>そこでSylpheedを使ってみたのだが、「次へ」でうまく拾ってくれなかったり、フォルダを移動する時の確認を消せない、そもそも新規フォルダを探すことができない、など結構不便。</p><p>機能の違いは、設定メニューがまるで違うことから感じるところもある。細かなところだが、色々違う。好みによるだろうが、Claws MailのほうがSylpheedよりも用意されている可能性が高いので、Claws Mailを使っているほうが移行性が高いのかな、という気はする。</p><h3>MIDI on Manjaro/Arch Linux</h3><p>結局一番簡単なのは、Timidity++とTimidity++ Freepatsをインストールする。そして<tt class="puredoc_pathname">/etc/timidity++/timidity.cfg</tt>に</p><samp style="display: block;white-space: pre-wrap" class="file" title="/etc/timidity++/timidity.cfg">dir /usr/share/timidity/freepats
+source /etc/timidity++/freepats/freepats.cfg
+</samp><p>あとは<samp>timidity -iA</samp>するか、<samp>systemctl start timidity.service</samp>して、<samp>aplaymidi --port 128:0 <var>file</var></samp>するなり、もしくは<samp>timidity -in <var>file</var></samp>するなり、あるいは<samp>timidity  -ig</samp>するなりで演奏できる。</p><p>Fluidsynth+FluidR3も試したが、かなりノイズが乗る上に、音源の質もあまりよくない。Freepatsはそれなりに聞ける。これはほぼArch Linux wikiのままだ。</p><p>FluidR3の音はひどいが、AURにはTitaniumとUnisonも存在。どちらかというと、Unisonのほうが音が良いが、相性は楽曲によるので一概には言えない。TitaniumまたはUnisonならば、曲によってはFreepatsよりもよさそうだ。</p><h3>XFce4 on Manjaro Linux</h3><p>カーソルが正常に表示されるようになったことについてだが、おそらくはXFce Theme Managerを使うとXFce起動時にXFceのX設定を読み込むため、一度画面がリセットされる。これによってカーソルが正常に表示されるようになったのだろあ。</p><p>ちなみに、カーソルテーマはLCD-Toxicにしている。3次元的である上に透過色で、しかも3D的に滑らかなアニメーションを見せる、こんなことできたんだというようなカーソルテーマだ。</p><h3>Conky</h3><p>Conkyを導入しセットアップ。ネットからとってきた<a href="http://epian-wiki.appspot.com/wiki/File:conky_screenshot.004.conkyrc" alt=".conkyrc">.conkyrc</a>をベースにカスタムしてみた。</p><p>フォントは<tt class="puredoc_idname">Mgen+ 2cp</tt>, <tt class="puredoc_idname">Garnet</tt>, <tt class="puredoc_idname">Dejevu Sans Mono</tt>, <tt class="puredoc_idname">Promenade</tt>を要求するので注意されたい。</p><samp style="display: block;white-space: pre-wrap">## General
+background yes
+disable_auto_reload true
+update_interval 5.0
+#update_interval_on_battery 10.0
+total_run_times 0
+double_buffer yes
+text_buffer_size 8192
+
+## Window
+## Window
+own_window yes
+#own_window_type desktop
+#own_window_colour black
+#own_window_argb_visual true
+#own_window_argb_value 100
+own_window_type override
+own_window_transparent yes
+gap_x 1550
+gap_y 20
+minimum_size 350 5
+maximum_width 350
+
+## Behavior
+alignment top_right
+use_spacer none
+format_human_readable yes
+short_units no
+show_graph_range no
+show_graph_scale no
+draw_graph_borders no
+cpu_avg_samples 2
+net_avg_samples 2
+diskio_avg_samples 2
+top_cpu_separate false
+top_name_width 25
+no_buffers no
+
+## Text/Font Settings
+override_utf8_locale yes
+use_xft yes
+xftfont Garnet:size=8
+xftalpha 1.0
+uppercase no
+
+## Border/Shade/Outline
+draw_borders no
+#border_width 1
+#stippled_borders 8
+draw_shades no
+default_shade_color black
+draw_outline yes
+default_outline_color 40b0ff
+
+## Color
+default_color white
+# Title
+color1 0f3074
+# Bar
+color2 2d56ab
+# Top Title
+color3 0f3074
+# Top 1
+color4 fbff8a
+#color5
+#color6
+#color7
+#color8
+#color9
+
+## Template
+# CPU Graph <num> <height> <width>
+template0 ${cpugraph cpu\1 \2,\3 40b0ff 2d56ab  100 -t}${offset -\3} CPU\1: ${cpu cpu\1}%
+# CPU Top <num> &lt;indent1&gt; &lt;indent2&gt; &lt;indent3&gt; &lt;indent4&gt;
+template1 ${top name \1}${goto \2}${top pid \1}${goto \3}${top cpu \1}${goto \4}${top mem \1}${goto \5}${top io_perc \1}
+# Memory Top <num> &lt;indent1&gt; &lt;indent2&gt; &lt;indent3&gt; &lt;indent4&gt;
+template2 ${top_mem name \1}${goto \2}${top_mem pid \1}${goto \3}${top_mem mem_vsize \1}${goto \4}${top_mem mem_res \1}${goto \5}${top_mem mem \1}
+# Disk I/O Graph <device> <type> <height> <width>
+template3 ${diskiograph_\2 \1 \3,\4 40b0ff 2d56ab 10000 -t}${offset -\4} /dev/\1 \2: ${diskio_\2 \1}
+# Disk I/O Top <num> &lt;indent1&gt; &lt;indent2&gt; &lt;indent3&gt; &lt;indent4&gt;
+template4 ${top_io name \1}${goto \2}${top_io pid \1}${goto \3}${top_io io_read \1}${goto \4}${top_io io_write \1}${goto \5}${top_io io_perc \1}
+# Network Graph &lt;ethN&gt; <type> <height> <width>
+template5 ${\2speedgraph \1 \3,\4 40b0ff 2d56ab 1000 -t}${offset -\4} \1 \2: ${\2speed \1}
+# Disk Bar <name> <path>
+template6 \1 ${goto 55} ${fs_used \2}/${fs_size \2} ${goto 150} ${color2} ${fs_bar 6 \2}
+# Load Average Graph <height> <width>
+template7 ${loadgraph \1,\2 40b0ff 2d56ab 4 -t}${offset -\2} Load Average: ${loadavg}${alignr}Processes: ${running_processes}/${processes}
+# Top 5 &lt;template num&gt; &lt;indent1&gt; &lt;indent2&gt; &lt;indent3&gt; &lt;indent4&gt;
+template8 ${color4} ${template\1 1 \2 \3 \4 \5}\n${color} ${template\1 2 \2 \3 \4 \5}\n${color} ${template\1 3 \2 \3 \4 \5}\n${color} ${template\1 4 \2 \3 \4 \5}\n${color} ${template\1 5 \2 \3 \4 \5}
+
+TEXT
+${color1}${font Promenade:style=Regular:size=9}System ${font}${hr}
+${color } ${nodename} - ${sysname} ${kernel} on ${machine}
+${color } Uptime: ${uptime}
+${color1}${font Promenade:style=Regular:size=9}${voffset 3}Processor ${font}${hr}
+#${color } CPU ${freq_g 0}GHz: ${color2}${cpubar cpu0}
+${color } CPU ${freq_g 1}GHz: ${color2}${cpubar cpu1}
+${color } CPU ${freq_g 2}GHz: ${color2}${cpubar cpu2}
+${color } CPU ${freq_g 3}GHz: ${color2}${cpubar cpu3}
+${color } CPU ${freq_g 4}GHz: ${color2}${cpubar cpu4}
+${color }${template0 0 20 325}${voffset -5}
+${color }${template7 20 325}${voffset -5}
+${color3} Command${goto 150}PID${goto 200}%CPU${goto 250}%MEM${goto 300}%I/O
+${color }${template8 1 150 200 250 300}
+${color1}${font Promenade:style=Regular:size=9}${voffset 3}Memory ${font}${hr}
+${color } RAM: ${mem}/${memmax} - ${memperc}%${goto 190}${color2}${membar}
+${color } Swap: ${swap}/${swapmax} - ${swapperc}%${goto 190}${color2}${swapbar}
+${color } B/C: ${buffers}/${cached}
+${color3} Command${goto 150}PID${goto 200}VIRT${goto 250}RES${goto 300}%MEM
+${color }${template8 2 150 200 250 300}
+${color1}${font Promenade:style=Regular:size=9}${voffset 3}Disk${font}${hr}
+${color }${goto 10}${template3 sda Read 20 166}${goto 175}${template3 sda Write 20 166}${voffset -20}
+${color }${goto 10}${template3 sdb Read 20 166}${goto 175}${template3 sdb Write 20 166}${voffset -10}
+${color3} Command${goto 150}PID${goto 200}Read${goto 250}Write${goto 300}%I/O
+${color }${template8 4 150 200 250 300}
+${color }
+${color } ${template6 / /}
+${color } ${template6 /tmp /tmp}
+${color1}${font Promenade:style=Regular:size=9}${voffset 3}Network ${font}${hr}
+${if_up enp4s0}${color }${template5 enp4s0 Down 20 166}${goto 175}${template5 enp4s0 Up 20 166}${voffset -20}${endif}${if_up wlp0s16f0u1}
+${color }${template5 wlp0s16f0u1 Down 20 166}${goto 175}${template5 wlp0s16f0u1 Up 20 166}${voffset -5}${endif}
+${color1}${font Promenade:style=Regular:size=9}${voffset -5}Calendar ${font}${hr}
+${color }${font DejaVu Sans Mono:style=Bold:size=7}${execi 1800 LANG=C cal -3}${font}
+${color1}${font Promenade:style=Regular:size=9}${voffset -5}Yahoo News ${hr}${font}
+${font Mgen+ 2cp:style=Medium:size=7}${rss http://headlines.yahoo.co.jp/rss/all-dom.xml 1 item_titles 10 }${font}
+</samp>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

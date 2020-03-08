@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-02-26T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-02-26T00:00:00+09:00" />
+    <title>縦書きウェブ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>縦書きウェブ</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p><a href="https://harukamy.com">「悠のおはなしのおはなし」というサイト</a>を始めた。</p>
+<p>これは、私が作家として物語について、あるいは物語をつくることについて述べている新しいサイトである。</p>
+<p>主たる話題が美少女ゲーム(=アダルトゲーム=エロゲー)であるため、苦手な人も多かろうし決して閲覧を推奨するものではないのだが(PVを欲しているわけでもないし)、このデザインに関してはかなりがんばったので、その話をChienomiでしたいと思う。</p>
+<h2 id="縦書き">縦書き</h2>
+<h3 id="縦書きプロパティ">縦書きプロパティ</h3>
+<p>CSS3に縦書き関係のプロパティがあることは知っていたのだが、実際試すと随分印象が違った。</p>
+<p>縦書き、あるいは段組というのは昔からあった。</p>
+<p>段組のほうが古く、段組用のタグはHTML4で廃止されてしまった。 「見た目に関わるタグである」ということが理由だったが、その時点でCSSで代替する方法がなく、そもそも段組というのがHTMLにふさわしくないという判断が働いたようであった。 実際、誰も使っていなかったし。</p>
+<p>また、単純に縦書きにすると非常にスクロールが長くなること、そして基点が左上であるため一旦全部右にもっていかなければならならいことからあまり快適性もなかった。</p>
+<p>しかし、CSS3の縦書き+段組であれば、「画面サイズにちょうどよいように段組してくれる」という使いやすさだった。 画面に3段収まるのであれば3段、収まらなければ2段といった感じだ。 これは段の高さだけで、段数自体は無限になる。</p>
+<p>もちろん、段組などしなければ縦書きは横にスクロールする形になる。 これは単純に縦書きか横書きかの違いになるため、考え方としては横書きとまるで変わらない。 しかし、PCの場合マウススクロールの方向がYだけ、タッチパッドでもX方向スクロールは無効であることが多いので、X方向にスクロールするUIというのは大変嫌われる。</p>
+<p>そのため、「縦書きの無限段組」というのは非常に良い挙動だと思う。</p>
+<p>ただ、「ePubみたいにフリックでめくりたい」という要望が出たので、後述するページめくりを入れた。</p>
+<h3 id="不安定な挙動">不安定な挙動</h3>
+<p>理屈上では理想的なのだが、現実としてはやはり「縦書き段組」なんてものをけんしょぅする人が少ないからか、なかなかbuggyである。</p>
+<p>なんといっても、ボックスのサイズ計算、位置計算が全ておかしくなる。そして、段組の計算もおかしい。</p>
+<p>さらに、リサイズ時の段数が読めない。同じサイズにリサイズされても条件によって結果が変わる。</p>
+<p>結局、その抑制のため、幅を取るエレメントを横に並べず、HTML全体を幅90%に制限するという方法をとった。</p>
+<p>なお、FirefoxよりはChromiumのほうが安定して描画してくれる。</p>
+<h2 id="レスポンシブルと4kスケーラブル">レスポンシブルと4kスケーラブル</h2>
+<p>4kの大きいディスプレイを買って感じるのが、「大きな画面を想定していないサイトが多い、ということだ。」 幅が極端にあると、コンテンツは真ん中にちょこんとあるだけ、という状況になりやすい。</p>
+<p>トヨタのウェブサイトは現在は真ん中コンテンツ型で、TGRに関しては写真だけ幅いっぱい、という仕様になっている。</p>
+<p>幅が小さいモバイル系デバイスの設定はしても、幅が大きいデバイスに対する対応というのはちゃんとしていない、という感じだ。</p>
+<p>そこでこれに対する対応として、私は珍しい指定を入れた。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" title="1">body<span class="fu">.article</span> article {</a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="co">/* ... */</span></a>
+<a class="sourceLine" id="cb1-3" title="3">  <span class="kw">font-size</span>: <span class="dv">3</span><span class="dt">vh</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-4" title="4">  <span class="kw">width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-5" title="5">  <span class="kw">max-width</span>: <span class="dv">34</span><span class="dt">em</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-6" title="6">}</a></code></pre></div>
+<p>フォントサイズが画面幅によって決まる、ということである。 このため、大きい画面であればピクセル数によらず文字は大きくなる。 段組の文字数を決める上でも扱いやすい。</p>
+<p>この考え方、今の「振れ幅の大きすぎるディスプレイサイズ」問題に対応できる気がする。</p>
+<p>幅は原則画面いっぱいにしており、幅広ディスプレイにも対応する。 しかし、あまりにも行数が多くなるととても読みづらいため、34行までに制限している。 そのため、さすがに上下タイルとかされると真ん中に置かれてしまうのだが、大画面の最大化ではそうはならない。</p>
+<p>ちなみに、今回行数をどうしようかと思って文庫本を色々数えてみたのだが、16から18行が多く、一部19行というものがあった。 さらに合わせたかったのだが、さすがに幅が少なく、見開き分ということで34行としている。もちろん、これはフォントによって結果が変わるが。</p>
+<h2 id="ui">UI</h2>
+<p>ボックスレイアウトが縦書きすると狂うこと、本好きの感覚としては余計な表示は欲しくないことから、トグルボタンを2つ置く、という方法で対応することにした。 ちなみに、いつも通り、CSSのみの対応である。</p>
+<p>操作できるものが他になければ操作してくれるものなので、割とイケると思っている。 微妙に表示としては邪魔なのだが、それはご愛敬。HTMLを90%にしたおかげで右側が少しあきやすく、この問題は少し軽減されている。</p>
+<p>ハンバーガーメニューはともかく、純粋なトグルというのはあまり見ない設計だが、simplifyという観点から言えば悪くないと思う。</p>
+<p>ハンバーガーメニューですらないUIに気づくかどうかについては… トップページにでも書いておいてなんとかしよう。</p>
+<h2 id="ページめくり">ページめくり</h2>
+<p>前述の通りePubのようにページをめくりたいという要望に応じて、swipeとflick両方に対応する簡単なスクリプトを書いてみた。 jQuery Mobileどころか、jQuery自体使っていない、PureJSによるものである。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">var</span> harukaStoryTeller</a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="cf">if</span> (<span class="op">!</span>harukaStoryTeller) <span class="op">{</span> harukaStoryTeller <span class="op">=</span> <span class="op">{}</span> <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="va">harukaStoryTeller</span>.<span class="at">swiper</span> <span class="op">=</span> <span class="op">{</span> <span class="dt">touchFrom</span><span class="op">:</span> <span class="dv">0</span> <span class="op">};</span></a>
+<a class="sourceLine" id="cb2-4" title="4"></a>
+<a class="sourceLine" id="cb2-5" title="5">(<span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-6" title="6">  <span class="kw">var</span> handleStart <span class="op">=</span> <span class="kw">function</span>(e) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="va">harukaStoryTeller</span>.<span class="at">swiper</span>[<span class="st">&quot;touchFrom&quot;</span>] <span class="op">=</span> <span class="va">e</span>.<span class="at">changedTouches</span>[<span class="dv">0</span>].<span class="at">pageX</span></a>
+<a class="sourceLine" id="cb2-8" title="8">  <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-9" title="9">  </a>
+<a class="sourceLine" id="cb2-10" title="10">  <span class="kw">var</span> handleEnd <span class="op">=</span> <span class="kw">function</span>(e) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-11" title="11">    <span class="kw">var</span> vwidth <span class="op">=</span> <span class="va">window</span>.<span class="at">innerWidth</span></a>
+<a class="sourceLine" id="cb2-12" title="12">    <span class="kw">var</span> moving <span class="op">=</span> <span class="va">harukaStoryTeller</span>.<span class="at">swiper</span>[<span class="st">&quot;touchFrom&quot;</span>] <span class="op">-</span> <span class="va">e</span>.<span class="at">changedTouches</span>[<span class="dv">0</span>].<span class="at">pageX</span> <span class="co">/* Moving value (swipe right to negative) */</span></a>
+<a class="sourceLine" id="cb2-13" title="13"></a>
+<a class="sourceLine" id="cb2-14" title="14">    <span class="kw">var</span> swipe_threshold <span class="op">=</span> vwidth / <span class="dv">3</span></a>
+<a class="sourceLine" id="cb2-15" title="15"></a>
+<a class="sourceLine" id="cb2-16" title="16">    <span class="cf">if</span> (moving <span class="op">&gt;</span> swipe_threshold) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-17" title="17">      <span class="va">window</span>.<span class="at">scrollBy</span>(<span class="dv">0</span><span class="op">,</span> <span class="op">-</span>(<span class="va">window</span>.<span class="at">innerHeight</span> / <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb2-18" title="18">    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> (<span class="op">-</span>moving <span class="op">&gt;</span> swipe_threshold) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-19" title="19">      <span class="va">window</span>.<span class="at">scrollBy</span>(<span class="dv">0</span><span class="op">,</span> (<span class="va">window</span>.<span class="at">innerHeight</span> / <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb2-20" title="20">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-21" title="21">  <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-22" title="22">  </a>
+<a class="sourceLine" id="cb2-23" title="23">  <span class="va">document</span>.<span class="at">addEventListener</span>(<span class="st">&quot;touchstart&quot;</span><span class="op">,</span> handleStart<span class="op">,</span> <span class="kw">false</span>)</a>
+<a class="sourceLine" id="cb2-24" title="24">  <span class="va">document</span>.<span class="at">addEventListener</span>(<span class="st">&quot;touchend&quot;</span><span class="op">,</span> handleEnd<span class="op">,</span> <span class="kw">false</span>)</a>
+<a class="sourceLine" id="cb2-25" title="25"><span class="op">}</span>)()</a></code></pre></div>
+<p>考え方は単純で、タッチ開始時に座標を保持し、タッチ終了時の座標と比較する。 Y軸は普通にスクロールだから、問題にするのはX軸だけ。 差が閾値以上にあればスワイプ、またはフリックしたものとみなす。</p>
+<p>今回、閾値は「画面の1/3以上」とした。意外としっかりとやらないとめくれない。 感触としていまいちなので、今後もっと小さい操作でもめくれるように調整するだろう。</p>
+<p>話をすごく単純化しているが、意外とこれで問題なく動作する。</p>
+<p>1段の高さははっきりしない上に取得もできないので、単純に画面半分をスクロールすることにした。 おまけのようなものなので実用性は状況によってはあまりないが、ないよりはよかろうということでアクセシビリティツールである。</p>
+<h2 id="デザイン">デザイン</h2>
+<p>やや黄色がかった背景とグレーの文字は目に優しく、「本っぽい感触」を求めてみた。 本であればもっと黒いのだが、印刷物よりも画面のほうがはるかにコントラスト比が高いことから、よりグレーにした。</p>
+<p>タイトルロゴは珍しく実用的にfloatが使われている。 最近はfloatは思い込みで横に並べるのに使われがちなので、多分珍しい。 ロゴの配色は「白枠、色付き背景」というライトノベルの背表紙のスタイルに合わせてみた。</p>
+<p>左上に入るページタイトルは、小説の上部に章タイトルが入るスタイルを意識している。</p>
+<p>「本なんて特に有益ではない」「本で勉強する必要はない」「本がありがたく高尚なわけではない」という発言を繰り返しているので誤解されがちなのだけど、私はそもそも本好きで、めちゃくちゃ読むほうだ。 最近は「本が入り切らなくなったので動画を見るようになり、動画に飽きたのでエロゲーをやるようになった」という感じで、割と物語ジャンキーみたいな感じで何かしら物語に触れていたいタイプだったりする。</p>
+<p>本屋にいけば際限なくに時間を消費してしまうからあまりいかないように心がけているし、横浜に図書館がないことは大変嘆いてもいる。</p>
+<p>電子書籍も(普通にPDFなどプレーンな形式で配布してくれるならば)好きだし、紙の本も好きだ。 ただ、どちらかというと私の場合、紙の本なら本棚に入れておけば何の気なしに読んだりするが、電子書籍は明確な動機がないと読まないので、それを理由にどちらかといえば紙の本が好きで、家に無限の広さがあり、引っ越しの手間も考えなくてよいのなら書庫を作って本いっぱい買いたいくらいである。</p>
+<p>本を読むタイプの人間としては、「本っぽさ」というのは長文を読むときには結構欲しい。 流し読み、というか斜め読みするときは横書きが圧倒的に早いけど、物語への没入なら縦書きがいい。</p>
+<p>紙っぽさ。縦書き。本っぽい文字数。本明朝。 これは私のこだわりであり、これをきっかけに「物語を読む」ことが好きな人が増えてくれたらいいなぁ、という気持ちも込められている。</p>
+<p>また、このデザインは、webページのデザインとして上がってきたものを見たときに、「ウェブはかくあらん」みたいな感覚をぶち壊したい、というのもあった。 そもそもそのサイトでは「従来にないデザインの方向性を目指したい」というのがあったのだけど、なぜか「デザイナーから上がってくるwebデザイン」ってすごくありきたりというか、みんな同じようなものを出してくる。(ちなみに、違う感じのを出してくる人は実用性の欠片もないとんでもないものを出してくることが多い。)</p>
+<p>それが常識としてこびりついているのなら、「ウェブはこんなことしたっていいんだよ」というのを声を大にして言いたかった。 だから、常識やお決まりからは思い切りかけ離れたサイトを作りたかったのもあります。それは、ウェブのクリエイティビティを失ったエンジニアに対しても。</p>
+<h2 id="縦書きプロポーショナル">縦書きプロポーショナル</h2>
+<p>今回、<code>vpal</code>を有効にしており、縦書きでプロポーショナルメトリクスが有効になっている。</p>
+<p>徹底して「文庫本っぽく」仕上げているにも関わらず、書籍ではまず見ない縦書きプロポーショナルは、私のちょっとしたチャレンジだ。 これが見やすいかどうか、ぜひ意見を募りたいと思う。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

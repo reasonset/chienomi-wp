@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-12-04T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-12-04T00:00:00+09:00" />
+    <title>Markdownにまつわるお話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Markdownにまつわるお話</h1></header>
+        <article id="MainArticle">
+<h2 id="ことの起こり">ことの起こり</h2>
+<p>なんだか急にMarkdown関連のことが盛り上がってきた。</p>
+<p>Commonmark絡みなのかもしれないけれど、ちょっと私にも言いたいこともある。</p>
+<p><a href="https://twitter.com/tk0miya/status/937716818843648000">Takeshi KOMIYA‏さんによるツイートその1</a></p>
+<blockquote>
+<p>Markdown は記法に限りがあるというシンプルさが強みであり、弱みだよね。表がないのが非常に不満だけど、それ以外は大体これで十分だよね。それ以降、いろんな人がいくつも派生記法を作っているけれど、どれも方言の域を出ていない。脚注や参照はなくても生きていけるんだ。</p>
+</blockquote>
+<p><a href="https://twitter.com/tk0miya/status/937717290841153536">その2</a></p>
+<blockquote>
+<p>もちろん、それで満足が行かない人たちがいるのは知っているし、ある用途 (執筆やら巨大なリファレンスの管理とか) では不十分なのは分かるけど、それは特別なユースケースであって、Markdown のそれから外れているだけなんだよね。そういう人たちは別のものを使う方が幸せになれる</p>
+</blockquote>
+<p>へぇ、テーブルってMarkdownの標準じゃなかったんだぁ…というのはおいといて、私が言いたいのはこんな感じ。</p>
+<blockquote>
+<p>少なくとも私はPandocのMarkdownに9割は満足している。 Kramdownでも良い</p>
+</blockquote>
+<blockquote>
+<p>そして、Markdownの優れているところは単にシンプルたからではない。DocbookやPODやroffやtrfやXMLのようなドキュメントメタフォーマットと比べても多くの人に取って受け入れやすく、だからこそメタフォーマットとして非常によく機能することだ。</p>
+</blockquote>
+<blockquote>
+<p>私には自分で作ったPureDocがある。けれど、Markdownのほうがよく使う。そのほうか変換の余地が大きく汎用性が高い。つまりはドキュメントメタフォーマットとして優れているのだ。 そして、Markdownは処理系依存でもそれほど困らないが、PureDocは他に処理系はない。</p>
+</blockquote>
+<blockquote>
+<p>Markdownの拡張が気に食わない、そんな人はMarkdownでないものを使え、というなら、拡張されたMarkdownはMarkdownではない別のフォーマットだと思えばいいではないか。Markdownを名乗らなければいいのか？それとも、似た記法を使うなんてけしからんということか？</p>
+</blockquote>
+<blockquote>
+<p>MarkdownはHTMLを含めることすら許しているんだ。足りなければ自分で拡張したっていいんだよ。好きなものを使えばいいさ。強制することなんかない。</p>
+</blockquote>
+<blockquote>
+<p>そんなくだらないことで言い争わないで、空を見てご覧よ。今日は満月。天使が降りてきそうな素敵な星空だよ。こんなに月が明るいのに２等星までよくみえる。</p>
+</blockquote>
+<h2 id="ドキュメントメタフォーマット">ドキュメントメタフォーマット</h2>
+<h3 id="とりあえず紹介">とりあえず紹介</h3>
+<p>ブログに書くのだからもう少し補足しよう。</p>
+<p>ドキュメントメタフォーマットというのは、なにか別の文書形式に変換することを前提としたドキュメント形式のことである。</p>
+<p>例えばPODはそれ自体が読みやすいテキストではあるが、「意味付け」ということはできても、それがplain textの状態で「フォーマットすることで意味付けを感じられる」というようなものではない。 PODはトランスレータと呼ばれるソフトウェアに通すことを前提としており、これにより様々な形式に変換する。 対応形式はplain, man, html, latexが標準で付属し、そのほかにも様々な形式に変換可能だ。 Perl cookbookはPODで書かれているという。</p>
+<p>RDocも似たようなもので、こっちはもっと「Wiki」っぽい。 こちらはriと呼ばれるtexinfo形式を標準としているが、HTMLにも変換できる。</p>
+<p>Wiki記法、はてな記法はマークアップ形式だが、あくまでもHTMLに変換することを前提としている。 HTMLよりも楽に書けるとことがその価値であり、「HTMLの簡易記法」であるといえる。</p>
+<p>plain2, reStructuredText, Re:view, AsciiDocはMarkdownに近いものだ。 plain2はLaTeXへの変換に限られているが、ReStructuredTextはSphinxを介して</p>
+<ul>
+<li>HTML</li>
+<li>LaTeX</li>
+<li>ePub</li>
+<li>Texinfo</li>
+<li>man</li>
+<li>plain</li>
+</ul>
+<p>に変換することができ、Re:viewは</p>
+<ul>
+<li>EPUB</li>
+<li>PDF (LaTeX)</li>
+<li>InDesign (IDGXML)</li>
+<li>Markdown</li>
+<li>plain text (TOPBuilder Text Markup Language)</li>
+</ul>
+<p>asciidocは、(公式プロセッサではなく)asciidoctorが</p>
+<ul>
+<li>HTML (HTML5)</li>
+<li>XHTML (XHTML5)</li>
+<li>DocBook (DocBook5, DocBook 4.5)</li>
+<li>manpage</li>
+<li>PDF</li>
+<li>ePub 3</li>
+<li>LaTeX</li>
+<li>Mallard</li>
+</ul>
+<p>に変換する。</p>
+<p>これらのフォーマットは「そのフォーマットをplain textとして書いて、他の形式に変換する」ことを前提としているのだ。</p>
+<p>ちなみに、これから執拗にDocBookの話をするが、DocBookもまた他の形式に変換するためのドキュメントメタフォーマットなのだが、「XMLまたはSGMLで書かれている」という特徴がある。 はっきり言えば、前述の形式と比べて圧倒的に読みにくく、書きにくい。 前述のフォーマットがHTMLよりも簡易な記述法を使っているのに対して、むしろODFやHTML, EPUBのようなドキュメント形式として作られたものだと考えたほうが良い。</p>
+<p>だが、DocBookに執拗に言及するのは、DocBookが技術文書の形式として普及したからであり、かつトランスレータが多様であるからだ。標準処理系で</p>
+<ul>
+<li>HTML</li>
+<li>PostScript</li>
+<li>PDF</li>
+<li>RTF</li>
+<li>DVI</li>
+<li>plain</li>
+</ul>
+<p>に対応している。</p>
+<p>ちなみに、PureDocというのは私が作ったもので、RubyをベースとしたDSLである。 これは、Markdownのようなフォーマットが目指しているものとはちょっと方向性が違う。HTMLよりも簡易な記述とHTMLよりも強力な表現を求めており、実際変換したものはHTMLを拡張したものになる(XMLネームスペースを使って独自のタグを追加する)。</p>
+<p>RubyのDSLであるため、「ロジックを含めた記述ができる」というのがポイントになっている。</p>
+<h3 id="読みやすいか">読みやすいか??</h3>
+<p>まず言っておくが、どのフォーマットが優れているかということに関しては、もはや宗教であり、好みによる。</p>
+<p>個人的にはReStructuredTextはかなり好きだ。 plain textの状態でも読みやすいし、表現力も高い。 Python(私は好きでない)のくせにやるじゃないか、と思う。</p>
+<p>Re:View形式と、asciidoc形式はあまり好きではない。 PureDocがそんな感じじゃないかというかもしれないが、 plain textとしての自然さがないのだ。</p>
+<p>例えば強調は、MarkdownやReStructuredTextでは</p>
+<pre class="sourceCode rest" id="cb1"><code class="sourceCode rest"><a class="sourceLine" id="cb1-1" data-line-number="1">*強調されたテキスト*</a></code></pre>
+<p>となるが、Re:Viewは</p>
+<pre class="review"><code>@&lt;em&gt;{強調されたテキスト}</code></pre>
+<p>であり、asciidocには強調という概念がない。 (asciidocは「見た目」での定義であり、どちらかというとTeXなどに近い)</p>
+<p>PureDocでは</p>
+<pre class="sourceCode ruby" id="cb3"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" data-line-number="1">e <span class="st">&quot;強調されたテキスト&quot;</span></a></code></pre>
+<p>となる。DocBook/XMLは完全に技術マニュアル用であり、そもそも「エレメントを定義しろ」とあるので、こちらも強調はない。 HTMLでは</p>
+<pre class="sourceCode html" id="cb4"><code class="sourceCode html"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">&lt;em&gt;</span>強調されたテキスト<span class="kw">&lt;/em&gt;</span></a></code></pre>
+<p>となる。RDocも見た目定義だが、一応「イタリックにすると<code>i</code>ではなく<code>em</code>を使う」仕様なので</p>
+<pre class="rdoc"><code>_強調されたテキスト_</code></pre>
+<p>となる。PODにも強調はなく、一応はイタリックを強調としているので</p>
+<pre class="pod"><code>I&lt;強調されたテキスト&gt;</code></pre>
+<p>となる。</p>
+<p>好みはともかくとして、ドキュメントメタフォーマットとしては「読みやすさ」は「表現力」に並ぶ重要な価値だ。 なぜならば、ドキュメントメタフォーマットはそもそもMicrosoft Word形式などのプロプライエタリフォーマットに対するアンチテーゼとしての意味合いがあるからだ。</p>
+<p>そして、同時に「書きやすい」ことは、HTMLが簡易なマークアップ言語とはいえ、「普通の人が書くにはハードルが高い」という側面があったためで、より誰にでもかけて、HTMLのように面倒な(タグ表現が妙に長い上に、「なぜ終端にまでタグを書かなければいけないのか」という冗長さを避けたかったということから来ているように思う。</p>
+<p>そもそも「書きやすいフォーマット」というのはWiki記法から流行り始めたように思うし、 徐々にブログなどでもHTMLではなくより簡易な記法でマークアップを可能にした。</p>
+<h3 id="ドキュメント形式なのにロジックがあるpuredoc">ドキュメント形式なのにロジックがあるPureDoc</h3>
+<p>ちなみに、PureDocはRuby DSLであるため、</p>
+<pre class="sourceCode ruby" id="cb7"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dv">3</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">  p { <span class="st">&quot;Hello!&quot;</span> }</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw">end</span></a></code></pre>
+<p>なんてことができ、この結果</p>
+<pre><code>&lt;p&gt;Hello!&lt;/p&gt;
+&lt;p&gt;Hello!&lt;/p&gt;
+&lt;p&gt;Hello!&lt;/p&gt;</code></pre>
+<p>という出力が得られる。 全く一般向けではない仕様だ。</p>
+<p>さらに言えばZshで書かれたPureDoc Zのほうは</p>
+<pre class="sourceCode zsh" id="cb9"><code class="sourceCode zsh"><a class="sourceLine" id="cb9-1" data-line-number="1">repeat 3</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">  p Hello</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="kw">done</span></a></code></pre>
+<p>とすれば同じような結果が得られる。 これを「読みやすい」と思う人はどうかしていると思う。 PureDocは「書きやすい」ようにはしているが、「読みやすい」ようにはしていない。</p>
+<p>PureDocはほぼすべてのテキスト系HTMLタグを使用することができ、かつオプションも指定できる。 さらにnoteなども備えていて、「HTML以上」であることが前提だ。 実のところ「ロジックで書ける」のも「HTML以上」の一部であり、「仕様」だったりする。</p>
+<p>PureDocは<code>instance_eval</code>を使ってRubyコードとして評価しているし、PureDoc Zに至ってはドキュメント中でライブラリをincludeすることでDSL的に使うための語彙がshell functionとして追加されるだけのものだ。</p>
+<h3 id="メタフォーマットとしての価値">「メタフォーマット」としての価値</h3>
+<p>WikiなどはHTMLを簡単に書くためのものなのだから、特に変換先としての意味はないのだが、 メタフォーマットとしての価値は、「一度書けば表示向けにも印刷向けにもできる」ということにある。 基本的にはHTMLとPDFにできれば良いだろうという考え方が成り立つのだが、例えば「自分はコマンドドリブンなマークアップで書けば良いけれど、みんなはWordだからDocxで吐きたい」というケースはあるものであり、多様なフォーマットでの出力というのは割と重要な価値である。</p>
+<p>実は、私はMarkdown/Pandocと出会うまでずっとPODで書いていた。 PODの多彩な変換形式に助けられてきたからだ。</p>
+<p>だが、PODは純粋に汎用というわけではなかったし、 「DOCよりも多くのフォーマットに変換でき、より汎用性と表現力がある形式」を求めていた。</p>
+<p>Pandocは極めて強力な変換ツールであり、入力形式はMarkdownに限ったわけではないのだが、 一応、Markdownを軸にしている…のだと思う。</p>
+<p>そのため、PandocをMarkdownツールだと考えれば、Markdownは圧倒的なアドバンテージがある。 (もちろん、PandocがReStructuredTextをMarkdownと同等に変換できるのであれば、特にMarkdownにアドバンテージがあるわけではなくなる)</p>
+<p>実はPandocは多彩なフォーマットが仇となり、適切に変換されないケースがそこそこある。 さすがに完璧に…というのは相当難しいのだろう。</p>
+<p>Markdownにはもうひとつ、様々な処理系があるということがある。 KramdownはRubyで書かれており、Rubyプログラムにおいて使いやすい処理系だ。 KramdownもLaTeXへの出力に対応しており、割と使いやすい。</p>
+<h2 id="方言の話">方言の話</h2>
+<p>Kramdownがinput formatとして</p>
+<ul>
+<li>Kramdown</li>
+<li>Markdown</li>
+<li>GitHub Flavored Markdown</li>
+</ul>
+<p>の3つを挙げていることに既に闇を感じるが、 実は処理系それぞれがMarkdownを拡張していて、一口にMarkdownといっても書き方に互換性がない、という問題が存在する。 冒頭で言及されていたのはそういうことだろう。</p>
+<p>だが、それほど問題があるとは思わない。</p>
+<p>まず、「多彩な処理系があるマークアップ言語」自体珍しく、Re:Viewなんてほとんどないし、ReStructuredTextだってそう多くはない。 なので、「特定の処理系向けに書かれたMarkdown」がそんなに問題なのか、という疑問がまずある。</p>
+<p>さらに、MarkdownはGFMとPHP Markdown Extraが普及していて、これらの記法はだいたい通用する。 だから、純粋なMarkdownでは表現力はかなり限られるが、これらの記法を取り込めばかなりの表現力を持つし、これらの記法を取り込んでなお複数の処理系で取り扱うことができるのだ。</p>
+<p>拡張記法のせいで無駄に「意味」をとられるのが気に入らないのであれば、 KramdownのようにMarkdown Standardに従った処理をできる処理系を使えば良い。</p>
+<h2 id="markdownが良いという話">Markdownが良いという話</h2>
+<p>Markdownの記法が完璧だとは思わないが、少なくともPandoc Markdownは表現力にほとんど不満はないし、Pandocの変換フォーマットにも不足はない。</p>
+<p>Markdownという記法について「及第点」で、変換という実用面に不満がないのだから、 それで文句を言うべきことなどない。</p>
+<p>だから、別に「Markdownじゃ足りない」というのであれば拡張すれば良いし、それが許されてもいる。 拡張されたMarkdownを使ってはいけないということはないだろうし、素のMarkdownと拡張Markdownは別物だと考えれば使い分けだって成立する。</p>
+<p>あるいは、「簡素さ優先のMarkdown」と「高機能なGFM」のように考えればよいではないか、ということだ。</p>
+<p>無理に「Markdownとはこうだ」ということを押し付け合う必要もないし、Markdownはいままでの苦痛を緩和してくれる、「良いもの」なのだ。</p>
+<p>そうでないというのならば、試しに大量のドキュメントをDocBookで書いてみればいい。 DocBookは確かに技術文書を書くのに適しているが、相当に苦痛だろう。 書く量が膨大で、しかもテキストはほとんどエレメントに埋もれてしまう。</p>
+<p>別にHTMLで書いても構わない。 Markdownよりも優れていると思うのであれば。</p>
+<p>Markdownが好きで、しかし機能が足りないから拡張しようという気持ちはなにも間違っていないし、それはまた別のものだと考えればごく自然なものなのだ。 方言があってはいけないというものではないし、が方言があったところでMarkdownは十分に共通性があると思う。</p>
+<p>このブログもMarkdownで書いて、Kramdownで変換している。</p>
+<p>ツールや記法でいがみあうことなどなにもない。 誰かに何かを強制する必要などないのだ。 あなたが幸せになるように使えばいい。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

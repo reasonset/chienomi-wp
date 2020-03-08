@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-11-22T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-11-22T00:00:00+09:00" />
+    <title>久しぶりのPerlの使い心地は - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>久しぶりのPerlの使い心地は</h1></header>
+        <article id="MainArticle">
+<p>Perl 5はもうすっかり廃れてしまった言語で、Perlが好きな私も最近はあまり長いプログラムは書かなくなっていた。</p>
+<p>Perl自体が滅びたとか、恥ずかしいような風潮もあるのだけれども、LinuxerにとってはSedやAwkを発展させたさらなる便利ツールなので、Perlが活用できていないというのはコマンドライン活用が下手ということになるので、そっちのほうがだいぶ恥ずかしい話になる。</p>
+<p>とはいえ、そういう日常的な作業としては長くても50行いかないような話であるため、プログラミングらしいプログラミングというのはPerlで行うことはごく少なくなってきている。 あえてPerlで書くことが好ましい状況というのは、<code>$_</code>をどれだけ多用するかという問題だし、そうなると長いコードを書くにはとても向かない状況が出来上がる。</p>
+<p>そのため、「汚くてもいいのでインスタントに書く」ときだけPerlを使うようになるし、そもそもほとんどの場合ワンライナーで使うことになる。</p>
+<p>こうなってくるとそれなりの長さのプログラムをPerlで書くという機会はめっきりなくなってしまい、50行を越えるプログラムを使うということは稀になってしまっていた。 50行に満たないプログラムなら、グローバル変数や雑な変数乱造は普通にあるし、サブルーチンやリファレンス、オブジェクトなどを使う機会はなかった。</p>
+<p>だが、久しぶりに仕事で集中的にPerlを触った。 が、なかなか手ごわかった。</p>
+<p>一番つらかったのは「デリファレンスの不明瞭さ」だ。</p>
+<p>Rubyで言うと次のようなコード</p>
+<pre class="sourceCode ruby" id="cb1"><code class="sourceCode ruby"><div class="sourceLine" id="cb1-1" data-line-number="1">result_list.each <span class="kw">do</span> |one_result|</div>
+<div class="sourceLine" id="cb1-2" data-line-number="2">  fname = one_result[<span class="st">:fname</span>]</div>
+<div class="sourceLine" id="cb1-3" data-line-number="3">  one_result.each <span class="kw">do</span> |match|</div>
+<div class="sourceLine" id="cb1-4" data-line-number="4">    linenum = match[<span class="st">:linenum_from</span>] + <span class="dv">1</span></div>
+<div class="sourceLine" id="cb1-5" data-line-number="5">    match[<span class="st">:lines</span>].each <span class="kw">do</span> |line|</div>
+<div class="sourceLine" id="cb1-6" data-line-number="6">      printf <span class="st">&#39;%d %s&#39;</span>, linenum, line</div>
+<div class="sourceLine" id="cb1-7" data-line-number="7">      linenum += <span class="dv">1</span></div>
+<div class="sourceLine" id="cb1-8" data-line-number="8">    <span class="kw">end</span></div>
+<div class="sourceLine" id="cb1-9" data-line-number="9">  <span class="kw">end</span></div>
+<div class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">end</span></div></code></pre>
+<p>Perlではこうなった。</p>
+<pre class="sourceCode perl" id="cb2"><code class="sourceCode perl"><div class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">foreach</span> <span class="kw">my</span> <span class="dt">$one_result</span> (<span class="dt">@</span>{<span class="dt">$result_list</span>}) {</div>
+<div class="sourceLine" id="cb2-2" data-line-number="2">  <span class="kw">my</span> <span class="dt">$fname</span> = <span class="dt">$</span>{<span class="dt">$one_result</span>}{fname};</div>
+<div class="sourceLine" id="cb2-3" data-line-number="3">  <span class="kw">foreach</span> <span class="kw">my</span> <span class="dt">$match</span> (<span class="dt">@</span>{<span class="dt">$</span>{<span class="dt">$one_result</span>}{result}}) {</div>
+<div class="sourceLine" id="cb2-4" data-line-number="4">    <span class="kw">my</span> <span class="dt">$linenum</span> = <span class="dt">$</span>{<span class="dt">$match</span>}{linenum_from} + <span class="dv">1</span>;</div>
+<div class="sourceLine" id="cb2-5" data-line-number="5">    <span class="kw">foreach</span> <span class="kw">my</span> <span class="dt">$line</span> (<span class="dt">@</span>{<span class="dt">$</span>{<span class="dt">$match</span>}{lines}}) {</div>
+<div class="sourceLine" id="cb2-6" data-line-number="6">      FH-&gt;<span class="fu">printf</span>(<span class="kw">&#39;</span><span class="st">%d %s</span><span class="kw">&#39;</span>, <span class="dt">$linenum</span>, <span class="dt">$line</span>);</div>
+<div class="sourceLine" id="cb2-7" data-line-number="7">      <span class="dt">$linenum</span>++;</div>
+<div class="sourceLine" id="cb2-8" data-line-number="8">    }</div>
+<div class="sourceLine" id="cb2-9" data-line-number="9">  }</div>
+<div class="sourceLine" id="cb2-10" data-line-number="10">}</div></code></pre>
+<p>なにをどうデリファレンスするか、が複雑すぎて極めて混乱した。 単純にこれはリファレントを得たいということを実現できる仕組みになっていないのだ。 このあたりはもう少し美しい解法があってもよかったのではないかと思う。 Perl4との互換性から生まれた仕様という気もするが、このあたりの仕様がぐちゃぐちゃなPHPよりもひどい。</p>
+<p>また、先のブログでも書いたWindows環境でのUnicodeファイル問題</p>
+<pre class="sourceCode perl" id="cb3"><code class="sourceCode perl"><div class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">open</span>(FH, <span class="kw">&quot;</span><span class="st">&gt;</span><span class="kw">&quot;</span>, <span class="kw">&quot;</span><span class="st">ภาษาไทยファイル名</span><span class="kw">&quot;</span>);</div></code></pre>
+<p>これが文字化けるのだ。Rubyだと問題ない。</p>
+<pre class="sourceCode ruby" id="cb4"><code class="sourceCode ruby"><div class="sourceLine" id="cb4-1" data-line-number="1"><span class="dt">File</span>.open(<span class="st">&quot;ภาษาไทยファイル名&quot;</span>, <span class="st">&quot;w&quot;</span>)</div></code></pre>
+<p>もっとも、RubyはMinGWで動作するし、PerlでもCygwinでは問題ないので、ここはPerlの問題とは違うかもしれない。 ただ、全体的にPerlが「アメリカ人の感覚だなぁ」と思うことはある。 優れていたはずの文字エンコーディングに対するサポートも、ちょっと甘い。</p>
+<p>Perlの文字列操作は割と独特。 PerlはUCSを採用し、内部エンコーディングにUTF-8、内部改行文字にLFを採用している。 そして、「文字ベースで処理するにも関わらず、文字列としてバイナリがデフォルト」。</p>
+<p>次の場合はいずれもバイナリ文字列となる。</p>
+<pre class="sourceCode perl" id="cb5"><code class="sourceCode perl"><div class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">my</span> <span class="dt">$str1</span> = <span class="kw">&quot;</span><span class="st">こんにちは世界</span><span class="kw">&quot;</span>;</div>
+<div class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">my</span> <span class="dt">$str2</span> = &lt;&gt;;</div>
+<div class="sourceLine" id="cb5-3" data-line-number="3"></div>
+<div class="sourceLine" id="cb5-4" data-line-number="4"><span class="fu">open</span>(FH, <span class="kw">&quot;</span><span class="st">&lt;</span><span class="kw">&quot;</span>, <span class="kw">&quot;</span><span class="st">somefile</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">my</span> <span class="dt">$str3</span> = <span class="kw">&lt;FH&gt;</span>;</div>
+<div class="sourceLine" id="cb5-6" data-line-number="6"><span class="fu">close</span>(FH);</div></code></pre>
+<p>次のようにすればいずれも内部文字列となる。</p>
+<pre class="sourceCode perl" id="cb6"><code class="sourceCode perl"><div class="sourceLine" id="cb6-1" data-line-number="1"><span class="fu">use</span> <span class="kw">utf8</span>;</div>
+<div class="sourceLine" id="cb6-2" data-line-number="2"><span class="kw">my</span> <span class="dt">$str1</span> = <span class="kw">&quot;</span><span class="st">こんにちは世界</span><span class="kw">&quot;</span>;</div>
+<div class="sourceLine" id="cb6-3" data-line-number="3"></div>
+<div class="sourceLine" id="cb6-4" data-line-number="4"><span class="fu">binmode</span>(STDIN, <span class="kw">&quot;</span><span class="st">:utf8</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb6-5" data-line-number="5"><span class="kw">my</span> <span class="dt">$str2</span> = &lt;&gt;;</div>
+<div class="sourceLine" id="cb6-6" data-line-number="6"></div>
+<div class="sourceLine" id="cb6-7" data-line-number="7"><span class="fu">open</span>(FH, <span class="kw">&quot;</span><span class="st">&lt;:utf8</span><span class="kw">&quot;</span>, <span class="kw">&quot;</span><span class="st">somefile</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb6-8" data-line-number="8"><span class="kw">my</span> <span class="dt">$str3</span> = <span class="kw">&lt;FH&gt;</span>;</div>
+<div class="sourceLine" id="cb6-9" data-line-number="9"><span class="fu">close</span>(FH);</div>
+<div class="sourceLine" id="cb6-10" data-line-number="10"></div>
+<div class="sourceLine" id="cb6-11" data-line-number="11"><span class="fu">use</span> <span class="fu">open</span> IN =&gt; <span class="kw">&quot;</span><span class="st">:utf8</span><span class="kw">&quot;</span>;</div>
+<div class="sourceLine" id="cb6-12" data-line-number="12"></div>
+<div class="sourceLine" id="cb6-13" data-line-number="13"><span class="fu">open</span>(FH, <span class="kw">&quot;</span><span class="st">&lt;</span><span class="kw">&quot;</span>, <span class="kw">&quot;</span><span class="st">somefile</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb6-14" data-line-number="14"><span class="kw">my</span> <span class="dt">$str4</span> = <span class="kw">&lt;FH&gt;</span>;</div>
+<div class="sourceLine" id="cb6-15" data-line-number="15"><span class="fu">close</span>(FH);</div></code></pre>
+<p>文字列は「バイナリ」か「内部文字列」かの2種類だ。 内部文字列はUTF-8+LFになっているので、そのまま出力すると元の文字エンコーディングに関わらずUTF-8で出力される。</p>
+<pre class="sourceCode perl" id="cb7"><code class="sourceCode perl"><div class="sourceLine" id="cb7-1" data-line-number="1"><span class="fu">open</span>(FH, <span class="kw">&quot;</span><span class="st">&lt;:encode(euc-jp):crlf</span><span class="kw">&quot;</span>, <span class="kw">&quot;</span><span class="st">somefile</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb7-2" data-line-number="2"><span class="kw">my</span> <span class="dt">$str</span> = <span class="kw">&lt;FH&gt;</span></div>
+<div class="sourceLine" id="cb7-3" data-line-number="3"><span class="fu">close</span>(FH)</div>
+<div class="sourceLine" id="cb7-4" data-line-number="4"></div>
+<div class="sourceLine" id="cb7-5" data-line-number="5"><span class="fu">print</span> <span class="dt">$str</span>;    <span class="co"># 入力はEUC-JPだったけれども、「内部文字列をそのまま出力」するとUTF-8になる</span></div></code></pre>
+<p>Perlは文字列操作を常に正規表現で行う。 固定文字列検索は次のような具合になる。</p>
+<pre class="sourceCode perl" id="cb8"><code class="sourceCode perl"><div class="sourceLine" id="cb8-1" data-line-number="1"><span class="dt">$str</span> =~ <span class="kw">/</span><span class="ch">\Q</span><span class="ot">こ.ん.に.ち.は</span><span class="ch">\E</span><span class="kw">/</span>;</div></code></pre>
+<p>あるいは</p>
+<pre class="sourceCode perl" id="cb9"><code class="sourceCode perl"><div class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">my</span> <span class="dt">$search_q</span> = <span class="fu">quotemeta</span>(<span class="kw">&quot;</span><span class="st">こ.ん.に.ち.は</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb9-2" data-line-number="2"><span class="dt">$str</span> =~ <span class="kw">/</span><span class="dt">$search_q</span><span class="kw">/</span>;</div></code></pre>
+<p>きちんと内部文字列にしておかないと次のようなコードは失敗する。</p>
+<pre class="sourceCode perl" id="cb10"><code class="sourceCode perl"><div class="sourceLine" id="cb10-1" data-line-number="1"><span class="dt">$str</span> =~ <span class="kw">tr</span><span class="ot">/Ａ-Ｚ/A-Z/</span>;</div></code></pre>
+<p>Perlでは「バイナリ」「内部文字列」と言っているが、その実ASCIIとUTF-8だったりする。 内部文字列フラグがない文字列は、ASCII前提の頭で処理されるのだ。</p>
+<p>そして、困ったことにPerlでは内部文字列フラグつきの文字列をバイナリに戻す方法がない。 文字列を内部文字列化することはできる。</p>
+<pre class="sourceCode perl" id="cb11"><code class="sourceCode perl"><div class="sourceLine" id="cb11-1" data-line-number="1"><span class="fu">use</span> Encode <span class="kw">&#39;</span><span class="st">decode</span><span class="kw">&#39;</span>;</div>
+<div class="sourceLine" id="cb11-2" data-line-number="2"></div>
+<div class="sourceLine" id="cb11-3" data-line-number="3"><span class="kw">my</span> <span class="dt">$str</span> = &lt;&gt;;</div>
+<div class="sourceLine" id="cb11-4" data-line-number="4"><span class="kw">my</span> <span class="dt">$internal_str</span> = decode(<span class="kw">&quot;</span><span class="st">UTF-8</span><span class="kw">&quot;</span>, <span class="dt">$str</span>);</div></code></pre>
+<p>ただし、このとき必ず変換される。 すでにUTF-8であると言えば変換されないわけではなく、 UTF-8として不正な文字は<code>?</code>にされてしまう。</p>
+<p><code>encode</code>した文字列はバイナリであるが、これも変換を伴う。なので、次のコードではASCIIに変換しようとして、いずれも変換できないために出力は<code>??</code>となる。</p>
+<pre class="sourceCode perl" id="cb12"><code class="sourceCode perl"><div class="sourceLine" id="cb12-1" data-line-number="1"><span class="fu">use</span> Encode <span class="kw">qw/</span>encode decode<span class="kw">/</span>;</div>
+<div class="sourceLine" id="cb12-2" data-line-number="2"></div>
+<div class="sourceLine" id="cb12-3" data-line-number="3"><span class="kw">my</span> <span class="dt">$str</span> = <span class="kw">&quot;</span><span class="st">世界</span><span class="kw">&quot;</span>;</div>
+<div class="sourceLine" id="cb12-4" data-line-number="4"><span class="kw">my</span> <span class="dt">$utf</span> = decode(<span class="kw">&quot;</span><span class="st">UTF-8</span><span class="kw">&quot;</span>, <span class="dt">$str</span>);</div>
+<div class="sourceLine" id="cb12-5" data-line-number="5"><span class="kw">my</span> <span class="dt">$asc</span> = encode(<span class="kw">&quot;</span><span class="st">ASCII</span><span class="kw">&quot;</span>, <span class="dt">$utf</span>);</div>
+<div class="sourceLine" id="cb12-6" data-line-number="6"></div>
+<div class="sourceLine" id="cb12-7" data-line-number="7"><span class="fu">print</span> <span class="dt">$asc</span>;</div></code></pre>
+<p>内部文字列として処理したあとURIエンコーディングを行う必要があったため、怪しげな超絶技法を駆使したりした。</p>
+<pre class="sourceCode perl" id="cb13"><code class="sourceCode perl"><div class="sourceLine" id="cb13-1" data-line-number="1">{</div>
+<div class="sourceLine" id="cb13-2" data-line-number="2">  <span class="fu">use</span> <span class="kw">bytes</span>;</div>
+<div class="sourceLine" id="cb13-3" data-line-number="3">  <span class="dt">$qword</span> =~ <span class="kw">s/</span><span class="ch">(</span><span class="bn">\W</span><span class="ch">)</span><span class="ot">/&quot;%&quot;.uc</span><span class="ch">(</span><span class="ot">unpack</span><span class="ch">(</span><span class="ot">&quot;H2&quot;,</span><span class="dt">$1</span><span class="ch">))</span><span class="ot">/eg;</span></div>
+<div class="sourceLine" id="cb13-4" data-line-number="4"><span class="ot">}</span></div></code></pre>
+<p>だが、UCSとして文字列を扱うための機能自体は備わっている、ということを感じる。 一応固定文字列検索を<code>index</code>で行う方法もある。</p>
+<pre class="sourceCode perl" id="cb14"><code class="sourceCode perl"><div class="sourceLine" id="cb14-1" data-line-number="1"><span class="fu">use</span> <span class="kw">utf8</span>;</div>
+<div class="sourceLine" id="cb14-2" data-line-number="2"><span class="fu">binmode</span>(STDIN, <span class="kw">&quot;</span><span class="st">:utf8</span><span class="kw">&quot;</span>);</div>
+<div class="sourceLine" id="cb14-3" data-line-number="3"></div>
+<div class="sourceLine" id="cb14-4" data-line-number="4"><span class="kw">while</span>(&lt;&gt;) {</div>
+<div class="sourceLine" id="cb14-5" data-line-number="5">  <span class="kw">if</span> (<span class="fu">index</span>(<span class="dt">$_</span>, <span class="kw">&quot;</span><span class="st">こんにちは</span><span class="kw">&quot;</span>) &gt;= <span class="dv">0</span>) { <span class="fu">print</span>; }</div>
+<div class="sourceLine" id="cb14-6" data-line-number="6">}</div></code></pre>
+<p><code>substr</code>は実用的ではないほど使いにくいため、<code>s///</code>を使わざるをえないが。 文字列操作は割と悪くない。Perlの得意分野だからか。 もっといまいちな文字列の取り扱いをする言語は多く、古いわりにはまっとうに動作する。</p>
+<p>だが、文字列を問答無用で破壊的に変更してしまうのはちょっと辛いものがある。 例えば次のようなケースでは変更前の値を変更後に使用する必要があるためコピーが必要になる。</p>
+<pre class="sourceCode perl" id="cb15"><code class="sourceCode perl"><div class="sourceLine" id="cb15-1" data-line-number="1"><span class="kw">sub </span><span class="fu">get_and_save</span>(<span class="dt">$</span>) {</div>
+<div class="sourceLine" id="cb15-2" data-line-number="2">  <span class="kw">my</span> <span class="dt">$qval</span> = <span class="dt">$_</span>[<span class="dv">0</span>];</div>
+<div class="sourceLine" id="cb15-3" data-line-number="3">  <span class="kw">my</span> <span class="dt">$quri</span> = <span class="dt">$qval</span>;</div>
+<div class="sourceLine" id="cb15-4" data-line-number="4"></div>
+<div class="sourceLine" id="cb15-5" data-line-number="5">  {</div>
+<div class="sourceLine" id="cb15-6" data-line-number="6">    <span class="fu">use</span> <span class="kw">bytes</span>;</div>
+<div class="sourceLine" id="cb15-7" data-line-number="7">    <span class="dt">$quri</span> =~ <span class="kw">s/</span><span class="ch">(</span><span class="bn">\W</span><span class="ch">)</span><span class="ot">/&quot;%&quot;.uc</span><span class="ch">(</span><span class="ot">unpack</span><span class="ch">(</span><span class="ot">&quot;H2&quot;,</span><span class="dt">$1</span><span class="ch">))</span><span class="ot">/eg;</span></div>
+<div class="sourceLine" id="cb15-8" data-line-number="8"><span class="ot">  }</span></div>
+<div class="sourceLine" id="cb15-9" data-line-number="9"></div>
+<div class="sourceLine" id="cb15-10" data-line-number="10"><span class="ot">  getstore</span><span class="ch">(</span><span class="ot">&quot;http://www.example.org/board</span><span class="ch">?</span><span class="ot">q=</span><span class="dt">$quri</span><span class="ot">&quot;, &quot;</span><span class="ch">$</span><span class="ot">{qval}.html&quot;</span><span class="ch">))</span><span class="ot">;</span></div>
+<div class="sourceLine" id="cb15-11" data-line-number="11"><span class="ot">}</span></div></code></pre>
+<p>破壊的に変更したくない時は決して珍しくないので、Perlを微妙に感じる場合のひとつだ。</p>
+<p>ちなみに、文字列の扱いに関してはRubyはCSIを採用するため「変わっている」。</p>
+<p>文字列にはエンコーディングに関する情報を与えることができるが、 特にこの場合に変換はしない。</p>
+<pre class="sourceCode ruby" id="cb16"><code class="sourceCode ruby"><div class="sourceLine" id="cb16-1" data-line-number="1">str.force_encoding(<span class="st">&quot;EUC-JP&quot;</span>)</div></code></pre>
+<p>Ruby2.0からは文字列は<code>default_external</code>の値のエンコーディングだとみなされる。ロケールに従うため、ここでは<code>ja_JP.UTF-8</code>を使用していることからUTF-8とみなされ、 変換しようとするとUTF-8からの変換が行われる。 次の例ではUTF-8からEUC-JPに変換している。</p>
+<pre class="sourceCode ruby" id="cb17"><code class="sourceCode ruby"><div class="sourceLine" id="cb17-1" data-line-number="1">puts <span class="st">&quot;こんにちは世界&quot;</span>.encode(<span class="st">&quot;EUC-JP&quot;</span>)</div></code></pre>
+<p>open時にPerlみたいな方法で指定することもできるようになっているが、 このときにPerlのように内部文字列の変換を行うわけではない。 次のコードではEUC-JPのファイルを読んでEUC-JPで出力する。</p>
+<pre class="sourceCode ruby" id="cb18"><code class="sourceCode ruby"><div class="sourceLine" id="cb18-1" data-line-number="1"><span class="dt">File</span>.open(<span class="st">&quot;somefile&quot;</span>, <span class="st">&quot;r:euc-jp&quot;</span>) {|f| puts f.gets }</div></code></pre>
+<p>EUC-JPと認識されているので、変換することはできる。</p>
+<pre class="sourceCode ruby" id="cb19"><code class="sourceCode ruby"><div class="sourceLine" id="cb19-1" data-line-number="1"><span class="dt">File</span>.open(<span class="st">&quot;somefile&quot;</span>, <span class="st">&quot;r:euc-jp&quot;</span>) {|f| puts f.gets.encode(<span class="st">&quot;UTF-8&quot;</span>) }</div></code></pre>
+<p>あるいは内部エンコーディングを指定して自動で変換することもできる。</p>
+<pre class="sourceCode ruby" id="cb20"><code class="sourceCode ruby"><div class="sourceLine" id="cb20-1" data-line-number="1"><span class="dt">File</span>.open(<span class="st">&quot;somefile&quot;</span>, <span class="st">&quot;r:euc-jp:utf-8&quot;</span>) {|f| puts f.gets }</div></code></pre>
+<p>だが、Rubyは独特なので、Perlがモダンでないという話とは繋がっていない。 Rubyの文字エンコーディング関連は、日本人によるものだけに非常に楽だ。</p>
+<p>Rubyと比べてという話にはなるのだけれど、JavaScriptやPHPとくらべても、彼らが当たり前に「よきに計らってくれる」ことを手動で面倒をみてあげないといけなかったりして、ちょっと不自由な感じがある。</p>
+<p>文字列と数値をコンテキストで分けている、というのもちょっと微妙だ。 それだったらまだ型を指定させたほうがマシであるように感じる。 どうしても<code>==</code>と<code>eq</code>の書き間違えなどは発生するし、割とデバッグもしづらい。</p>
+<p>Perlへの批判は大部分がPerl4に起因するもので、「書き方次第」なのだが、統一感がないというか、ちょっとすっきりしない仕様というのはままある。 これはZshを使っていてbashに感じるものと似たもので、古いが故か洗練されていないというか、なにより直感に反する要素がしばしば入ってくるのがストレスだ。</p>
+<p>まず、リファレンスを多様するのであれば他のプログラミング言語のほうが楽だ。 そして、デリファレンスをたくさん書くのであればオブジェクト指向で書くほうがずっとスマートだ。</p>
+<p>Perlに求めていたのはそのあたりの改善だったのだが、それはPerl6によってではなく、RubyやPythonによって達成されてしまった。 だが、これらはすでに「Perlの良さ」はないため、Perlの新しいバージョンにはその改善を求めたかった。 実際にはPerl6は全く異なる言語であり、(なかなか良いように見えるが)望んだものとは少し違う。</p>
+<p>依然としてUnixツールとしてのPerlは優れたものであり、これよりUnixツール的に優れた言語は登場していないが(Streemが実用レベルに達すればその状況は変わるかもしれない)、本格的なプログラミングにはいささか辛い部分も見え隠れする。 特に、「わかりづらくなりやすい」という点に関しては問題が大きく、さらに妙に面倒な状況が出る場合もある。</p>
+<p>今、Perl5を使うにはいささかの割り切りが必要だ。 だが、他の大多数の言語よりも依然として良いのもまた事実。 プログラミング言語が業務的に語られることの多い昨今だが、優れた言語は優れた言語なのであるということを改めて実感させてくれる部分もあった。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

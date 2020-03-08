@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-05-10T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-05-10T00:00:00+09:00" />
+    <title>MailDeliver2 : 完全にプログラマブルなフィルタ機能を持つMDA - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>MailDeliver2 : 完全にプログラマブルなフィルタ機能を持つMDA</h1></header>
+        <article id="MainArticle">
+<p>MailDeliver2がついに完成した。 おおよそできてはいたのだが、テストできておらず、テストしたらまだまだ足りない機能があることに気づき、 また不完全な部分が多かったため、2日かけてデバッグ、テスト、修正を繰り返した。</p>
+<h2 id="概要">概要</h2>
+<h3 id="保存配送">保存・配送</h3>
+<p>Mail Deliverは完全にプログラマブルなフィルタを持つMDAと、それを補助するユーティリティ群である。 フィルタ、ソーター、通知の基本機能を備える。</p>
+<p>基本的にはLinuxあるいはUNIX向けで、MH形式のメールフォルダに対して保存することになっている。</p>
+<p>localdelivがMDAだ。その役割としては、フィルタを呼び出し、フィルタに従って処理することにある。 フィルタはメールの保存の機能を兼ねる。もしフィルタがメールを保存も破棄もしなかった場合は、localdeliv自身がデフォルトのメールフォルダへと保存する。</p>
+<p>デフォルトのメールフォルダもフィルタ同様の方法で決定することができる。 MailDeliver2はRubyで書かれており、保存先メールフォルダの決定はRubyのprocオブジェクトによって行われる。このprocオブジェクトにはメールのヘッダの情報に加え、それを取り扱いやすくした情報を加えたメールオブジェクトが渡される。 そのため、静的な文字列ではなく、より動的に保存先を決定することができる。 ほとんどの場合、これで事足りるだろう。</p>
+<p>例えば、設定サンプルでは次のように書かれている。</p>
+<pre><code>DefaultRule: -&gt;(mail) { &quot;inbox/address/#{mail.in || &quot;Default&quot;}/#{mail.domain || mail.address }/#{mail.address}&quot; },</code></pre>
+<p>これはつまり、</p>
+<pre><code>inbox/address/&lt;ユーザーのアカウント名 | Default&gt;/&lt;相手のドメイン名&gt;/&lt;相手のメールアドレス&gt;</code></pre>
+<p>というフォルダに保存される、ということを意味している。 多数のメールアドレスを使用して使い分けている人は、そのメールアドレスによって相手の意味は既に分かれているだろう。まず、自分のどのアカウントに送られたものかをフォルダで分けてしまうことで相手を分類でき、この3段階の分け方があれば「だいたい分かる」。</p>
+<p>ちなみに、副次的な効果として、詐欺にひっかかりにくくなる。受け取りアドレスとドメインを必然的に意識するからだ。 メールの「名前」をAmazonにしてお知らせを装った詐欺メールを大量に受け取っているが、ドメインがAmazonでないためすぐ分かる。 銀行関連もすぐわかるだろう。なぜならば、名前はメールを開くまでわからないが、アドレスは到着した時点から既に意識しているからだ。</p>
+<p>フィルタは完全にプログラマブルであり、Rubyで自由に書くことができる。 もちろん、保存と破棄はよくある処理なのでそれを助ける機能がある。</p>
+<p>さらに、保存してそのメールの処理を完了するかどうかは自由に選べる。 例えば複数のフォルダに保存するとか、特別に直ちに通知するとか、あるいは保存はするけれど通知の対象からは外す、ということも可能だ。 <code>destroymail()</code>は通知のためのファイルを削除するため、<code>savemail()</code>のあと<code>destroymail()</code>すると通知はされない。</p>
+<p>フィルタは条件自体がプログラマブルなので、例えば差出人によってのみ判定できる、というようなことはない。条件に単にtrueと書けば、常に適用されるフィルタが書ける。 現在デフォルトではclamAVしかサポートしないが、もっと強力な何らかのフィルタによって判定することもできる。その場合は、その判定処理を条件式に書けば良い。条件式に渡されるメールオブジェクトから完全なメール本文を得ることも可能で、<code>IO.popen</code>と<code>$?</code>を用いて外部プログラムを条件として使用できる。</p>
+<p>そのためにルール記述がやや難しいことは否定しないが、最低限であればマニュアル通りに記述することで、常識的に判断できる人ならば動かすことはできるだろう。</p>
+<h3 id="通知">通知</h3>
+<p>通知機能はプラグイン方式を取っている。</p>
+<p>そのため、して欲しい通知方式を好きに組み合わせることができる。 現在は<code>notify-send</code>を用いたGUI表示機能と、<code>play</code>(SOX)を用いた音声通知機能を備える。</p>
+<p>ディスプレイ表示機能はプログラマブルではない。選択式だ。 「アドレス」または「Fromの値」のどちらかで、各差出人あたりの通数か、 または総数を通知する。</p>
+<p>音声通知機能はプログラマブルだ。 音声ファイルは静的に指定しなければならないが、適否に関してはProcオブジェクトなので、その気になれば判定とは関係のないプログラムを書くこともできる。</p>
+<p>その重要性は、アドレスのマッチングにしても</p>
+<ul>
+<li>完全一致</li>
+<li>case insensitiveな一致</li>
+<li>Glob</li>
+<li>正規表現</li>
+</ul>
+<p>とそれらの否定から選べることにある。また、論理和、論理積も使用可能だ。 一致だけでは大量のルールを書かなくてはいけない場合に、同じファイルを再生させる場合も楽になる。 設定ファイルの中でインスタンス変数を定義しておくことで、例えば複数のアドレスをマッチさせる、というようなことも可能だ。 マスター設定ファイル内でアドレスごとのグループを設定しておくこともできる。</p>
+<p>何がしたかったかというと、「ケータイメールのような使い心地」だ。 ケータイならば、着信音で相手が分かる。通知で、メールを開かなくても誰から来たかも分かる。 「着メロ」機能があるMUAは極めて少ない。着メロ機能と強力な振り分け機能を兼ね備えるものはない。 そもそも、振り分けのルール記述が極めて面倒だ。</p>
+<p>そのような、大量のメールを受け取る人が、効率的にルールを書くことができ、メールを確認したり処理するための効率を大幅に向上させる、画面にかじりついていなくても、その時がきたことをアクティブに教えてくれる、という使い心地を、MUAではなく、MDAで実現した形となる。</p>
+<h2 id="からの変更">1からの変更</h2>
+<p>まず、完全にRubyになった。 フルプログラマブルにするために、今まで開発効率からZshを使用していた部分に関しても、全てRubyとした。外部プログラムでなく、ライブラリの呼び出しとすることで、連続したマッチングも高速化でき、また渡せる情報も大幅に増えた。</p>
+<p>一部手段としてUNIX系OS固有のものを使用しているが、恐らくWindowsに対して移植可能なものになったというのもメリットだろうか。 問題は<code>Kernel.fork</code>を使用していることと、<code>play</code>コマンドや<code>notify-send</code>を使っていること、Sound Notifyはログを/dev/nullに書いていることだろう。</p>
+<p>当然、このこととセットになって、よりプログラマブルになった。 そもそもの出発点が、フィルタが保存する内容には関与できない（保存するフォルダを出力するだけだったため、必ず保存されるし、保存内容を加工することもできない）という点が要求を満たさないケースがあったことについてだ。</p>
+<p>これに対応したため、メールの破棄や、保存内容の加工も可能になった。 メールオブジェクトがメール全文を持っており、それがそのまま書き込む内容でもある。 メールを破棄した場合は、通知にも残らない。</p>
+<p>構造がすっきりして、手を加えることもしやすくなった。 これまで通知系はプログラム自体を変更して、手元で専用のものにしていたが、汎用性があるものとなり、 単にプラグインフォルダに入れているものが適用されることとなった。</p>
+<p>このあたりは、自分用だったものが、使ってもらうことを考えた変更が加えられたといっていい。</p>
+<p>このほか、開発効率を優先して非常に複雑な構成（トリッキー）だったプログラムが、しっかりと設計されたものに変更されたため、挙動を把握しやすく、プログラマブルな部分がちゃんと活かせるようになった。 従来はフィルタが動くはずのものを書いても動かないことが多く、デバッグも難しかった。 今回はデバッグしやすいようにログもわかりやすいしてある。 これは、プログラマブルなためにユーザー定義部分でプログラムのエラーがでる場合が多いからだ。</p>
+<h2 id="プログラム">プログラム</h2>
+<p>見どころは多いが、いくつか紹介。</p>
+<h3 id="プラグイン">プラグイン</h3>
+<p>単純にロードしているが、</p>
+<pre><code>class StandardNotify
+  PLUGINS = []</code></pre>
+<p>と名前に約束を作り、プラグインは自身のオブジェクトを<code>StnadardNotify::PLUGINS</code>にpushする。 プラグインは<code>fire</code>メソッドをインターフェイスとして義務付けられている。</p>
+<h3 id="メールの準備">メールの準備</h3>
+<p>ヘッダとボディは次のようにして取得。</p>
+<pre><code>head, body = NKF.nkf( &quot;-w -Lu -m&quot;, mailstr ).split(/\r?\n\r?\n/, 2)</code></pre>
+<p>ヘッダは次のコード</p>
+<pre><code>    head.each_line do | l |
+      if l =~ /^\s*$/
+        break
+      elsif l =~ /^\s+/
+        headerlines.last.concat(l.lstrip)
+      else
+        headerlines.push(l)
+      end
+
+    end
+    
+    headerlines.each do |i|
+      if i =~ /\A([-_A-Za-z0-9]+)\s*:/ # match header format?
+        mailobj[$1.upcase] = $&#39;.strip
+      else
+        next
+      end
+    end</code></pre>
+<p>caseやspaceなどを守らない変なメールに対応するための措置を取っている。</p>
+<h3 id="メールアドレスの抜き出し">メールアドレスの抜き出し</h3>
+<p>恐らく最もテクニカルだ。</p>
+<pre><code>  def extract_addr(f)
+    if f =~ /(?:[^&quot;&lt;]*(?&gt;&quot;[^&quot;]*&quot;))*&lt;([^&gt;]+)&gt;/ # Do From term have NAME&lt;addr&gt; format?
+      address = $1.delete(&quot;\&quot; \t/&quot;)
+    else
+      address = f.delete(&quot;\&quot; \t/&quot;)
+    end
+    
+    address
+  end</code></pre>
+<p>単に仕様だけでなく、実際に使われている形式に則っている。 アドレスをクォートしているものに対しては対応しない。</p>
+<h3 id="メール方向の判定">メール方向の判定</h3>
+<pre><code>    if @maildeliv_conf[:MyAddress].any? {|k, v| in_k =k; File.fnmatch(v, from) }
+      mailobj.direction = :send
+      mailobj.address = to
+      mailobj.in = in_k
+      
+    elsif @maildeliv_conf[:MyAddress].any? {|k, v| in_k =k; File.fnmatch(&quot;*&quot; + v + &quot;*&quot;, mailobj[&quot;TO&quot;]) }
+      mailobj.direction = :recieve
+      mailobj.address = from
+      mailobj.in = in_k
+      
+    else
+      
+      mailobj.direction = :unknown
+      mailobj.address = from
+      mailobj.in = nil
+    end</code></pre>
+<p><code>from</code>も<code>to</code>もアドレスを抽出したものだ。 差出人アドレスがマイアカウントとして定義されたものと一致するか？をチェックしている。 ちなみに、Toは単一とは限らないので、Fromを先に判定するのが確実で好ましい。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

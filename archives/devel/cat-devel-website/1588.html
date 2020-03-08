@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-06T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-06T00:00:00+09:00" />
+    <title>Mimir Yokohamaで続く改修、力を注ぐ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Mimir Yokohamaで続く改修、力を注ぐ</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>2018年8月5日、Mimir Yokohamaのソースリポジトリにはじめてのタグ、<code>5.0</code>が打たれた。</p>
+<p>なぜはじめてのタグなのに5.0だったのか。</p>
+<p>これは、Aki SI&amp;Eのプロトタイプを1.0, Aki SIEのウェブサイトを2.0, Mimri YokohamaのWordPressを3.0, 現在のウェブサイトになったときを4.0とカウントしたものだ。</p>
+<p>つまり、はじまって以来の、同一システムのままのバージョンアップとなった。</p>
+<p>しかもこのタイミングである。 先日、大幅な編成変更と、いいね機能、コメント機能の追加を行った。 これで新しい船出だというタグではない。かといって同バージョン最終仕様としてのタグでもない。</p>
+<p>これから次々とアップデートが予定されている。 その中での一区切りだった。</p>
+<h2 id="年積み上げてきたものとは">13年積み上げてきたものとは</h2>
+<p>PureBuiler Simplyの原型となっているのは2005年のACCS1である。</p>
+<p>もうブログが流行り始めていた頃だったが、既に「事前生成戦略」に関するイメージはあった。 ブログを避けた理由は、一連の流れを持つ記事群を拾いにくくなること、そして時間とともに消えてしまうことだった。</p>
+<p>「普遍的な内容を、きちんと分類して読みやすいように提供したい」と考えたわけだ。</p>
+<p>様々な機能、様々なアイディアがあった。 実装されたものもあるし、実装されなかったものもある。 言語もPerl, PHP, Zsh, Rubyと変わってきた。 このような変遷をたどっているのはEQAIとこれだけで、まさに私のライフワークであり、また成長の軌跡でもあった。</p>
+<p>この中でこだわってきたものもある。</p>
+<p>例えば、デザイン性を保ったまま軽量・高速なウェブサイトを構築すること、可能な限り高いアクセシビリティを提供すること(環境や回線の違い、身体的ハンディキャップなどで差別しないこと)などもそうだ。 意味あるコンテンツを、読みやすい形で提供する、というのもある。</p>
+<p>ACCSが追い求めてきた機能は次のようなものだった。</p>
+<ul>
+<li>カテゴリで分類されて探しやすいインデックス</li>
+<li>検索機能</li>
+<li>意思表示機能 (コメント、と考えていることが多かった)</li>
+<li>連続した記事のページめくり</li>
+<li>要約の先読み</li>
+<li>インライン用語集</li>
+<li><code>prev</code>, <code>next</code>, <code>glossary</code>, <code>index</code>, <code>description</code>情報を持たせる</li>
+</ul>
+<p>PureBuilder Simplyは当初、Mimir YokohamaのWordPressページで提供されている全機能を提供する、ということを目標としていた。 これについては既に達成されている。そのために、従来のPureBuilderにはなかったタグ機能なども追加された。</p>
+<p>「いいね機能」「コメント機能」はWordPressに完全な意味で標準であるものではないのだが、事実上付属するようなもの(特にコメント機能は)なので、これを追加したことで、事実上「WordPressを置き換える」というミッションは完遂した。</p>
+<p>だが、同時に既にWordPressにはない機能の搭載もはじまっていた。 用語集機能はWordPressではなく、PureBuilderの伝統に由来する。そう、ACCSが目指していたものを達成する、という次のミッションに向かいはじめたのだ。</p>
+<p>そこでつけられたのが<code>5.0</code>タグだった。</p>
+<h2 id="用語集機能">用語集機能</h2>
+<p>用語集機能という発想のスタート地点は、私が使っていたWindows 98SEマシンに搭載されていたインライン翻訳ソフトだった。</p>
+<p>カーソルを載せるだけでその単語を翻訳してくれる、というソフトウェアは今持ってそれ以上のユーザービリティを提供するものはない。</p>
+<p>「カーソルを載せたらわからない言葉を教えてくれる」というのは最高に便利だと思ったのだ。 現在はニコニコやはてなが似たような機能を提供しているが、あれはページが変遷してしまうため私からすれば理想的ではない。 どらちかといえばWikiに搭載されているインライン展開のほうがずっと理想的だ。</p>
+<p>この機能は</p>
+<ul>
+<li>表示後にJavaScriptでtreatする</li>
+<li>生成時にHTMLを置き換える形で組み込む</li>
+<li>ソースドキュメントを改変してから生成する</li>
+</ul>
+<p>という3つのパターンを行ったり来たりしている。</p>
+<p>PureBuilder SimplyではPost Plugins/Pre Pluginsの構造からこの3つとも選択肢として取ることができる。 Mimir YokohamaではPost PluginによるHTML置換え方式を取っている。</p>
+<p>このあたりは試行錯誤の成果といえるだろう。 用語集ページも含めてYAMLの辞書ファイルから生成しており、文書に対して特別な処理は必要ない。</p>
+<h2 id="次の記事前の記事">次の記事、前の記事</h2>
+<p>ACCSで最も苦戦したのがこの機能だ。</p>
+<p>この解決については何度か言及しているが、今は前後関係をメタ情報として書く、という仕様になっている。</p>
+<p>解決方法としては後退しているように見えるが、前後関係の自動解決はファイル名なり、もしくはなんらかのヒントなりを厳密に管理する必要があり、結構バグりやすいということを経験したのだ。</p>
+<p>複雑な置換えやユーザーの管理によってバグを発生しうるようなものであるならばメタ情報をユーザー自身が書くべきだ、という割り切りは、これまでの歴史の中で手にしたバランス感覚である。</p>
+<p>実のところ今の構成では前後を自動化することは難しくない。 だが、ユーザーがそれを守ってくれることを期待すべきではないだろう。</p>
+<p>Post pluginsはページ生成が終わってから実行されるが、これは「他の記事の情報を取得できるようにする必要がある」からであり、 環境変数<code>$pbsimply_indexes</code>という形でデータベースのパスが渡っていることから</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" data-line-number="1">db = <span class="dt">Marshal</span>.load(<span class="dt">File</span>.read(<span class="dt">ENV</span>[<span class="st">&quot;pbsimply_indexes&quot;</span>]))</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">fn = <span class="dt">File</span>.basename <span class="dt">ARGV</span>[<span class="dv">0</span>], <span class="st">&quot;.html&quot;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">fn = <span class="kw">case</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">when</span> db[fn + <span class="st">&quot;.md&quot;</span>]</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">  fn + <span class="st">&quot;.md&quot;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="kw">when</span> db[fn + <span class="st">&quot;.rst&quot;</span>]</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">  fn + <span class="st">&quot;.rst&quot;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">  abort</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">articles = db.keys.sort</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">current = db.index(fn)</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">nextart = db[current + <span class="dv">1</span>] <span class="kw">if</span> current &lt; db.length - <span class="dv">1</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">prevart = db[current - <span class="dv">1</span>] <span class="kw">if</span> current &gt; <span class="dv">0</span></a></code></pre></div>
+<p>のようにして取得できるし、 連番に限るのであればもっと簡単に</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" data-line-number="1">fn = <span class="dt">ARGV</span>[<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">if</span> fn =~ <span class="ot">/([0-9]+)\.html$/</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">  fnpp = <span class="dt">$`</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  cindex = <span class="dt">$1</span>.to_i</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  nextart = <span class="st">&quot;</span><span class="ot">#{</span>fnpp<span class="ot">}#{</span>cindex + <span class="dv">1</span><span class="ot">}</span><span class="st">.html&quot;</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">  nextart = <span class="dt">File</span>.exist? nextart ? <span class="dt">File</span>.basename nextart : <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">  <span class="kw">if</span> cindex &gt; <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    prevart = <span class="st">&quot;</span><span class="ot">#{</span>fnpp<span class="ot">}#{</span>cindex - <span class="dv">1</span><span class="ot">}</span><span class="st">.html&quot;</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    prevart = <span class="dt">File</span>.exist? prevart ? <span class="dt">File</span>.basename prevart : <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="kw">end</span></a></code></pre></div>
+<p>とできる。 ちなみに、ディレクトリを認識させる方法は最新のコミットで環境変数<code>$pbsimply_subdir</code>に含まれるようになった。</p>
+<p>このように「できるけれど、あえて手書き」だ。 これは、問題を簡単にするためと、この処理をPandocテンプレートを通じて行いたいためだ。 Pre Pluginsを使えばできるが、かなり複雑なことをすることになるため避けている。</p>
+<h2 id="意思表示機能">意思表示機能</h2>
+<p>過去には「コメントを直接にHTMLファイル化し、objectで読ませる」ということをしていたこともある。</p>
+<p>表示するかどうかを別として、コメント機能はそのときとあまり変わっていない。 表示させるために必要な部分を削ってシンプルになったくらいだ。</p>
+<p>このような機能は本質的な部分は極めて簡単に書けることはこれまでの経験によって証明されている。 どの程度正当性を検証する必要があるかという点がwebアプリケーションの分量になる。</p>
+<h2 id="要約の先読み">要約の先読み</h2>
+<h3 id="まずは要約を入れる">まずは要約を入れる</h3>
+<p>いよいよ今回のハイライトだ。</p>
+<p>descriptionへの対応自体は最初のリリース時点で</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb3-1" data-line-number="1">$if(description)$</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">        <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;description&quot;</span><span class="ot"> content=</span><span class="st">&quot;$description$&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">$endif$</a></code></pre></div>
+<p>という記述があり、対応はちゃんとしていた。 だが、「書くのが面倒」「書いてもあまり意味がない」ということで放置していた。</p>
+<p>「descriptionの先読み」は今まで実装計画には入っていたが、実装されたことはなかった。 そもそもdescriptionってSEOのために入れられているくらいで、「descriptionを読ませる」という発想はあまりない。</p>
+<p>Firefoxだとこんなふうにブックマークのプロパティを表示するか、ブラウジングライブラリー上で詳細表示にするとdescriptionが表示されたりするのだが、これを見たことがある人という人は地球上に5桁いないのではないだろうか。</p>
+<figure><a href="/wp-content/uploads/2018/08/bookmark-description.png"><img src="/wp-content/uploads/2018/08/bookmark-description.png" alt="" width="531" height="403" class="size-full wp-image-1587" /></a><figcaption> Firefoxのブックマークの詳細</figcaption></figure>
+<p>だがdescriptionは入れたいと思っていたし、それを活用したいと思っていた。</p>
+<p>そもそもの発端はトップページのレイアウト更新で、最新の更新記事と要約を(ニュースとは別に)表示したい、ということだった。 「どうせ記事の要約書くんだったらdescriptionに入れようよ」ということだ。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="co"># -*- mode: ruby; coding: UTF-8 -*-</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">require <span class="st">&#39;date&#39;</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">top3 = []</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="dt">Dir</span>.glob(<span class="st">&quot;**/.indexes.rbm&quot;</span>).each <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">  dir = <span class="dt">File</span>.dirname i</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">  db = <span class="dt">Marshal</span>.load <span class="dt">File</span>.read(i)</a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">  top3 += db.select{|k,v| v[<span class="st">&quot;description&quot;</span>] &amp;&amp; v[<span class="st">&quot;date&quot;</span>] &amp;&amp; k != <span class="st">&quot;index.md&quot;</span>}.map{|i| {<span class="st">dir: </span>dir, <span class="st">filename: </span>i[<span class="dv">1</span>][<span class="st">&quot;_filename&quot;</span>], <span class="st">timestamp: </span>(i[<span class="dv">1</span>][<span class="st">&quot;last_modified&quot;</span>] || i[<span class="dv">1</span>][<span class="st">&quot;date&quot;</span>]), <span class="st">description: </span>i[<span class="dv">1</span>][<span class="st">&quot;description&quot;</span>], <span class="st">title: </span>i[<span class="dv">1</span>][<span class="st">&quot;title&quot;</span>] } }.sort_by {|i| i[<span class="st">:timestamp</span>] }.last(<span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb4-11" data-line-number="11"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">top3 = top3.compact.sort_by {|i| i[<span class="st">&quot;timestamp&quot;</span>]}.last(<span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb4-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">top3.reverse_each <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb4-16" data-line-number="16">  printf <span class="st">&quot;[%s](/%s/%s) (%s)\n&quot;</span>, i[<span class="st">:title</span>], i[<span class="st">:dir</span>], i[<span class="st">:filename</span>].sub(<span class="ot">/\.*$/</span>, <span class="st">&quot;.html&quot;</span>), i[<span class="st">:timestamp</span>]</a>
+<a class="sourceLine" id="cb4-17" data-line-number="17">  printf <span class="st">&quot;: %s\n\n&quot;</span>, i[<span class="st">:description</span>]</a>
+<a class="sourceLine" id="cb4-18" data-line-number="18"><span class="kw">end</span></a></code></pre></div>
+<p>実はAtomフィードもスタンバイしている。</p>
+<h3 id="要約を見える形に">要約を見える形に</h3>
+<p>だが、これだけではおもしろくない。どうせ要約を表示するのならばぜひともユーザーに見える形にしたい。</p>
+<p>私の文章は基本的に長いので(体系的でない短い文章に価値を感じていない)、読むのがしんどい人もいるだろう。 読むかどうか決めるために要約は重要だ。</p>
+<p>要約を見たいタイミングとはいつだろう? やはり記事を読み始める前だろう。ならば本文前に</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb5-1" data-line-number="1">$if(description)$</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">&lt;aside</span><span class="ot"> id=</span><span class="st">&quot;ContentDescription&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">$description$</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="kw">&lt;/aside&gt;</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">$endif$</a></code></pre></div>
+<p>とかやってやればいいし、そのほうが効果的なのかもしれないが、既に「文書情報」という項目があることを考えるとちょっといただけない。</p>
+<p>そこで文書情報に追加した上で「記事タイトルをクリックすると文書情報にジャンプする」という仕様にした。</p>
+<p>これはヘルプページにも書いてあるけれども、誰も気づかなそうだ…</p>
+<p>もうひとつ、利用者は多くなさそうだが、カテゴリインデックスがある。 ACCSとしてはこれが中心であり、ぜひとも使って欲しい機能だ。 世の中、情報を整頓するということに怠けすぎて、検索が全てになってしまっているので、使われていないような気もするけれど…</p>
+<p>しかし私の意図としてはこのようなインデックスを活用してほしいというのがあるし、やはりタイトルだけではわかりにくい。 かといって変遷するとだるいので、変遷せずにインデックス上で要約を確認できると便利だ。</p>
+<p>これはタイトルで関心をそそられた後の二次的な情報であり、通常は一覧性が高いほうがいい。 というわけで、ツールチップにしてみた。</p>
+<figure><a href="/wp-content/uploads/2018/08/accs-description.png"><img src="/wp-content/uploads/2018/08/accs-description.png" alt="" width="431" height="711" class="size-full wp-image-1586" /></a><figcaption> PureBuilder Simply ACCS上でDescriptionを扱う</figcaption></figure>
+<p>単純には記事タイトルに<code>title</code>で入れてあるため、ロールオーバーツールチップとして表示される。 だが、スマホだとこれが効かないので、補助的に“&#x1f4d6;?”と表示して、これをタップすればツールチップが表示されるようにしてみた。 全く標準的でないインターフェイスなので、あまり気づいてもらえないような気もするけれど…</p>
+<h3 id="pbs-accs用ツールチップ実装">PBS ACCS用ツールチップ実装</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb6-1" data-line-number="1">(<span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">    <span class="kw">var</span> setClickTooltip<span class="op">=</span> <span class="kw">function</span>(e) <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">      <span class="kw">var</span> text <span class="op">=</span> <span class="st">&#39;&lt;div class=&quot;description&quot;&gt;&#39;</span> <span class="op">+</span> <span class="va">e</span>.<span class="va">currentTarget</span>.<span class="at">xDescription</span> <span class="op">+</span> <span class="st">&quot;&lt;/div&gt;&quot;</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">      <span class="va">Art</span>.<span class="at">displaytooptip</span>(e<span class="op">,</span> text)</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">    <span class="co">// Set Event Listener</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">    <span class="kw">var</span> lists <span class="op">=</span> <span class="va">Art</span>.<span class="at">getElementsByTagName</span>(<span class="st">&quot;ul&quot;</span>)</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">    <span class="co">/* Each list set */</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">    <span class="cf">for</span>(<span class="kw">var</span> i<span class="op">=</span><span class="dv">0</span><span class="op">,</span>l<span class="op">=</span><span class="va">lists</span>.<span class="at">length</span><span class="op">;</span> i<span class="op">&lt;</span>l<span class="op">;</span> i<span class="op">++</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">        <span class="co">/* lists[i] is ul element */</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12">        <span class="kw">var</span> terms <span class="op">=</span> lists[i].<span class="at">getElementsByTagName</span>(<span class="st">&quot;a&quot;</span>)</a>
+<a class="sourceLine" id="cb6-13" data-line-number="13">        <span class="cf">for</span>(<span class="kw">var</span> ti<span class="op">=</span><span class="dv">0</span><span class="op">,</span>li<span class="op">=</span><span class="va">terms</span>.<span class="at">length</span><span class="op">;</span> ti<span class="op">&lt;</span>li<span class="op">;</span> ti<span class="op">++</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-14" data-line-number="14">            <span class="co">/* terms[ti] is an anchor */</span></a>
+<a class="sourceLine" id="cb6-15" data-line-number="15">            <span class="cf">if</span> (terms[ti].<span class="at">title</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-16" data-line-number="16">                <span class="kw">var</span> detail <span class="op">=</span> <span class="va">document</span>.<span class="at">createElement</span>(<span class="st">&quot;span&quot;</span>)</a>
+<a class="sourceLine" id="cb6-17" data-line-number="17">                <span class="va">detail</span>.<span class="at">xDescription</span> <span class="op">=</span> terms[ti].<span class="at">title</span></a>
+<a class="sourceLine" id="cb6-18" data-line-number="18">                <span class="va">detail</span>.<span class="at">className</span> <span class="op">=</span> <span class="st">&quot;accs_descriptor&quot;</span></a>
+<a class="sourceLine" id="cb6-19" data-line-number="19">                <span class="va">detail</span>.<span class="at">addEventListener</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> setClickTooltip<span class="op">,</span> <span class="kw">false</span>)</a>
+<a class="sourceLine" id="cb6-20" data-line-number="20">                <span class="va">detail</span>.<span class="at">textContent</span> <span class="op">=</span> <span class="st">&quot;&#x1f4d6;
+<a class="sourceLine" id="cb6-21" data-line-number="21">                terms[ti].<span class="va">parentNode</span>.<span class="at">appendChild</span>(detail)</a>
+<a class="sourceLine" id="cb6-22" data-line-number="22">            <span class="op">}</span></a>
+<a class="sourceLine" id="cb6-23" data-line-number="23">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb6-24" data-line-number="24">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb6-25" data-line-number="25"><span class="op">}</span>)()</a></code></pre></div>
+<p>何度見てもJavaScriptの複数代入が慣れない。 慣れればみやすそうだけども。</p>
+<p>世の中的には割と珍しいDOM操作をしているが、これはelementに対してイベントリスナを設定するためで、innerHTMLだと二度手間になる。 基本的にやっていることは「記事部分 &gt; リスト全体 &gt; リンク」と絞り込んでいって要素を作成して追加する、という手順だ。 末っ子要素を追加するとき(今の要素の親要素の最後の子要素として追加する)は<code>element.parentNode.appendChild</code>という手順は覚えておいてもいいかもしれない。</p>
+<p>glosarryと共通のコードがライブラリとして読まれるようになっている。ライブラリは<code>defer</code>だが<code>async</code>ではない。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">var</span> Art</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">(<span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">    <span class="cf">if</span> (<span class="op">!</span>Art) <span class="op">{</span> Art <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;MainArticle&quot;</span>) <span class="op">||</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;AccsIndex&quot;</span>)<span class="op">}</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="cf">if</span>(<span class="va">document</span>.<span class="at">addEventListener</span> <span class="op">&amp;&amp;</span> <span class="op">!</span> <span class="va">Art</span>.<span class="at">toolTip</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">        <span class="va">Art</span>.<span class="at">toolTip</span> <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;PointTooltip&quot;</span>)</a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">        <span class="kw">var</span> ttip <span class="op">=</span> <span class="va">Art</span>.<span class="at">toolTip</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">        <span class="va">Art</span>.<span class="at">canceltooltip</span> <span class="op">=</span> <span class="kw">function</span>(e) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">            <span class="va">ttip</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;none&quot;</span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">        <span class="va">Art</span>.<span class="at">displaytooptip</span> <span class="op">=</span> <span class="kw">function</span>(e<span class="op">,</span> content) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">            <span class="va">ttip</span>.<span class="at">innerHTML</span> <span class="op">=</span> content</a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">            <span class="va">ttip</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;block&quot;</span></a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">            <span class="va">ttip</span>.<span class="va">style</span>.<span class="at">top</span> <span class="op">=</span> <span class="va">e</span>.<span class="at">pageY</span> <span class="op">+</span> <span class="st">&quot;px&quot;</span></a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">            <span class="cf">if</span> (<span class="va">window</span>.<span class="at">innerWidth</span> <span class="op">&gt;</span> <span class="dv">900</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">              <span class="va">ttip</span>.<span class="va">style</span>.<span class="at">left</span> <span class="op">=</span> <span class="va">e</span>.<span class="at">pageX</span> <span class="op">+</span> <span class="st">&quot;px&quot;</span></a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">              <span class="va">ttip</span>.<span class="va">style</span>.<span class="at">left</span> <span class="op">=</span> <span class="st">&quot;0px&quot;</span></a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">            <span class="op">}</span></a>
+<a class="sourceLine" id="cb7-20" data-line-number="20">            <span class="va">e</span>.<span class="at">stopPropagation</span>()</a>
+<a class="sourceLine" id="cb7-21" data-line-number="21">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">        <span class="va">document</span>.<span class="va">body</span>.<span class="at">addEventListener</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> <span class="va">Art</span>.<span class="at">canceltooltip</span><span class="op">,</span> <span class="kw">false</span>)</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb7-24" data-line-number="24"><span class="op">}</span>)()</a></code></pre></div>
+<p>900pxを堺にしているのは、「サイドカラムがあるのであれば表示領域は少なくとも右側にサイドカラム幅はあるが、シングルカラムになるとそうではない」からだ。(このページのシングルカラム境界は800pxである)</p>
+<p>機能チェックしているが、<code>document.addEventListener</code>できないブラウザでJavaScriptに対応しているものはあまり残っていないだろうし、あっとしても単純にイベントリスナー設定時にエラーになるので放置してもいいかもしれない。 ただし、間違って複数回ライブラリが読まれたときのために<code>Art.tooltip</code>はしておかないとイベントリスナが複数設定されてしまう。</p>
+<h2 id="purebuilder-simplyはうまくいっている">PureBuilder Simplyはうまくいっている</h2>
+<p>PureBuilder Simplyがここまでうまくいっている理由としては、やはりPandocの強力さがなによりだろう。</p>
+<p>PureBuilder SimplyはPandocが持っている機能をちょっと拡張する…という考え方をしている。 今までドキュメントジェネレーター自体を制作していた(PureDoc)ことと比べると問題はかなり簡単になっている。</p>
+<p>Pandocの動作は必ずしも簡潔ではなく、自分で実装するのであればドキュメントジェネレーターにここまでの機能をもたせることはないだろう。 だが、Pandocがある以上はPandocを使いたい。</p>
+<p>もしPandocがなければdocutilsを拡張することを考えただろうが、その場合はPureBuilder Simplyは今のように良いツールにはなっていなかっただろう。</p>
+<p>PureBuilder Simplyが今ほど素晴らしいツールになったのは、Pandocがあったからこそだ。</p>
+<p>Mimir Yokohamaに対して行われている様々な拡張は今の所PureBuilder Simplyに対して適用されていない。 これは、PureBuilder Simplyが生成するものに対する機能ではなく、Mimir Yokohama固有の、そしてテンプレートとCSSによるものだからだ。</p>
+<p>だが、いくらかでも一般化してPureBuilder Simplyに還元していければと思っている。 PureBuilder Simplyのエコシステムの充実は普及には不可欠だろうから。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

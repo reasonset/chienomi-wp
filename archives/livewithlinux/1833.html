@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-11-04T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-11-04T00:00:00+09:00" />
+    <title>ウェブサイト全文検索システムの開発 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ウェブサイト全文検索システムの開発</h1></header>
+        <article id="MainArticle">
+<h2 id="開発経緯">開発経緯</h2>
+<p>NamazuやGroongaも試したのだが、いまひとつ望むものにはならなかったので、シンプルで美しい全文検索システムを書くことにした。</p>
+<p>これは、第一にはGoogle検索に依存しているMimir Yokhamaの検索機能を自前で持つこと、 第二にはChienomiを含むWordPressのシステムの置換えである。</p>
+<p>検索システムの開発自体はそれほど難しくないと思うのだが、どのように動作するのが望ましいかということを考えると非常に難しい。 Googleの検索システムは非常に高度なので、それに匹敵するものを作るのは難しいのだ。</p>
+<p>だが、ここはPureBuilder Simplyにふさわしいシンプルなものを目指すことにする。</p>
+<h2 id="設計その1">設計その1</h2>
+<p>とりあえず、grepを使えば話が早いのだが、HTMLだと余計な要素を含んだ検索になってしまう。 HTMLからタグを除去するのは難しくないが、どういうポリシーで除去するのか、いつどうやって除去するのか、などが難しい。</p>
+<p>PureBuilder Simplyの構成から言えば、生成時に、Pandocで生成するのが望ましい。</p>
+<pre><code>$ pandoc index.md -t plain index.txt</code></pre>
+<p>だが、生成時に生成を全く無視してインデックスを生成するのはどうだろうか? そもそもPre pluginsはソースファイルを、Post Pluginsは生成したHTMLファイルを加工するものであるため、本来の目的から逸脱してしまう。 例えばPre Pluginsを使って</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb2-1" title="1"><span class="co">#!/bin/zsh</span></a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">typeset</span> <span class="ot">exclude=(</span>_err/* ./mailform.md ./feed.md<span class="ot">)</span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="kw">typeset</span> <span class="ot">indexdir=</span><span class="st">&quot;../Build/search&quot;</span></a>
+<a class="sourceLine" id="cb2-5" title="5"></a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="ot">sourcefile=</span><span class="st">&quot;</span><span class="ot">$1</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="ot">filename=</span><span class="st">&quot;</span><span class="ot">$(</span>ruby -ryaml -e <span class="st">&#39;print YAML.load(ENV[&quot;$pbsimply_doc_frontmatter&quot;])[&quot;_filename&quot;]&#39;</span><span class="ot">)</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-8" title="8">pandoc <span class="st">&quot;</span><span class="ot">$sourcefile</span><span class="st">&quot;</span> -t plain -o <span class="st">&quot;</span><span class="ot">$indexdir</span><span class="st">/</span><span class="ot">$pbsimply_subdir</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-9" title="9"></a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="kw">cat</span></a></code></pre></div>
+<p>とかもできる。</p>
+<p>ただ、今のところ検索対象になるようなソースファイルを加工するようなPre plguinsを使っていないため、別にこのようにする必要性はない。</p>
+<h2 id="設計その2">設計その2</h2>
+<p>あとから処理するためのもの。 <code>.indexes.rbm</code> に基づいて処理を行う方式。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb3-1" title="1"><span class="co">#!/bin/zsh</span></a>
+<a class="sourceLine" id="cb3-2" title="2"></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="kw">if [[</span> <span class="ot">-e</span> .search_index_timestamp<span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb3-5" title="5">    <span class="kw">export</span> <span class="ot">LASTUPDATE=</span><span class="st">&quot;</span><span class="ot">$(</span><span class="kw">cat</span> .search_index_timestamp<span class="ot">)</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb3-7" title="7">    <span class="kw">export</span> <span class="ot">LASTUPDATE=</span><span class="st">&quot;1969-12-31 23:59:59&quot;</span></a>
+<a class="sourceLine" id="cb3-8" title="8"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb3-9" title="9"></a>
+<a class="sourceLine" id="cb3-10" title="10"><span class="kw">typeset</span> <span class="ot">exclude=(</span>_err/* ./mailform.md ./feed.md<span class="ot">)</span></a>
+<a class="sourceLine" id="cb3-11" title="11"></a>
+<a class="sourceLine" id="cb3-12" title="12"><span class="kw">for</span> i <span class="kw">in</span> **/.indexes.rbm</a>
+<a class="sourceLine" id="cb3-13" title="13"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-14" title="14">    <span class="kw">(</span> </a>
+<a class="sourceLine" id="cb3-15" title="15">        <span class="kw">cd</span> <span class="ot">${i:h}</span></a>
+<a class="sourceLine" id="cb3-16" title="16">        ruby -rdate -e <span class="st">&#39;lup=ENV[&quot;LASTUPDATE&quot;]&#39;</span> -e <span class="st">&#39;index = Marshal.load(File.read(&quot;.indexes.rbm&quot;)).select {|k, v| ut = v[&quot;last_update&quot;].kind_of?(Date) ? v[&quot;last_update&quot;].strftime(&quot;%Y-%m-%d %H:%M:%S&quot;) : v[&quot;last_update&quot;]; ut &gt; lup}&#39;</span> -e <span class="st">&#39;puts index.map {|i| i[1][&quot;_filename&quot;] }&#39;</span></a>
+<a class="sourceLine" id="cb3-17" title="17">    <span class="kw">)</span> <span class="kw">|</span> <span class="kw">while</span> <span class="kw">read</span></a>
+<a class="sourceLine" id="cb3-18" title="18">    <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-19" title="19">        <span class="kw">if [[</span> <span class="ot">${exclude[(i)${i:h}</span>/<span class="ot">$REPLY]}</span> <span class="ot">-gt</span> <span class="ot">${#exclude}</span><span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb3-20" title="20">        <span class="kw">then</span></a>
+<a class="sourceLine" id="cb3-21" title="21">            [[ -e ../Build/sindex/<span class="ot">${i:h}</span> ]] <span class="kw">||</span> <span class="kw">mkdir</span> -pv ../Build/sindex/<span class="ot">${i:h}</span></a>
+<a class="sourceLine" id="cb3-22" title="22">            <span class="kw">print</span> -P <span class="st">&quot;%F{blue}Creating index: %f</span><span class="ot">$REPLY</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb3-23" title="23">            pandoc <span class="st">&quot;</span><span class="ot">${i:h}</span><span class="st">/</span><span class="ot">$REPLY</span><span class="st">&quot;</span> -t plain -o <span class="st">&quot;../Build/sindex/</span><span class="ot">${i:h}</span><span class="st">/</span><span class="ot">${REPLY:r}</span><span class="st">.txt&quot;</span></a>
+<a class="sourceLine" id="cb3-24" title="24">        <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb3-25" title="25">    <span class="kw">done</span></a>
+<a class="sourceLine" id="cb3-26" title="26"><span class="kw">done</span></a>
+<a class="sourceLine" id="cb3-27" title="27"></a>
+<a class="sourceLine" id="cb3-28" title="28"><span class="kw">date</span> +<span class="st">&quot;%F %T&quot;</span> <span class="kw">&gt;|</span> .search_index_timestamp</a></code></pre></div>
+<h2 id="検索">検索</h2>
+<p>いずれにせよここまでやってしまえば検索は簡単。 grepで検索できる状態なので、シンプルに検索可能。</p>
+<p>AND検索の要領としては</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1">result = exprs.map <span class="kw">do</span> |expr|</a>
+<a class="sourceLine" id="cb4-2" title="2">  <span class="dt">IO</span>.popen([<span class="st">&quot;grep&quot;</span>, <span class="st">&quot;-FlR&quot;</span>, <span class="st">&quot;-e&quot;</span>, expr, <span class="st">&quot;base/index&quot;</span>], <span class="st">&quot;r&quot;</span>) {|io| io.read }.split(<span class="st">&quot;\n&quot;</span>)</a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="kw">end</span>.inject([]) {|sum, x| sum &amp;= x }</a></code></pre></div>
+<p>ものすごく検索対象が多い場合は、検索対象そのものを絞り込んでいくほうがいいだろう。 だが、プロセス起動回数が増えることを考えると、そのような場合は自前実装のほうが良い可能性が高い。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" title="1">files = <span class="dt">Dir</span>.glob(<span class="st">&quot;base/index/**/*.txt&quot;</span>)</a>
+<a class="sourceLine" id="cb5-2" title="2">result = files.select <span class="kw">do</span> |fn|</a>
+<a class="sourceLine" id="cb5-3" title="3">  content = <span class="dt">File</span>.read(fn)</a>
+<a class="sourceLine" id="cb5-4" title="4">  exprs.all? {|i| content.include?(i) }</a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="kw">end</span></a></code></pre></div>
+<p>OR検索はもっと簡単で</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">result = <span class="dt">IO</span>.popen([<span class="st">&quot;grep&quot;</span>, <span class="st">&quot;-FlR&quot;</span>, ] + exprs.map{|i| [ <span class="st">&quot;-e&quot;</span>, i ] }.flatten + [ <span class="st">&quot;base/index&quot;</span>], <span class="st">&quot;r&quot;</span>) {|io| io.read }.split(<span class="st">&quot;\n&quot;</span>)</a></code></pre></div>
+<p>スペースの取り扱い方とか、case問題とか考え始めると難しい。 ただ、世の中そんな複雑な検索をしている検索エンジンはあまりないし、多分ローカルにそんなもの作ったところで報われないのでこれくらいでいいような気もする。</p>
+<p>ANDまたはORではなく自由にANDとORを結合できるようにした場合は、expr自体に評価できるメソッドを追加すると良い。例えば</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">class</span> <span class="dt">Expr</span></a>
+<a class="sourceLine" id="cb7-2" title="2">  <span class="kw">def</span> initialize(*arg)</a>
+<a class="sourceLine" id="cb7-3" title="3">    <span class="ot">@exprs</span> = arg</a>
+<a class="sourceLine" id="cb7-4" title="4">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-6" title="6"></a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="kw">class</span> <span class="dt">Expr</span>::<span class="dt">Or</span> &lt; <span class="dt">Expr</span></a>
+<a class="sourceLine" id="cb7-8" title="8">  <span class="kw">def</span> eval(content)</a>
+<a class="sourceLine" id="cb7-9" title="9">    <span class="ot">@exprs</span>.any? {|i| i.kind_of?(<span class="dt">Expr</span>) ? i.eval(content) : content.include?(i) }</a>
+<a class="sourceLine" id="cb7-10" title="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-12" title="12"></a>
+<a class="sourceLine" id="cb7-13" title="13"><span class="kw">class</span> <span class="dt">Expr</span>::<span class="dt">And</span> &lt; <span class="dt">Expr</span></a>
+<a class="sourceLine" id="cb7-14" title="14">  <span class="kw">def</span> eval(content)</a>
+<a class="sourceLine" id="cb7-15" title="15">    <span class="ot">@exprs</span>.all? {|i| i.kind_of?(<span class="dt">Expr</span>) ? i.eval(content) : content.include?(i) }</a>
+<a class="sourceLine" id="cb7-16" title="16">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-17" title="17"><span class="kw">end</span></a></code></pre></div>
+<p>といった感じである。</p>
+<h2 id="あとがき">あとがき</h2>
+<p>検索機能の実装自体は難しくないのだが、ChienomiをPureBuilder Simply化するという話になると結構難しい。</p>
+<p>既にかなりの記事があり、検索からの流入も多いため、どうしても全記事に対してマップせざるをえない。 これもなかなか面倒だ。</p>
+<p>だが、もっと問題Chienomiの記事は書き方が一定でない、ということだ。</p>
+<p>Chienomiの記述形式はPOD, RDoc, ACCS2, PureDoc, PureDoc2, PureDoc2::Markdown, Pandoc Markdownがある。 PureBuilder SimplyはPandocでの処理を前提としているため、なんとかしないといけない。</p>
+<p>過去記事については諦める方針ならばHTMLとして抜き出すという方法もあるのだが(Mimir Yokohamaでウェブサイトのサルベージでよく使う方法だ)、 できれば避けたいというのもある。</p>
+<p>また、タグとカテゴリのつけ方が一定ではないため、これを処理しなければならない。</p>
+<p>さらに厄介なのがメディアファイルだ。 WordPressはメディアファイルの使い方が独特だし、そのためにメディアファイルについてはWordPress上で追加する方法をとっていた。 さらにサイト移行時にメディアファイルを紛失したこともあって、結構大規模な作業になると思う。</p>
+<p>そのことを考えると一筋縄ではいかない。</p>
+<p>それはともかくとして、サイトの検索で非常に複雑な演算子を使いたがる人はまずいない、 どころかサイト内検索なんてほぼ使われていないに等しいので、基本的な検索機能で十分だと思うのだが、それであればこの通り実装はとても簡単だ(例によって設計で稼いだ感があるが)。</p>
+<p>というわけでちょっとした実装例、そしてシェルスクリプトサンプルとして役立てば幸いである。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

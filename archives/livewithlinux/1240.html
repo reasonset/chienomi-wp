@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-04-20T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-04-20T00:00:00+09:00" />
+    <title>Perffered application, Nemo, Dolphin, Thunarを設定してみた - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Perffered application, Nemo, Dolphin, Thunarを設定してみた</h1></header>
+        <article id="MainArticle">
+<h2 id="perffered-application">Perffered application</h2>
+<p>Cinnamonで「お気に入りのアプリ」にできるのは<code>.desktop</code>ファイルがあるものだけ。 ブラウザをプライベートモードで起動したかったのだが、なかったので作ってみた。</p>
+<p><code>.dsktop</code>ファイルは基本的にはいわゆる<code>.ini</code>形式である。 XDGは兎にも角にもWindowsっぽい。</p>
+<p>ユーザーローカルのファイルの場所は<code>~/.local/share/applications</code>。</p>
+<pre class="desktop"><code>[Desktop Entry]
+Version=1.0
+Name=Vivaldi Incognito
+GenericName=Web Browser (with Incongnito)
+GenericName[ja]=ウェブブラウザ (with Incongnito)
+Comment=Access the Internet (with safety)
+Comment[ja]=インターネットに安全にアクセス
+Exec=/usr/bin/vivaldi-stable --incognito %U
+Terminal=false
+Icon=vivaldi
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml_xml;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;
+Actions=new-private-window;
+
+[Desktop Action new-private-window]
+Name=New Incognito Window
+Name[ja]=新しいシークレット ウィンドウ
+Exec=/usr/bin/vivaldi-stable --incognito</code></pre>
+<p><code>/usr/share/applicaitions</code>以下にたくさんあるので参考になる。</p>
+<h2 id="cinnamon">Cinnamon</h2>
+<h3 id="nemo-の右クリックメニュー">Nemo の右クリックメニュー</h3>
+<p>右クリックメニューのコンテキストは<code>~/.local/share/nemo/actions</code>以下の<code>/.nemo_action</code>ファイル。 形式自体は<code>.desktop</code>ファイルと同様だけれど、内容はちょっと違う。</p>
+<pre class="desktop"><code>[Nemo Action]
+Name=Open in Konsole
+Comment=Konsole
+
+Exec=konsole --workdir &quot;%P&quot;
+
+Icon-Name=konsole
+
+Selection=none
+Extensions=any;</code></pre>
+<p>これは「何も選択していない状態で右クリックすることでKonsoleで開く」もの。 <code>%P</code>は現在のディレクトリ。 <code>Selection=none</code>で非選択状態。 <code>Extensions</code>は拡張子かMIMEタイプを指定する。ここでは何も選択しないので<code>any</code></p>
+<pre class="desktop"><code>[Nemo Action]
+Name=Open with Thunar
+Comment=Open with Thunar
+
+Exec=thunar &quot;%F&quot;
+
+Icon-Name=thunar
+
+Selection=s
+Extensions=dir;</code></pre>
+<p>こちらはディレクトリをThunarで開くメニュー。 <code>Selection</code>は<code>s</code>になっており、ひとつのファイルを選択した場合のみ。 <code>Extensions</code>は<code>dir</code>でディレクトリのみ。 <code>%F</code>は選択ファイル</p>
+<pre><code>[Nemo Action]
+Name=Open with Konqueror
+Comment=Open with Konqueror
+
+Exec=konqueror %F
+
+Icon-Name=konqueror
+
+Selection=notnone
+Extensions=any;</code></pre>
+<p>Konqueror。 <code>Selection</code>はひとつでも複数でも良い<code>notnone</code>。 <code>%F</code>をクォートしてしまうと、複数の場合に全部がひとつの引数にされてしまう。</p>
+<h3 id="cinnamonのショートカットアプレット">Cinnamonのショートカットアプレット</h3>
+<p>カスタムはできるけれども、アイコンが特定のテーマのものを選択しなければいけなくなってしまう。</p>
+<p>設定ファイルは<code>.cinnamon/configs/panel-launchers@cinnamon.org/3.json</code>。 ここで<code>.desktop</code>ファイルを指定するのだが、ユーザーローカルなものは選択できない。 ユーザーローカルな<code>.desktop</code>ファイルは<code>~/.cinnamon/panel-launchers</code>に配置しておく必要がある。 シンボリックリンク可。</p>
+<h2 id="kde-plasma">KDE Plasma</h2>
+<h3 id="dolphinのカスタムアクション">Dolphinのカスタムアクション</h3>
+<p>場所は</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ex">kf5-config</span> --path services</a></code></pre></div>
+<p>で確認。<code>~/.kde4</code>以下に置いても多分駄目。</p>
+<p>試しに作ってみた「Viewniorで開く」コマンドは以下の通り</p>
+<pre class="desktop"><code>[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=image/png;image/jpeg;
+Actions=setAsWallpaper
+
+[Desktop Action setAsWallpaper]
+Name=View With Viewnior
+Icon=viewnior
+Exec=viewnior %U</code></pre>
+<p>画像選択時に項目として登場する。</p>
+<h3 id="dolphinのテンプレート">Dolphinのテンプレート</h3>
+<p>KDEはXDGのテンプレートを一切無視する。</p>
+<p>使用されるテンプレートは以下の方法で探すことができる。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="ex">kf5-config</span> --path templates</a></code></pre></div>
+<p>こちらも<code>.desktop</code>ファイルで、<code>URL</code>としてテンプレートになるファイルのアドレスを指定する必要がある。</p>
+<pre class="desktop"><code>[Desktop Entry]
+Comment=Blog Markdown
+Icon=text
+Name=Blog Markdown
+Type=Link
+URL=/home/haruka/Templates/blogmd.md</code></pre>
+<h2 id="xfce4">XFce4</h2>
+<h3 id="thunarのカスタムアクション">Thunarのカスタムアクション</h3>
+<p><code>.desktop</code>ファイルの話をすると思った?</p>
+<p>残念でした。</p>
+<p>“編集→アクションの設定” から設定することができる。</p>
+<h3 id="thunarのテンプレートファイル">Thunarのテンプレートファイル</h3>
+<p>XDGフォルダ自体をシンボリックリンクにすると機能しない</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-12-15T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-12-15T00:00:00+09:00" />
+    <title>Sabayon Linuxのセットアップ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Sabayon Linuxのセットアップ</h1></header>
+        <article id="MainArticle">
+<p>Sabayon Linuxをインストールしたので、セットアップを行う。</p><h3>日本語環境</h3><p>まずは日本語周り。<tt class="puredoc_idname">fcitx-anthy</tt>をいれれば入力は可能になるが、これだとQT/GTKアプリに入力できない。<tt class="puredoc_pathname">~/.xprofile</tt>の変更が必要だ。</p><samp style="display: block;white-space: pre-wrap" class="filecontent" title="~/.xprofile"># IME and non-roman fonts support
+# see Sabayon bug #2518
+
+        export LANG="ja_JP.UTF-8"
+        export XMODIFIERS="@im=fcitx"
+        export XMODIFIER="@im=fcitx"
+	export GTK_IM_MODULE=fcitx
+        export QT_IM_MODULE=fcitx
+        export DefaultIMModule=fcitx
+
+
+</samp><p>これでだいたいはOKだが、このAnthy、extradicをひとつも持たないというなかなか恐ろしい代物だ。そして、どこになのかはわからないが、最新のAnthy9100h+fcitx+fcitx-anthy+kcm-fcitxだと設定時にAnthyのキーバインドがあらかた消滅する。その場合、標準設定にすればおおよそ復活するが、しょっちゅうしなくてはいけない。私はキーバインドを一部モディファイして使っているが、あまりいじると何度もすることになり大変だ。</p><p>Anthyをリビルドしてもいいのだが（私はAnthyが好きだ…ただし、Momonga Linux 5のuim-anthyの快適な入力環境についてだ。MageiaのAnthyもなかなかだったが、ManjaroのAnthy-UTはそうでもない（Modified Anthyである）。とりあえずAnthyをどうこうすると打てなくなる可能性があるので、Mozc追加を検討する。</p><p>fcitx-mozcはunofficialなGentoo Overlayであるgentoo-zhに含まれている。Sabayon LinuxはデフォルトでLaymanを持っているので、<code>layman -L</code>で確認の上、<code>layman -a gentoo-zh</code>でインストール可能になる。</p><p>はずだった。だが、searchしてもヒットしない。ここから手探りのスタートだ。まずキャッシュを更新する。</p><samp style="display: block;white-space: pre-wrap" class="shell"># <kbd>emerge -S</kbd>
+# <kbd>layman -S</kbd>
+</samp><p>リポジトリを見るとfcitx-mozcをmozcに改名したよ、とある。mozcパッケージはibus用だと言ってくるが、fcitx-mozcを含んでいるということだろうか。</p><p>で、mozcをインストールしようとする(<samp>emerge mozc</samp>)と、automakeがないといっていきなりコケる。そして、さらに実行するとconfigでコケるが、gccがない(!)。gccをインストールすると今度はpygobjectがUSE_PYTHONなんちゃらかんちゃらでコケる。</p><p>よくよく読んでみると、よく分からなかったりするが、メッセージに従い<a href="http://wiki.gentoo.org/wiki/Project:Python/PYTHON_TARGETS" alt="wiki">wiki</a>を見てみると、どうやら<tt class="puredoc_pathname">/etc/make.conf</tt>に書くものらしい、ということがわかる。開いてみると、<samp>USE_PYTHON="2.7"</samp>とありメッセージと異なるので、<samp>USE_PYTHON="2.7 3.3"</samp>と変更。合わせて<tt class="puredoc_idname">PYTHON_TARGETS</tt>についても変更しておく。</p><p>で、メッセージは変更したらpython-updaterを実行しろよ！とあるので、実行しておく。変更前は「することないよ！」と言ってきたが、変更後だと自動でemergeに走る。</p><p>一応、どうせいずれコケるだろうから、glibもインストールしておく。</p><p>今度はpythonの衝突(collision(s))だー！と言ってくる色々試したが直らない…と思ったら、どうやらgentooとsabayonの間で起きているらしい。というわけでpygobjectについてはequoでインストールしておくとあっさり通った。</p><p>が、mozcはibusに依存している。そのため、ibusを入れてしまうのだ。しかも、インストールが完了したが、fcitxから扱えない。</p><p>さらさに調べてみると…<a href="https://github.com/microcai/gentoo-zh/blob/master/app-i18n/mozc/metadata.xml" alt="manifest">manifest</a>を見ると、fcitxの文字を発見。あぁ、「USEフラグ」というやつか。</p><p><tt class="puredoc_pathname">/usr/portage/package.use</tt>に<samp>app-i18n/mozc fcitx</samp>と書いておく。別にグローバルUSEにしても良い気がするが、とりあえずこの方法で試す。が、結果は同じだった。とりあえず、諦める。</p><p>あとは、jmanをインストールし、いくつかフォントをインストールしておくといいだろう。Sabayonに日本語フォントは含まれているが、さざなみなのであまりキレイではない。VLゴシックをいれるとかなり改善する。</p><h3>ユーザー管理</h3><p>Sabayon Linuxのユーザー管理は、uidは1000から振り、プライマリグループを持つ。usersグループは<tt class="puredoc_value">101</tt>だ。これは従来とは互換性がない。</p><p>一般ユーザーを追加し、そのユーザーの<tt class="puredoc_pathname">~/.kde4</tt>をコピーする。encfs上にあるため、encfsから取り出した後、rootでコピーしchown、となかなか手間になる。元はopenSUSEのもので、Mageiaとの間では互換性の問題があったが、うまくいった。ただし、壁紙は導入はされているものの適用されていない。ウィジェットは復元されない。また、KMailは受信設定だけが適用されていない。</p><p>この状態で気づくのが、インストーラで作成したユーザーはAkonadiがD-Busに登録されていないため、KDEPIMが動かない。一方、新規に作成したユーザーはいくら設定してもキーボードがUSになってしまう。</p><p>キーボードがUSになる問題は、キーボードレイアウトからUSを削除した上で（それでもUSになるが）、fcitxに日本語キーボードを追加することで対応。念の為<samp>setxkbmap -rules evdev -model jp106 -layout jp</samp>も<tt class="puredoc_pathname">.xprofile</tt>に書き足しておく。</p><h3>アプリの追加</h3><p>メイン環境でないため、大量のアプリは入れずに対応したい。メインユーザーがKMailを使えないのでSylpheedを追加。また、Firefoxは公式binを導入し、Twitterクライアント（もうTwitterは終わりに近いのかもしれないが）はCorebirdを選択。単純な挙動だが、非常に便利だ。サブ環境には相応しい。</p><p>サブ環境としてCinnamonを入れたが、ログインできなかった。</p><p>ポイントになったのはPidginだ。知らなかったのだが、PidginのプロトコルとしてBonjourを選ぶとZeroconfを用いてチャットができる。この時のIDは好きに設定すれば良く（ただし同じマシン内で同時に使われるユーザーで重複してはいけない。まずないと思うが）、あとはZeroconfがいい感じに面倒を見てくれる。</p><p>この方法はLAN内に便利にチャットできるが、もちろん相手はリンクしていなくてはいけないし、Zeroconfを通すようになっていなくてはいけない。だが、LAN chatについて色々模索したのだが、これがイチバン確実かつスマートな方法だった。とりあえず今はラップトップとデスクトップのやりとりなので、この方法で支障はない。必要ならもうちょっと色々したほうがいいのかもしれないが、最も手っ取り早いのはXMPPサーバーを立てることだろう。</p><p>さらによく知らなかったのだが、実はfcitx、Unicodeを検索して入力する機能があるのだ。デフォルトではCtrl+Aly+Shift+Uというキーバインドになっており、検索はかなり高速で便利だ。TUT-Codeを使おうという気にはなかなかならないが、この機能なら簡単には打てない文字をさくさく入力できる。しかし、MageiaでできていたMeta+Spaceによる入力メソッド切り替えができないのが不便だ。</p><h3>ウィンドウショッピング</h3><p>Sabayonはデフォルトでかなりオシャレだ。というか、そこにイチバン力を入れているディストリビューションかもしれない（Sabayonの力点がそこであるという意味よりも、ここまでオシャレなディストリビューションはない気がする、という意味だ）。</p><p>デフォルトでテーマがいくつか導入されている。これを選ぶだけでかなり飾れるが、まずフォントを持ち込んでいつものように<tt class="puredoc_pathname">fonts.conf</tt>を書き、KDEのフォントを設定してフォントはできあがり。ちなみに、14.1inchのHDだとPPIは約112だった。</p><p>壁紙とスプラッシュ・スクリーンはKCMからインストール。アイコンテーマ、カラースキーム、ウィンドウの修飾とfcitxテーマはプリインストールを採用。それでもしっかりcoolに仕上がった。従来、デスクトップがダークカラー、ラップトップがライトカラーだったが、今回逆になった。デスクトップが明るく、ラップトップが暗い。ちなみに、ひとりで長時間作業しているコンピュータに極端なダークカラーを採用していると気分が落ち込んでくるのであまりオススメできない。見やすいし、疲れにくいが。</p>
+<a href="/wp-content/uploads/2014/12/e440-sabayon-ss0001.png"><img src="/wp-content/uploads/2014/12/e440-sabayon-ss0001-300x168.png" alt="e440-sabayon-ss0001" width="300" height="168" class="alignnone size-medium wp-image-412" /></a>
+<a href="/wp-content/uploads/2014/12/e440-sabayon-ss0002.png"><img src="/wp-content/uploads/2014/12/e440-sabayon-ss0002-300x168.png" alt="e440-sabayon-ss0002" width="300" height="168" class="alignnone size-medium wp-image-413" /></a>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

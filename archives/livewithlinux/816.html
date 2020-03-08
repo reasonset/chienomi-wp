@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-12-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-12-17T00:00:00+09:00" />
+    <title>Linuxにおけるビデオフォーマットの取り扱い(H.264/H.265/VP9 WebM) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linuxにおけるビデオフォーマットの取り扱い(H.264/H.265/VP9 WebM)</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">ビデオのファイルフォーマットについて</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">検討すべき点</a>    <ul>
+      <li><a href="#section-2" id="markdown-toc-section-2">画質とファイルサイズ</a></li>
+    </ul>
+  </li>
+  <li><a href="#section-3" id="markdown-toc-section-3">速度</a></li>
+  <li><a href="#section-4" id="markdown-toc-section-4">ハードウェアアクセラレーション</a></li>
+  <li><a href="#section-5" id="markdown-toc-section-5">フォーマット</a>    <ul>
+      <li><a href="#h264" id="markdown-toc-h264">H.264</a></li>
+    </ul>
+  </li>
+  <li><a href="#h265hevc" id="markdown-toc-h265hevc">H.265/HEVC</a></li>
+  <li><a href="#vp9-webm" id="markdown-toc-vp9-webm">VP9 (WebM)</a></li>
+  <li><a href="#section-6" id="markdown-toc-section-6">比較</a></li>
+  <li><a href="#section-7" id="markdown-toc-section-7">結論</a></li>
+</ul>
+
+<h3 id="section">ビデオのファイルフォーマットについて</h3>
+
+<p>ビデオのファイルフォーマットは、</p>
+
+<ul>
+  <li>動画部分</li>
+  <li>音声部分</li>
+  <li>それをまとめる部分</li>
+</ul>
+
+<p>の3パートからなる。
+今回は</p>
+
+<ul>
+  <li>H.264+AACのMPEG-4 Part14(mp4)</li>
+  <li>H.265+AACのMPEG-4 Part14(mp4)</li>
+  <li>VP9+OpusのWebM</li>
+</ul>
+
+<p>の3種類についての検討となる。</p>
+
+<h3 id="section-1">検討すべき点</h3>
+
+<h4 id="section-2">画質とファイルサイズ</h4>
+
+<p>画質面では基本的に非圧縮が最良である、と考えて良い。
+しかし、それではあまり巨大なデータになってしまうので、圧縮することになる。
+非可逆圧縮を行えば画質は劣化する。これは、音声と同じ理屈である。可逆圧縮も存在するが、やはりサイズが大きく、現実的ではないとみなされている。</p>
+
+<p>そもそもの話として、そんな巨大すぎるデータを扱うことは難しいため、動画素材が出力される時点でなんらかの圧縮がされているというのが普通だ。
+それは、例えば録画ソフトだったり、ビデオカメラだったりだ。録画の場合、録画時に圧縮されるだけでなく、録画ソースがデジタル動画なら、その動画自体が既に圧縮されていて、2回目の圧縮をかけることになる。</p>
+
+<p>いずれにせよ、非圧縮の映像ソースが手に入らないのであれば、映像ソースの状態が最良である。画質向上のための加工をすれば改善する可能性はあるが、それは普通ではない。</p>
+
+<p>そこからさらにファイルサイズを小さくするために変換するか、あるいは取り扱いやすさのために変換するか、ということになる。
+場合によっては、カメラから出力されるデータの圧縮形式を選べる、という場合もある。</p>
+
+<p>つまりここで問題になるのは、ファイルサイズに対して画質の劣化がどれくらい抑えられるか、である。</p>
+
+<h3 id="section-3">速度</h3>
+
+<p>エンコード時に時間がかかるコーデックは、動画を変換してファイルとして出力する際に時間がかかる。</p>
+
+<p>デコード時に時間がかかるコーデックは、再生が間に合わず飛んでしまうかもしれない。</p>
+
+<p>ただ、実感としては、デコード時の所要時間の問題というよりは、ビットレートが高い動画は飛びやすい、という印象だ。
+ただし、動画再生の重さには関係する。</p>
+
+<h3 id="section-4">ハードウェアアクセラレーション</h3>
+
+<p>デコードが重いコーデックであっても、ビデオカードがそのデコードを担うことができるのであれば、それは問題にならない。</p>
+
+<p>これは、プロセッサ、ドライバ、そしてアクセラレーションの仕組みの全てがサポートしていなければ利用できない。</p>
+
+<h3 id="section-5">フォーマット</h3>
+
+<h4 id="h264">H.264</h4>
+
+<p>H.264(≈MPEG-4 AVC)は2003年に勧告された新しいフォーマットで、現在の主流といっていい。
+MPEG-1から続く基本的な動画圧縮アルゴリズムを改良したもので、かなりの高圧縮でも目立った劣化が少ないことから主流となった。</p>
+
+<p>高機能・高圧縮・高画質とメリットは大きいが、H.264を「使わない理由」といえば、エンコードに時間がかかりすぎるため、というのが一般的だ。</p>
+
+<p>一般的なので、とりあえず迷ったらH.264で良いと思う。
+LinuxではVDPAU/VA-APIにおいて、nVidiaグラフィックスにオープンソースまたはプロプライエタリのドライバ、さらにAMDグラフィックスにRadeonまたはCatalystドライバでH.264アクセラレーションがサポートされるというのは大きなメリットだろう。
+どうもAMD APUでうまく動作してくれていないが。</p>
+
+<p>nVidia Quadro 2000グラフィックスにLinux 4.3 + nvidia 1:352.53-1という構成の<code>vdpauinfo</code>はこのようになっている。</p>
+
+<pre><code>H264_BASELINE                  --- not supported ---
+H264_MAIN                      41  8192  2048  2048
+H264_HIGH                      41  8192  2048  2048
+H264_CONSTRAINED_BASELINE      --- not supported ---
+H264_EXTENDED                  --- not supported ---
+H264_PROGRESSIVE_HIGH          --- not supported ---
+H264_CONSTRAINED_HIGH          --- not supported ---
+H264_HIGH_444_PREDICTIVE       --- not supported ---
+</code></pre>
+
+<p><a href="ftp://download.nvidia.com/XFree86/Linux-x86/358.16/README/supportedchips.html">Quadro 2000はFeature set Cなので</a>こうなっているのだろう。</p>
+
+<p>非常に扱いやすい、お勧めできるフォーマットだ。
+可搬性からいえば、MPEG-4のほうが上かもしれない。ちなみに、MPEG-4 Part2は、H.263がベースで、H.264と比べると劣っている。</p>
+
+<h3 id="h265hevc">H.265/HEVC</h3>
+
+<p>承認されたのが2013年という非常に新しいコーデックで、携帯向け映像配信から8kビデオまで幅広くターゲットにしている。
+dアニメストアがH.265を採用していることで知られている。</p>
+
+<p>同等の画質でH.264の半分の容量、という触れ込みだ。
+非常に優れたフォーマットだが、新しすぎて結構厳しい。ハードウェア支援が追いついておらず、それでいて処理は非常に重い、というのが辛い部分でもある。
+将来的には、H.265を置き換えていくのだろう。</p>
+
+<p><a href="](ftp://download.nvidia.com/XFree86/Linux-x86/358.16/README/supportedchips.html)">H.265をサポートするFeature set FはGTX950/960のみで、TITANも含まない。</a>QuadroシリーズはM6000まで含めて最大でもEまでだ。H.265が新しいフォーマットであることもあり、対応はまだまだ進んでいない、最新のカードでようやく対応がはじまったということなのだろう。</p>
+
+<p>ちなみに、エンコード速度の差はあまりなかった。
+というよりも、私の環境ではH.264の高品位エンコードが結構遅いので、H.265を若干軽い設定にしたこともあってか、2.1fpsでどちらも同じだった。</p>
+
+<h3 id="vp9-webm">VP9 (WebM)</h3>
+
+<p>H.264はかなり複雑な特許関係になっているし、H.265はMPEG LAが特許を保有している。
+こうしたことを嫌う人は、かなりいる。</p>
+
+<p>Mozilla Firefoxは、以前mp4系ではなく、Ogg Theoraをサポートしていくことを表明したことがある。</p>
+
+<p>Ogg Theoraについてはちょっと説明が必要だろう。Oggというのは、そもそもコンテナフォーマットで、任意の数の対応したコーデックを格納できる。一番有名なのは非可逆圧縮音声コーデックのVorbisで、OggコンテナフォーマットにVorbisを格納したものがOgg Vorbisだ。</p>
+
+<p>そして、可逆圧縮音声コーデックのFLACを格納したものがOgg FLAC(FLACはOggに格納しないほうが普通)、動画コーデックのTheoraを格納したものがOgg Theoraだ(音声はSpeex, Vorbis, CELT, Opus, FLAC, OggPCMのどれか)。</p>
+
+<p>このあたりは、Xiph.orgが開発したロイヤリティフリーコーデック/フォーマットで、OSSの一翼を担うと自負するMozillaなりのプライドだったのだろう。
+しかし、そもそもOn2のVP3をベースにしたTheoraはあまり品質の良いものではなく、結局普及もしないままだ。オープンなのは良いことだが、Ogg Theoraをサポートしているプレイヤーも少なく、最初から影の薄い存在だ。</p>
+
+<p>動機は似ているが、よりアグレッシヴに、技術的な主導権を握ろうとしたのがChromeの開発を行うGoogleだ。GoogleはChromeへの搭載とYouTubeでの採用の両面から働きかけている。</p>
+
+<p>GoogleはコンテナフォーマットWebMを開発し、VPコーデックを開発してきたOn2を買収してその最新コーデックであるVP8を採用、音声フォーマットはVorbisをメインに採用してきた。
+VP8に関しては特許問題があったが、最初から利用者に対する開放という方針は貫かれている。その後特許問題をライセンス契約締結によって解決し、自由に使えるようにした。</p>
+
+<p>主導権を得るために、かなり献身的な振る舞いをしていると言ってもいい。品質面に問題があるTheoraに対して、VP8を採用するWebMは品質面でもH.264+AACのmp4に対抗できる存在だった。
+現在においてもこの試み、つまりオープンソースによってデファクトスタンダードを塗替え、フォーマットを統一してリーダーボードを握るというのは依然として野心的だが、挑戦は続いているし、かつ悪くない話でもあり失敗もしていない。</p>
+
+<p>そして、WebMの第二世代ともいうべきサポートが、VP9ビデオコーデックとOpusオーディオコーデックの採用だ。</p>
+
+<p>VP9は、VP8に対して同一画質でビットレートを半分にする、ということなので、その目標はH.264に対するH.265と等しい。仕様がH.265と比べてもシンプルで、YUV444, 12bit色深度, アルファチャンネル, 深度チャンネル, 8kと機能はむしろ勝ってさえいる。
+2011年にスタートしたプロジェクトで、後追いだったVP8とは違い、H.265に対して一歩前をいく状況で始まっている。</p>
+
+<p>さらに、音声コーデックのOpusは、スピーチ向き音声フォーマットのSpeex、あるいは音楽向けコーデックのVorbisを越える存在として登場している。
+IETFによって開発され、RFCで標準化され、リファレンス実装がBSDライセンスでリリースされている。Xiph.orgが手動するVorbisやFLACよりも、さらに文句なしにフリーだ。
+音質がいいだけでなく、低レイテンシも実現している。ビットレートによって(場合によってはシームレスに)モードが切り替わり複数の仕様が混在するのは美しいとは言えないように思うが、実際に品質は素晴らしいのだから文句のつけようがない。
+政治的紛争と無縁というわけではないのだが、Vorbisの次を叶えるコーデックではあるだろう。</p>
+
+<p>つまり、完全に特許と制約に基づいたH.265+AACに対して、課題はあれども利用者としては自由に使うことが約束されているVP9+Opusでは、まずそこで魅力がかなり異なる。
+しかも品質面でも優れている。</p>
+
+<p>だが、決定的なディスアドバンテージもある。LinuxのVDPAUにおいてどころか、WindowsのPureVideoでさえ、VP9はもちろん、VP8もハードウェアアクセラレーションがサポートされていない。
+VP8がサポートされていないということは、将来的にも大きな状況の変化がない限りはVP9も含め、WebMでのハードウェアアクセラレーションはサポートされないのだろう。
+H.265のサポートはもう見えている。これは決定的だ。</p>
+
+<h3 id="section-6">比較</h3>
+
+<p>実際に比較してみた。</p>
+
+<p>エンコーディングはだいたい同じくらいの時間がかかった。VP9+OpusのWebMが3.0fps出ていて1.5倍ちかく速かったが、それでもとても遅いのであまり意味はない。</p>
+
+<p>サイズを見てみよう。</p>
+
+<pre><code>-rw------- 1 aki users 194571866 12月 10 10:59 moto-mad-01.h264.mp4
+-rw------- 1 aki users 153719824 12月 10 17:14 moto-mad-01.h265-crf20.mp4
+-rw------- 1 aki users  96287262 12月 10 09:13 moto-mad-01.h265.mp4
+-rw-r--r-- 1 aki users 492912031  4月 16  2015 moto-mad-01.mov
+-rw------- 1 aki users 215367319 12月 10 11:50 moto-mad-01.webm
+</code></pre>
+
+<p>H.264はCRF18、h265-crf20とWebMはCRF20、h265はCRF24だ。
+ちなみに、元のMOVファイルはH.264+AC3である。</p>
+
+<p>CRFが同一基準にならないようにしか見えないので、それぞれのコーデックで画質と容量の関係を探らなければ意味がなさそうだ。
+実際、FFmpeg公式で、x265については</p>
+
+<blockquote>
+  <p>default CRF of 28. The CRF of 28 should visually correspond to libx264 video at CRF 23, but result in about half the file size.</p>
+</blockquote>
+
+<p>と言っていたりする。色々やってみなければ分からないのだが、実際H.265の「劣化が少ない」は納得できる。H.264と比べてもそこは結構違う。H.264でCRFを上げていくとかなり乱れるので、ケータイ向けに用意したりするとはっきりと違ってくるのだ。</p>
+
+<p>ちなみに、この生成物の感覚的な画質の比較でいうと</p>
+
+<ul>
+  <li>H.264は若干粗い。滑らかさが足りない</li>
+  <li>H.265は綺麗。CRF20かCRF24かの違いはほとんど分からない</li>
+  <li>WebM(VP9)はなめらかに見えるが、動きが激しいところではざらついて見える</li>
+</ul>
+
+<h3 id="section-7">結論</h3>
+
+<ul>
+  <li>今のところはH.264を使うのが可搬性を考えてもまとも</li>
+  <li>どうしてもファイルサイズを落としたい場合、H.265は結構いい</li>
+  <li>とりあえずVP9を使うメリットは、OSS派以外にはなさそう。エンドユーザーから見るとこだわりがない限り動機としてはかなり弱い</li>
+  <li>将来的にはH.265に移っていくと考えて良いと思う</li>
+  <li>WebMがもっと普及して、ハードウェアアクセラレーションも対応してくれると嬉しい</li>
+  <li>そもそも、現在大抵の動画はH.264になってるし、普通の人がコーデックを選ぶ機会があまりないと思う</li>
+  <li>昔のWMVやRM抱えてる人はWebMにしちゃうのもいいかもよ</li>
+</ul>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-05-26T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-05-26T00:00:00+09:00" />
+    <title>ArchLinux * Nginx * php-fpm * MariaDB * WordPress - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ArchLinux * Nginx * php-fpm * MariaDB * WordPress</h1></header>
+        <article id="MainArticle">
+<p>慣れている人にとっては常識レベルなのだろうけれど、つまずきどころ満載だったので、メモ。</p>
+<h2 id="nginxのインストール">Nginxのインストール</h2>
+<pre><code># pacman -S nginx</code></pre>
+<h2 id="php-php-fpmのインストール">PHP / php-fpmのインストール</h2>
+<pre><code># pacman -S php-fpm</code></pre>
+<h2 id="mariadbのインストール">MariaDBのインストール</h2>
+<p>“MySQL”と認識している人も多いだろうけれども、 現在は圧倒的にMySQLよりMariaDBが一般的である。</p>
+<p>MySQL自体は継続しているが、MySQLを提供しているディストリビューションは非常に少なく、 そもそもアプリケーションが想定しているデータベースもMySQLよりMariaDBのほうが一般的だ。</p>
+<p>MariaDBはMySQL5.5から派生したコミュニティベースのデータベースである。</p>
+<pre><code># pacman -S mariadb</code></pre>
+<p><em>有効化する前に</em> 初期設定を行う。</p>
+<pre><code># mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql</code></pre>
+<p>そしてセキュアな設定を行う。 (省略しても構わない)</p>
+<pre><code># mysql_secure_installation</code></pre>
+<p>リモートホストからのアクセスを拒絶しておく。 <code>/etc/mysql/my.cnf</code>の<code>skip-networking</code>をアンコメントすればOK。この状態でもローカルホストからは接続できる。</p>
+<p>これでMariaDBを起動・有効化できる。</p>
+<h2 id="phpの設定">PHPの設定</h2>
+<p>PHPのモジュールが無効になっているので有効にしておく。 これがなければデータベースに接続できず、500 Internal Server Errorになる。</p>
+<p><code>/etc/php/php.ini</code>を編集する。<code>bz2</code>, <code>mysqli</code>, <code>pdo_mysql</code>を有効にする必要がある。</p>
+<p>これをしていないとWordPressの初期設定でデータベース設定後に500エラーになることになり困惑することになる。</p>
+<p>これでphp-fpmを起動・有効化できる。</p>
+<h2 id="nginxの設定">Nginxの設定</h2>
+<p>まずはサーバー設定を書いておく。 設定を書かない場合、WordPressにアクセス自体できない。</p>
+<p>どこに何を書くかという解説はしない(Nginxについて説明をはじめると長い)ので、それを理解しているという前提で進める。 もしろん、コピペでなく値は合わせること。</p>
+<p>最低限だとこんな感じ。</p>
+<pre class="nginx"><code>server {
+  listen 80;
+  listen [::]:80;
+  server_name blog.example.com;
+  root /srv/http/blog/example.com;
+
+  access_log /var/log/nginx/blog-example.log;
+
+          location / {
+               index  index.html index.htm index.php;
+          }
+          location ~ \.php$ {
+               fastcgi_index  index.php;
+               include        fastcgi.conf;
+          }
+
+}</code></pre>
+<p>公式の設定から引用するとこんな感じ。</p>
+<pre class="nginx"><code>server {
+  listen 80;
+  listen [::]:80;
+  server_name blog.example.com;
+  root /srv/http/blog/example.com;
+
+
+  location / {
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  rewrite /wp-admin$ $scheme://$host$uri/ permanent;
+
+  location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+    expires 24h;
+    log_not_found off;
+  }
+
+  location ~ \.php$ {
+    try_files $uri =404;
+    
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    include fastcgi_params;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+#   fastcgi_intercept_errors on;
+    fastcgi_pass php;
+  }
+
+}</code></pre>
+<p>公式の場合サイト別ではなく上流で次のような設定も必要になる。</p>
+<pre class="nginx"><code>upstream php {
+  server unix:/run/php-fpm/php-fpm.sock;
+}</code></pre>
+<p>php-fpmのソケットファイルが間違っている場合、502 Bad Gatewayになる。</p>
+<h2 id="wordpressのインストール">WordPressのインストール</h2>
+<p>「公式パッケージはあるけどWordPress公式からインストールしたほうがいいよ」というのがArchの姿勢。</p>
+<pre><code>$ cd /srv/http
+$ wget https://wordpress.org/latest.tar.gz
+$ tar xvzf latest.tar.gz
+$ sudo chown -R http:http wordpress
+$ mv wordpress blog/example.com</code></pre>
+<p>パーミッションが間違っていると403 Forbiddenになる。 これは主に所有者で、Nginxプロセスの所有にする必要がある。 現在のArch LinuxではNginxプロセスは<code>http:http</code>で動作する。</p>
+<h2 id="起動と有効化">起動と有効化</h2>
+<pre><code># systemctl start nginx
+# systemctl enable nginx
+# systemctl start mariadb
+# systemctl enable mariadb
+# systemctl start php-fpm
+# systemctl enable php-fpm</code></pre>
+<p>php-fpmが起動されていない場合は502 Bad Gateway、MariaDBが起動されていない場合は500 Internal Server Errorになる。</p>
+<h2 id="別のwordpressから移行する">別のWordPressから移行する</h2>
+<p>WordPressのファイル側にもファイルがあるらしい(どうも画像データはこっちらしい)ので、MySQLのエクスポートと同時にファイルもとっておく必要がある。</p>
+<p>取得したファイルはWordPressインストールの代わりに展開し、パーミッション(所有者)を変更する。 パーミッションの変更は忘れがち。</p>
+<p>SiteGuardでログインアドレスを変更している場合は、この機能がApacheに依存しているためログインできなくなってしまうので、<code>wp_content/plugins/site-guard</code>を削除しておく。あるいは、エクスポート前にこの機能を無効にしておいてもいい。 ログインページをNginx上で変更したい場合は他のプラグインを仕様する必要がある。私の場合は“Login Rebuilder”を利用した。</p>
+<p>従来が第三者サービスなどによって提供されていたWordPressで、データベース名やユーザー名が好ましくない場合、あるいは複数サイトをインストールするために指定したい場合は<code>wp_config.php</code>も編集。</p>
+<p>データベースをインポートする前にデータベースを用意しておく。</p>
+<pre><code># mysql
+&gt; create database &lt;database_name&gt;
+&gt; create user &#39;&lt;username&gt;&#39;@&#39;localhost&#39;
+&gt; grant all privileges on &lt;database_name&gt;.* to &#39;&lt;username&gt;&#39;@&#39;localhost&#39; identified by &#39;&lt;password&gt;&#39;
+&gt; quit</code></pre>
+<p>そしてインポート</p>
+<pre><code># mysql &lt;database_name&gt; &lt; wordpress_database_file.sql</code></pre>
+<h2 id="そんなわけでブログ引っ越し完了">そんなわけでブログ引っ越し完了</h2>
+<p>ブログはXdomainの付属サービスから自サーバーに移動した。</p>
+<p>これによりパフォーマンスが改善し、またスマートフォンでの閲覧において広告がでなくなった。</p>
+<p>パフォーマンスは最善ではない。これはこのサーバーでWordPressだけが動いているわけではないため、リソースをWordPressに大量に割くことができないからだ。 必要ならば将来的にWordPressを独立したサーバーにしてパフォーマンスを向上させたり(Kasanagi導入が妥当だろう)、リソースを増強してパフォーマンスチューニングを行うかもしれない。</p>
+<p>現状ではこのChienomiのほうのデイリーPVは1500から6000程度である。 特に広告などを出して収益があるわけでもないので、今のところあまり考えていない。 そうね、ヒューマンユニークがデイリー1500を越えるか、月間1000円以上の広告収入が発生するようなことがあれば考えようかな。</p>
+<p>いずれ広告を出す可能性があるにせよ、それはChienomi側で選定しコントロールした話であり、プロバイダー広告が出るのは(広告を出さないというポリシーに基づく)ユーザービリティ的にもパフォーマンス的にもデメリットしかないので、Chienomiがそれなりにアクセスがあることを踏まえて対応した。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

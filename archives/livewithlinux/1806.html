@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-10-18T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-10-18T00:00:00+09:00" />
+    <title>シェル芸: 並列処理するシェルスクリプトで表示も並列(分割)にする @4種 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>シェル芸: 並列処理するシェルスクリプトで表示も並列(分割)にする @4種</h1></header>
+        <article id="MainArticle">
+<h2 id="概要">概要</h2>
+<p>シェルスクリプトでの並列実行時</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">(</span> <span class="ex">worker</span> 1 <span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">(</span> <span class="ex">worker</span> 2 <span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">(</span> <span class="ex">worker</span> 3 <span class="kw">)</span> <span class="kw">&amp;</span></a></code></pre></div>
+<p>各Workerが情報を出力する(例えばffmpegなど)場合ぐちゃぐちゃになって表示されてしまう。</p>
+<p>特にrun時間が長い場合、表示も分けて並列で(multipane, split view, STDOUT splitting)表示したいところだ。</p>
+<p>考えはするもののなかなか難易度も高く、実際にやる人は少ないと思う。 特にASCIIエスケープシーケンスを伴う場合や、プログラムがTTYを要求する場合は初歩的な知識では不足する。</p>
+<p>いずれもなかなかのシェル芸なので、楽しんでいただけたら幸いだ。</p>
+<h2 id="tput-縦並び水平分割-split-horizontal">tput (縦並び・水平分割 split horizontal)</h2>
+<p>シェル芸奥義tputを使えば横分割も可能。<code>tput cup</code>でカーソル移動を実現している。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">Draw()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="kw">typeset</span> -i <span class="ot">tlines=$((</span> <span class="ot">$(</span>tput lines<span class="ot">)</span> - 3 <span class="ot">))</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">    </a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    tput <span class="kw">clear</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    <span class="kw">for</span> i <span class="kw">in</span> <span class="dt">{1..$wokrkers}</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="kw">print</span> <span class="st">&quot;Worker</span><span class="ot">$i</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">    <span class="kw">print</span> <span class="st">&quot;-------------------------------------------------------------------&quot;</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="kw">cat</span> .output.worker<span class="ot">$i</span>.tail</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    tput cup <span class="ot">$((</span> tlines / <span class="ot">$workers</span> * <span class="ot">$i</span> <span class="ot">))</span> 0</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="kw">}</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="kw">stty</span> -icanon time 0 min 0</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">tput smcup</a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb2-15" data-line-number="15"><span class="ot">worker_pid=()</span></a>
+<a class="sourceLine" id="cb2-16" data-line-number="16"><span class="kw">for</span> i <span class="kw">in</span> <span class="dt">{1..$workers}</span></a>
+<a class="sourceLine" id="cb2-17" data-line-number="17"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-18" data-line-number="18">  <span class="kw">(</span> worker <span class="ot">$i</span> <span class="kw">&gt;</span> .output.worker<span class="ot">$i</span> <span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb2-19" data-line-number="19">  <span class="ot">worker_pid+=($!)</span></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="kw">done</span></a>
+<a class="sourceLine" id="cb2-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb2-22" data-line-number="22"><span class="kw">(</span></a>
+<a class="sourceLine" id="cb2-23" data-line-number="23">  <span class="kw">while</span> <span class="kw">sleep</span> 2</a>
+<a class="sourceLine" id="cb2-24" data-line-number="24">  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-25" data-line-number="25">    <span class="kw">for</span> i <span class="kw">in</span> <span class="dt">{1..$workers}</span></a>
+<a class="sourceLine" id="cb2-26" data-line-number="26">    <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-27" data-line-number="27">      <span class="kw">tail</span> -n <span class="ot">$((</span> ( <span class="ot">$(</span>tput lines<span class="ot">)</span> - 3 ) / <span class="ot">$workers</span> - 3 <span class="ot">))</span> .output.worker<span class="ot">${i}</span> <span class="kw">&gt;</span> .output.worker<span class="dt">{i}</span>.tail</a>
+<a class="sourceLine" id="cb2-28" data-line-number="28">    <span class="kw">done</span></a>
+<a class="sourceLine" id="cb2-29" data-line-number="29">    Draw</a>
+<a class="sourceLine" id="cb2-30" data-line-number="30">  <span class="kw">done</span></a>
+<a class="sourceLine" id="cb2-31" data-line-number="31"><span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb2-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb2-33" data-line-number="33"><span class="ot">displayer_pid=$!</span></a>
+<a class="sourceLine" id="cb2-34" data-line-number="34"><span class="kw">wait</span> <span class="ot">${worker_pid[@]}</span></a>
+<a class="sourceLine" id="cb2-35" data-line-number="35"><span class="kw">kill</span> <span class="ot">$displayer_pid</span></a>
+<a class="sourceLine" id="cb2-36" data-line-number="36">tput rmcup</a>
+<a class="sourceLine" id="cb2-37" data-line-number="37"><span class="kw">stty</span> sane</a></code></pre></div>
+<ul>
+<li>各workerは出力をファイルに保存する</li>
+<li>子プロセスとして定期的に画面出力を行うdisplayerを起動する</li>
+<li>メインプロセスではdisaplyerのpidを保持しており、workerをすべてwaitしてからこのプロセスを停止する</li>
+<li>displayerはsleepを使ったタイマーループ</li>
+<li>tputで画面クリアやカーソル位置の移動を行っている</li>
+<li>開始行の位置は行数をワーカー数で割った数 * ワーカーナンバーに等しいが、余裕をもたせるため全体行からは3、出力行数は3をひいている。(出力行には2行が追加されるので、1行空白をもたせている)</li>
+</ul>
+<p>なお、Zshの正数除算は切り捨てが行われる。</p>
+<h2 id="multiview-横並び垂直分割-vertical-split-パイプ">multiview (横並び・垂直分割 vertical split, パイプ)</h2>
+<p>それほど難しい表示でない場合は<code>multiview</code>が便利である。インストールは</p>
+<pre><code>$ sudo npm -g multiview</code></pre>
+<p>でできる。</p>
+<p>これで</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">(</span> <span class="ex">worker</span> 1 <span class="kw">)</span> <span class="kw">|</span> <span class="ex">multiview</span> -s <span class="st">&quot;worker1&quot;</span> -c conworkers <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw">(</span> <span class="ex">worker</span> 2 <span class="kw">)</span> <span class="kw">|</span> <span class="ex">multiview</span> -s <span class="st">&quot;worker2&quot;</span> -c conworkers <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw">(</span> <span class="ex">worker</span> 3 <span class="kw">)</span> <span class="kw">|</span> <span class="ex">multiview</span> -s <span class="st">&quot;worker3&quot;</span> -c conworkers <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="ex">multiview</span> -x -c conworkers</a></code></pre></div>
+<p>で大丈夫だ。</p>
+<p>ただし、multiviewが表示される前に大量に流し込んだり、multiviewで表示可能な速度(結構遅い)より早く流し込んだりするとえらいことになる。 (簡単に言えばバッファがあふれる)</p>
+<p>なお、ASCIIエスケープシーケンスを含むものも認識はするが、画面表示がおかしくなったり、スローダウンしたりするのでおすすめできない。</p>
+<h2 id="terminator">Terminator</h2>
+<p>ffmpegのようなプログラムは進行状態をかなり緻密に標準出力に書き出す。 進行状態を書くプログラムはどれも似たようなもので、だいたいがカーソル位置を動かすASCIIエスケープシーケンスによって実現している。</p>
+<p>このようなプログラムの場合、少なくともcolumnやtputを使う方法はうまくいかない。</p>
+<p>そこで登場するのがTerminatorである。 この方法は恐らくここにあるすべての方法の中で最も理想的に動作する。 ただし方法自体はあまり美しくない。</p>
+<p>まず、Terminatorをインストールしたら起動し、右クリックでレイアウトを施してから再び右クリックで設定を開き、レイアウトとして保存する。 さらに、ここでCustom commandとして専用のセットプランスクリプトを用意する。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#!/bin/zsh</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">integer</span> <span class="ot">lockfd</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">exec</span> <span class="dt">{lockfd}</span><span class="kw">&gt;&gt;</span> .stty</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">flock -x <span class="ot">$lockfd</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">print</span> <span class="ot">$TTY</span> <span class="kw">&gt;&amp;</span><span class="ot">$lockfd</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="kw">exec</span> <span class="dt">{lockfd}</span><span class="kw">&gt;&amp;-</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="kw">exec</span> <span class="kw">cat</span></a></code></pre></div>
+<p>これにより、Terminator上で開かれるシェルはすべて<code>.stty</code>というファイルに自身の<code>$TTY</code>を出力してから<code>cat</code>に置き換わる。</p>
+<p>やっていることは</p>
+<ol type="1">
+<li>.sttyファイルに対してflockによるロックを伴って<code>$TTY</code>を書き込む</li>
+<li><code>cat</code>にexecする</li>
+</ol>
+<p>だけである。</p>
+<p>あとは次のようにする。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">[[</span> <span class="ot">-e</span> ./.stty<span class="kw"> ]]</span> <span class="kw">&amp;&amp;</span> <span class="kw">rm</span> .stty</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">terminator -l 3workers <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="ot">terminator_pid=$!</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="ot">worker_pids=()</span></a>
+<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="ot">ptys=($(</span><span class="kw">cat</span> .stty<span class="ot">))</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6"><span class="kw">for</span> i <span class="kw">in</span> <span class="dt">{1..$workers}</span></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">  <span class="kw">(</span> <span class="kw">exec</span> <span class="kw">1&gt;</span> <span class="ot">$ptys[$i]</span>; worker <span class="ot">$i</span> <span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="ot">worker_pids+=($!)</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10"><span class="kw">done</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11"><span class="kw">wait</span> <span class="ot">$worker_pids[@]</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="kw">kill</span> <span class="ot">$terminator_pid</span></a></code></pre></div>
+<p>ffmpegなどはリダイレクトやパイプを拒否するので、予め<code>/dev/pts/n</code>にリダイレクトした上でworkerを起動している。youtube-dlのようにリダイレクトを受け入れるのであれば</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">[[</span> <span class="ot">-e</span> ./.stty<span class="kw"> ]]</span> <span class="kw">&amp;&amp;</span> <span class="kw">rm</span> .stty</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">terminator -l 3workers <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="ot">terminator_pid=$!</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="ot">worker_pids=()</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="ot">ptys=($(</span><span class="kw">cat</span> .stty<span class="ot">))</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="kw">for</span> i <span class="kw">in</span> <span class="dt">{1..$workers}</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">  worker <span class="ot">$i</span> <span class="kw">&gt;&amp;</span> <span class="ot">$ptys[$i]</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">  <span class="ot">worker_pids+=($!)</span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10"><span class="kw">done</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11"><span class="kw">wait</span> <span class="ot">$worker_pids[@]</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12"><span class="kw">kill</span> <span class="ot">$terminator_pid</span></a></code></pre></div>
+<p>とすることもできる。</p>
+<p>なお、<code>exec cat</code>としているが、実のとろここのcatプログラムは一切使われない。 出力はcatに書き込んでいるのではなく、仮想端末そのものに対して書き込んでいるからだ。</p>
+<p>catにしている理由は</p>
+<ul>
+<li>プロンプトが邪魔になるのでシェルを起動したくない</li>
+<li>catならタイムアウトで終了したりしない</li>
+<li>シェルプロセスを終了する方法としてシェルプロセスをkillしたり親端末をkillしたりする以外にcatに対してEOFを送るという手段が確保できる</li>
+</ul>
+<p>からだ。</p>
+<h2 id="gnu-screen">GNU screen</h2>
+<p>今回の本命である。表示がある程度バグるものの、Terminatorよりは美しい方法で、multiviewよりもうまくいく。</p>
+<p>まずはレイアウト用の設定ファイルを用意しておく。 縦分割のほうが速いが、横分割のほうが乱れにくい。</p>
+<pre><code>layout new
+split
+split
+screen 0
+title worker1
+focus next
+screen 1
+title worker2
+focus next
+screen 2
+title worker3
+detach</code></pre>
+<p>さらに先程と同じように起動用のスクリプトも用意しておく。</p>
+<p>これで準備は完了だ。</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">[[</span> <span class="ot">-e</span> ./.stty<span class="kw"> ]]</span> <span class="kw">&amp;&amp;</span> <span class="fu">rm</span> .stty</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="ex">screen</span> -s ./.worker_tty_setup -h 1 -S workerinfo -c .multiworker.screen_config -t workerinfo</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="fu">sleep</span> 10</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="va">ptys=($(</span><span class="fu">cat</span> .stty<span class="va">))</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="kw">(</span> </a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">  <span class="kw">for</span> <span class="ex">i</span> in <span class="dt">{1..$workers}</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8">    <span class="kw">(</span> <span class="bu">exec</span> <span class="op">1&gt;</span> <span class="va">$ptys[$i]</span><span class="kw">;</span> <span class="ex">worker</span> <span class="va">$i</span> <span class="kw">)</span> <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9">  <span class="kw">done</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10">  </a>
+<a class="sourceLine" id="cb9-11" data-line-number="11">  <span class="bu">wait</span></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12">  <span class="ex">screen</span> -S workerinfo -X quit</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"><span class="kw">)</span></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14"><span class="ex">screen</span> -S workerinfo -r</a></code></pre></div>
+<p>Terminatorの場合は事前の設定が必要で、任意数のワーカーを起動することは事実上不可能なのだが、 screenを使う場合は実行時にscreenの設定ファイルを生成するようにすれば可能というメリットもある。</p>
+<p>任意数のワーカーを使う場合は分割は諦めたほうが良い。 その場合でもウィンドウ切り替えで処理でき、並べたい場合は任意にレイアウトできるため柔軟性は高い。 さらに分割を諦めるのであれば設定ファイルを使わずに<code>-dm</code>オプションで起動し、<code>-X screen</code>オプションでウィンドウを増やしていくこともできる。 ビューの分割はデタッチ状態ではできない。</p>
+<p>このスクリプトで起動後にsleepしているのは、screen起動時に起動シェルセットアップ状態に関係なくデタッチされるため、<code>.stty</code>の書き込みが間に合わないからだ。</p>
+<h2 id="補助知識">補助知識</h2>
+<h3 id="端末について">端末について</h3>
+<p>基本的に古の端末は文字だけを扱うので、「構造的に組版される」ようにできている。 つまり、座標はX何文字目、Y何文字目という扱いになるのだ。</p>
+<p>互換性のために現在でもこのような仕様になっているが、実際にはドット単位で取り扱えるようになっている場合も多い。</p>
+<p>だが、互換性をもっている以上、文字数を数える構造は今も持っている。 だから<code>tput lines</code>で端末の行数をカウントすることができるのだ。 これは現在のグラフィカルなアプリケーションの多くでは割と難しい。</p>
+<h3 id="端末の互換性">端末の互換性</h3>
+<p>一般的にはVT100という古の端末をエミュレートするようにできているのだが、互換性をもつ範囲でも微妙に違うためうまく動作しないことがある。 これは、現在の端末はX Window System上で動作するためにVT100ではできないようなことがいろいろできるためだ。</p>
+<p>tputはそのような端末の互換性問題を吸収する。 例えば<code>clear</code>は単に現在のウィンドウの行数だけ空行を出力するような仕様の端末も多いが、<code>tput clear</code>すると表示そのものがクリアされる場合が多い。</p>
+<h3 id="terminator-1">Terminator</h3>
+<p>ビューを分割できることで有名なターミナルエミュレータ。 ちなみに、分割自体はKonsoleでもできる。</p>
+<h3 id="pts">pts</h3>
+<p>仮想端末はそれぞれ<code>/dev/pts/n</code>という形でアクセスできる。 これは「端末に対して読み書きする」プログラムは少なくないからだ。</p>
+<p>これは端末そのものであり、このファイルに書き込めば端末の画面上に表示されることになる。 「端末上で動作しているプロセスに対する読み書き」ではないことに注意してほしい。</p>
+<p>典型的にはwallやtalkといったプログラムがこれを使う。 SSHがリダイレクトとは別に端末で操作できるのも、標準入出力ではなく端末デバイスを直接取り扱うためだ。</p>
+<h3 id="exec">exec</h3>
+<p>シェルコマンドのexecは続く引数をコマンドとして実行し、そのコマンドで現プロセスを置き換えるが、引数がない場合は自分自身を自分自身で置き換えることになるため何もしない。</p>
+<p>ただし、このときリダイレクトしているとファイルディスクリプタのオープンは行う。 そしてファイルディスクリプタをオープンしたプロセスで置き換えることになるため現プロセスでファイルディスクリプタは開きっぱなしになる。</p>
+<p>という理屈はさておき、現在のシェルでファイルディスクリプタを開いたままにしておきたい場合に<code>exec</code>を使うのはそういう呪文なのである。 空のexecを使うシーンは他にないため、呪文だと思っても割と差し支えない。</p>
+<p>基本的には</p>
+<pre><code>exec command 9&gt; file</code></pre>
+<p>とするのと同じことである。 この場合commandではリダイレクトが効くのでファイルディスクリプタ9は開きっぱなしであり、そのコマンドでファイルディスクリプタ9に対して書き込みができる。 ここでcommandがなければ自分自身になるため、当該シェルプロセス上でファイルディスクリプタが開きっぱなしになる。</p>
+<p>なお、<code>{fd}&gt;</code>という書き方はZshで整数型変数を使う場合のみ可能な特殊な書き方。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

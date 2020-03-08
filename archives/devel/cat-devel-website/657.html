@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-06-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-06-27T00:00:00+09:00" />
+    <title>SIサイトの細かなモバイル対応 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>SIサイトの細かなモバイル対応</h1></header>
+        <article id="MainArticle">
+<h3 id="概要">概要</h3>
+<p>特にサイトのデザインをいじる気はなかったのだが、 写真を使ったページを縮小した時に画像がはみだしてしまう、という問題があり、 モバイルフレンドリーの観点から修正を実行した。</p>
+<p>だが、実際はかなり根が深かった。 結局、PureDocの改修を含む大掛かりな作業になってしまったのだ。</p>
+<h3 id="配置方法">配置方法</h3>
+<p>私のサイトは見た目はシンプルだが、実際は結構複雑なことをしている。 特にSIサイトに関しては、かなり難しいことを実験している面がある。</p>
+<p>SIサイトの難しさは、やはり「レスポンシブデザインで右カラムが上にくる」ということにある。</p>
+<p>CSSで指定する場合、左右に並べるのは必ずしも左が先でなくても配置できるが、これを上下にする場合は基本的には「先にくるものが上」になる。 そのため、SIサイトではサイドバーである右カラムがHTML上は「先に」書かれている。</p>
+<p>だが、左カラムが先にこない、ということは、左右に並べるために</p>
+<pre><code>display: table-cell</code></pre>
+<p>が使えないということを意味する。</p>
+<p>となると使用できる方法はかなり限られてくるのだが、 しかも高さが一定でない上に、「チェックのボーダー」は親要素の背景になっているため、<code>absolute</code>配置を利用して並べてしまうと、要素の高さが維持されない。 また、両方とも高さが固定でない以上、ネガティブマージンを使う方法も取れない。 <code>float</code>を使う方法が、事実上唯一だと思われた。</p>
+<p>実際に、この問題は試行錯誤の末、既にfloatを使う方法を用いている。 だが、それでもうまくいかない部分があった。</p>
+<h3 id="widthとpaddingとmarginの関係">widthとpaddingとmarginの関係</h3>
+<p>基本的にはwidthをまず確保し、そこにpaddingとborder-widthとmarginを足す。 全体幅を指定したい要素に関しては、それらを<code>0</code>にした入れ子要素を用意するのが無難だ。</p>
+<p>しかし、100%の幅を用意したい場合、<code>width: 100%</code>を指定すると、必然的に親ボックスからはみだすことになる。 なぜならば、この時点でコンテンツの幅は親ボックスいっぱいまで確保されていて、その外に足すことになるからだ。</p>
+<p>ところが、<em>paddingに相対値を指定すると、paddingはwidthに含まれる</em>のが普通。</p>
+<p>つまり、<code>padding: 1em;</code>とした時は、ボックスの外に1emを足すことはしない。 paddingのボックス相対(主に%)を使用する場合、親ボックスはその要素のようだ。 つまり、paddingに25%を指定すると、ボックスの内側50%にコンテンツボックスが生成される。</p>
+<p>だが、paddingは相対値は普通にあるが、marginはレイアウトボックスではあまりない。 border-widthに至ってはまずない。</p>
+<p>そのために、widthの相対値がとても使いにくい。 UIデザインはスケーラブルな時代になってきているはずなのだが、ウェブの場合、結局スケーラブルな値ではなく、 スタティックなピクセル値を自分で計算して書いて、それに対してスケールするという美しくないことになっている。 しかも、その中にピクセル値に対して曖昧な物理絶対値(特にフォントのポイント指定)を含むのでぐっちゃぐっちゃだ。</p>
+<p>結局は全てスタティックなピクセル値に書きなおした。</p>
+<ul>
+<li><code>#MainContainer</code>はW850+PAD50+MGNautoで950pxボックス</li>
+<li><code>#TopPan</code>はwidth838+border6の850pxボックス。HTMLに直接指定されていたPADは除去。</li>
+<li>サイズ調整は入れ子のh1要素による指定に変更</li>
+<li><code>#LeftPage</code>は590pxでPADauto, MGNは0</li>
+<li><code>#SideBar</code>は225pxで左に35pxのMGN。PADは0で、<code>#LeftPage</code>と合わせて850pxボックス</li>
+<li>つまりカラムの間のボーダーは、サイドバーのMGNが持っている</li>
+</ul>
+<h3 id="なぜ画像のmax-widthが効かないのか">なぜ画像のmax-widthが効かないのか</h3>
+<p>厄介なのが画像だ。 画像は既にwidthやheightのボックス相対指定でスケールするようになっている。 一般的には<code>max-width: 100%</code>を用いるのだろう。</p>
+<p>だが、そもそもの発端はmax-width: 100%が効かない、ということだった。</p>
+<p>なぜ効かないのか。実は<em>Geckoでは</em>親要素がピクセル値を持っていなければ画像のwidth/height系プロパティを無視するのだ。 例えば親要素がボックス相対値であっても、その親要素はスタティックなピクセル値ならば問題ない。 例えば幅600pxのボックスに入れ子にされた幅100%のボックスの中であるならば、 画像は600pxに対する幅になる。これは、max-*のプロパティでも効く。</p>
+<p>だが、親ボックスがピクセルで固定されたボックスに入れ子にされていても、max-*プロパティで決定されていると効かない。</p>
+<p>これが<em>Blinkだと問題ない</em>。例え相対widthの中のmax-widthで決定されたボックスの中であれ、<code>max-width: 100%;</code>を指定すればちゃんと効く。 モバイルでGeckoを使っている人は恐らく少数派なので、あまり問題ない、とも考えられる。</p>
+<p>だが、単純なテストを行うと、そのような問題は出ない。 例えば</p>
+<pre><code>&lt;html&gt;
+&lt;head&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;div style=&quot;width: 50%&quot;&gt;
+&lt;p&gt;
+&lt;img src=&quot;file:///home/aki/share/pic/vlcsnap-2015-05-12-02h05m49s780.png&quot; style=&quot;max-width: 100%;&quot; /&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>のようなだ。そこで色々試したのだが、</p>
+<ul>
+<li>inline-blockの中では画像のwidthは効かない。これはGeckoでは効かないがBlinkでは効く</li>
+<li>block要素の中ではfloatされている要素は高さを持たないが、inline-blockの中では持つ。これはGecko/Blink共通</li>
+</ul>
+<p>ということが分かった。</p>
+<p>多分だが、これは明確な仕様にはなっていない。曖昧な部分なのだろう。 仕様に準拠した「論理的な記述」からはかけ離れているが、実際の挙動に合わせて意図した通り動かすため、 <code>#UnderContainer</code>を950pxを超える場合は<code>inline-block</code>に、950px以下では<code>block</code>になるようにした。</p>
+<h3 id="その他の修正">その他の修正</h3>
+<h4 id="webfontの修正">Webfontの修正</h4>
+<p>SIではなくReasonSetのほうで使用しているwebフォントのロゴたいぷゴシックだが、OTFのほうがグリフはかなり多いのだが、かなり空白グリフがある。</p>
+<p>空白グリフというのは結構な問題だ。というのは、通常、グリフがない文字についてはフォールバックされ、他の代替フォントを使用して表示する。 そのため「表示されないから読めない」ということは避けられるのだが、空のグリフが存在していると結局空白を表示してしまうため、文字が表示されないため見えない。</p>
+<p>空のグリフは削除してしまうのが望ましい。 これを問題にしたのは、「精悍」の「悍」の字が出なかったためだ。</p>
+<p>これを<a href="https://gist.github.com/cockscomb/5442744#file-remove-empty-glyphs-py">cockscombさんのGitHubコード</a> を使用して修正した上で再生成してこの問題を修正した。</p>
+<h4 id="puredocの修正">PureDocの修正</h4>
+<p>PureDocの<code>Puredoc::XHTPureDoc.std</code>メタメソッドがオプショナルなパラメータを正しく解釈しなかったため、修正した。</p>
+<p>これは<code>Puredoc::XHTPureDoc.getoptions</code>メソッドが戻り値をちゃんと指定していなかったためである。</p>
+<h4 id="原稿のgitリポジトリ">原稿のGitリポジトリ</h4>
+<p>原稿はCodebreakで草稿も含めて公開しているが、 久しぶりに更新した。若干歴史にも改変を加えたが、ゴミの除去が主だ。</p>
+<h4 id="プロフィール">プロフィール</h4>
+<p>プロフィールに部活の履歴を追加し、　項目としてBiographyを加えた。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-09-20T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-09-20T00:00:00+09:00" />
+    <title>Linuxのメモリの本当の必要量を考える(メモ) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linuxのメモリの本当の必要量を考える(メモ)</h1></header>
+        <article id="MainArticle">
+
+<p>Linuxはメモリを可能な限り使う実装。</p>
+
+<p>メモリが空いていれば、それはキャッシュやバッファーに使う。
+bufferは、ファイルに対して書き込みが完了していない内容。dirty cacheとも言う。
+cacheは、同期が完了しているファイルの内容。</p>
+
+<p>プログラムの読み書きは、低レベルのI/Oを発行しない限り、bufferになり、cacheになる。これはLinuxカーネルがコントロールし、特に意識する必要はない。</p>
+
+<p>Linuxのパフォーマンスの高さの理由のひとつとして、このメモリ利用が巧みである、ということが挙げられる。
+Windowsはメモリを常に余らせてしまうが、Linuxは長期稼働していればいずれメモリのfreeは0になる。</p>
+
+<p>このcacheは重要だ。なにせ、ディスクはメモリの100倍は遅い。いちいちディスクに対して読み書きしていたら、ものすごくストレスフルな環境ができあがる。</p>
+
+<p>ユーザー空間のメモリはFile-backedとAnonymousがある。
+File-backedはファイルと一致するもので、ファイルに書き出してしまえば解放することができる。
+一方、Anonymousはプログラムが使っている内容であり、解放するためにはプロセスを殺すか(最終手段)、Swapに追い出すしかない。</p>
+
+<p>File-backedはBuffers + Cachedだが、</p>
+
+<pre><code>Buffer = Active(file)
+Cached = Inactive(file) + Shmem
+File-backed = Buffer + Cache
+</code></pre>
+
+<p>ということになる。</p>
+
+<p>こうした理由から、Memfreeがないからといってメモリ不足ではないが、「プログラムが空中で確保しているAnon分だけメモリがあればいい!」とか思うのは間違っている。
+それだけあれば動くが、恐ろしくストレスが増す。</p>
+
+<p>さて、ここで問題が発生した。</p>
+
+<p>メモリはあればあるだけいいというのはあるものの、ずっと余裕がある場合は間違いなくそれ以上積んでもパフォーマンス向上にはつながらない。
+では実際にメモリはどれくらい積めば、パフォーマンス向上が頭打ちになるのか。</p>
+
+<p>最後にアクセスされたのがはるか昔で、いつでも解放できるメモリは空きも同然だ。だが、Linuxは特に不足しなければそれはそのままにする。
+今の状態で十分なのか。それとも、もっと積めばパフォーマンスが向上するのか。さらに重い処理をしても余裕はあるのか。tmpfsにどれくらいファイルをおけるのか。
+そして、新しいマシンを組む時にメモリはどれくらい必要なのか。</p>
+
+<p>気になる。すごく。</p>
+
+<p>ひとつの考え方としては、so(Swap Out)もsi(Swap In)もずーっと0のままであれば、それはあまりにも余裕がありすぎて、Swapを使うかどうかを判断する必要自体が全く無い、という状態なので、「ものすごく余っているから増やす必要はない」と考えていいが、</p>
+
+<p>それでは気持ち悪くないか。</p>
+
+<p>古いキャッシュだけ捨てられればわかるのになぁ、なんか方法ないかなぁ、と思って調べていたら、見つけた。</p>
+
+<p><code>/proc/meminfo</code>だ。</p>
+
+<p>これをみると</p>
+
+<pre><code>MemTotal:       12291120 kB
+MemFree:          568720 kB
+MemAvailable:    8536348 kB
+Buffers:          196976 kB
+Cached:          7606960 kB
+SwapCached:            0 kB
+Active:          6458348 kB
+Inactive:        4584444 kB
+Active(anon):    3052444 kB
+Inactive(anon):   298720 kB
+Active(file):    3405904 kB
+Inactive(file):  4285724 kB
+Unevictable:       49344 kB
+Mlocked:           49408 kB
+SwapTotal:       4034556 kB
+SwapFree:        4034556 kB
+Dirty:               964 kB
+Writeback:             0 kB
+AnonPages:       3288328 kB
+Mapped:           703892 kB
+Shmem:             72480 kB
+Slab:             390816 kB
+SReclaimable:     328332 kB
+SUnreclaim:        62484 kB
+KernelStack:       12096 kB
+PageTables:        48484 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    10180116 kB
+Committed_AS:    8082496 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      173492 kB
+VmallocChunk:   34359488508 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   1734656 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:     1635988 kB
+DirectMap2M:    10930176 kB
+</code></pre>
+
+<p>のように表示される。</p>
+
+<p>答ががっつり書いてあった。</p>
+
+<p><code>Active</code>が最近アクセスされた領域、<code>Inactive</code>がいつでも解放できるとマークされている領域。「はるか昔のいらないキャッシュ」は<code>Inactive(file)</code>だ。</p>
+
+<p>つまり、「余裕」とみなせるのは</p>
+
+<pre><code>Memfree + Inactive
+</code></pre>
+
+<p>ということになる。空き領域と、使われていない領域だ。
+基本的にLinuxのメモリー確保は</p>
+
+<ol>
+  <li>空いているなら確保</li>
+  <li>使われていないのなら捨てて確保</li>
+  <li>使われているのなら、<code>Active(file)</code>の領域を(Dirtyならsyncしてから)解放するか、もちしくSwap</li>
+</ol>
+
+<p>という順で行う。よって、Free+Inactiveが常に潤沢にあるのであれば、メモリ容量によるパフォーマンス低下は起こらない。</p>
+
+<p>このことからメモリの追加に意味があるのか、そもそもメモリはどれくらい必要なのか、を推測する術が見つかった。</p>
+
+<pre><code>MemTotal - ( MemFree + Inactive )
+</code></pre>
+
+<p>長期に渡り活発に使用して常に保たれるこの量が、余裕の量だ。
+重い処理をした場合でも、その重い処理がその量以上に使おうとしなければ問題ない。</p>
+
+<p>ということで見ると、だいたい5Gくらい余裕があるわけで、となると使っているのは7GBくらいか。
+実感としては、起動時に3GB近い(Manjaro LinuxでCinnamon。Plasma Workspaceだともうちょっと多い)ので、間違いなく4GBなければ「まともに」動かないが(軽量環境を使う必要がある)、当然ながら4GBだとすぐに枯渇する。4GBで足りないのはわかるが、では6GBなのか、8GBなのかという話になる。</p>
+
+<p>感覚的には、だいたい6GBくらいは使うという印象がある。
+稼働時間が浅いうちの値がそれぐらいで伸びなくなるからだ。
+よって、6GBだと不足する可能性が高い。</p>
+
+<p>8GBで十分かどうかがよくわからなかったのだが、これを見ると、Swapがちゃんと確保されていれば、若干のパフォーマンス低下はあるものの、ちゃんと動きそうだ。
+ただし、tmpfsを使うと明らかにすぐ不足するので、tmpfsの積極利用は控えたほうがいい。</p>
+
+<p>12GB(私と同じ2x2+4x2か、あるいは2x6)ならば、おおよそ問題はないが、tmpfsにDVDイメージを置くとswapされる可能性がある。
+また、ビルド時にtmpfsに大きなファイルを起き、ビルド自体が重いときついかもしれない。ただし、12GBでかなり重いopenjdk8-infinalityとMozc-UTをビルドしたが、問題なかった。</p>
+
+<p>16GB(4x4か8x2)ならばかなり余裕があり、ほとんど気にする必要はなくなる。</p>
+
+<p>というのが、今回調べた結論だ。</p>
+
+<p>今回は<a href="http://enakai00.hatenablog.com/entry/20110906/1315315488">enkai00さんのブログエントリ</a>を全面的に参考にさせていただいた。非常に有用な記事だった。ありがとうございました。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

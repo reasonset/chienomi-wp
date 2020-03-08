@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-08-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-08-17T00:00:00+09:00" />
+    <title>rsyncでなくsend/receiveを使うことでBtrfsに戻す - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>rsyncでなくsend/receiveを使うことでBtrfsに戻す</h1></header>
+        <article id="MainArticle">
+<h3 id="概要">概要</h3>
+<p>btrfsがrsyncで死んでしまうので、現在はLVM+XFSを使用しているが、いい加減容量は限界近いのでbtrfsに戻す。</p>
+<p>rsyncで詰んでしまう以上、rsyncではなく、send/receiveを用いたものとする。 <a href="https://btrfs.wiki.kernel.org/index.php/Incremental_Backup">btrfs wiki</a>によれば、rsyncを用いるよりも遥かに高速なのだという。</p>
+<h3 id="手順">手順</h3>
+<p>まずはアンマウント</p>
+<pre><code>umount /MirrorSlave</code></pre>
+<p>そして、LVMをインアクティブに</p>
+<pre><code>vgchange -a n</code></pre>
+<p>btrfsを作る</p>
+<pre><code>mkfs.btrfs -L MirrorBtr /dev/mapper/btr*</code></pre>
+<p>/etc/fstabを編集する</p>
+<pre><code>UUID=0123456-7890-acbd-ef01-234567890ab /MirrorRoot           btrfs   noauto,noatime,autodefrag,compress-force=lzo,space_cache,subvol=mirror 0 0</code></pre>
+<p>初期化スクリプトを編集する</p>
+<pre><code>#!/bin/zsh
+
+typeset -i index=1
+
+for i in /dev/disk/by-id/{ata-foo,ata-bar,ata-baz,ata-quux}
+do
+#  print $i
+  cryptsetup --hash=sha512 --cipher=twofish-xts-plain --offset=0 --key-file=/home/foo/key --key-size=512 open --type=plain &quot;$i&quot; &quot;btrdm_$(printf &quot;%02d&quot; $index)&quot; || exit 1
+(( index++ ))
+done
+
+mount /MirrorRoot
+	
+#mount -U 7ebc7d8d-35c6-4d98-8457-3323c242e9fe -o noatime,autodefrag,compress-force=lzo,space_cache,subvol=mirror /MirrorRoot
+
+#pvscan
+#vgscan
+#lvscan
+#vgchange -a y MirrorVG
+#lvchange -a y MirrorVG/MirrorLV
+#mount -U &quot;0d09b605-a52b-48f4-8ad5-ed26456ab6cd&quot; /MirrorRoot</code></pre>
+<p>クライアント側スクリプト。</p>
+<pre><code>#!/usr/bin/zsh
+
+notify-send &quot;BtrSnapSync: Woke&quot;
+
+if ! btrfs subvolume snapshot -r /home/foo/share /home/foo/share/snapshots/snapshot-new 
+then
+  print &quot;BtrSnapSync: **CRITICAL** Failed to create new snapshot&quot;
+  exit 2
+fi
+
+sync
+
+notify-send &quot;BtrSnapSync: Snapshot.&quot;
+
+if [[ -e /home/foo/share/snapshots/snapshot-old ]]
+then
+  if btrfs send -v -p /home/foo/share/snapshots/snapshot-old /home/foo/share/snapshots/snapshot-new/  | ssh -v -i /root/.ssh/btrsnapsync daisy.local /usr/local/sbin/btrrecv.sh
+  then
+    notify-send &quot;Send Snapshot.&quot;
+    btrfs subvolume delete /home/foo/share/snapshots/snapshot-old
+    mv /home/foo/share/snapshots/snapshot-new /home/foo/share/snapshots/snapshot-old
+    notify-send &quot;Deleted old Snapshot.&quot;
+  else
+    notify-send &quot;Failed to send Snapshot&quot;
+    btrfs subvolume delete /home/foo/share/snapshots/snapshot-new
+  fi
+else
+  if btrfs send -v /home/foo/share/snapshots/snapshot-new  | ssh -i /root/.ssh/btrsnapsync daisy.local /usr/local/sbin/btrrecv.sh
+  then
+    notify-send &quot;Send Snapshot.&quot;
+    mv /home/foo/share/snapshots/snapshot-new /home/foo/share/snapshots/snapshot-old
+    notify-send &quot;Deleted old Snapshot.&quot;
+  else
+    notify-send &quot;Failed to send Snapshot&quot;
+    btrfs subvolume delete /home/foo/share/snapshots/snapshot-new
+  fi
+fi</code></pre>
+<p>サーバー側スクリプト</p>
+<pre><code>#!/bin/sh
+btrfs receive /MirrorRoot &amp;&amp; mv /MirrorRoot/snapshot-new /MirrorRooot/snapshot`date +%y%m%d%H%M`</code></pre>
+<p>rootのSSH鍵を生成（適宜）</p>
+<pre><code>mkdir .ssh
+ssh-keygen -f .ssh/snapshot
+chmod 700 .ssh
+chmod 600 .ssh/*</code></pre>
+<p>鍵を転送（適宜）</p>
+<pre><code>scp .ssh/snapshot.pub server:.ssh/authorized_keys
+ssh server
+chmod 600 .ssh/authorized_keys</code></pre>
+<p>鍵をコマンドに結びつける</p>
+<pre><code>vim .ssh/authorized_keys</code></pre>
+<p>sshd_configでforced-commands-only</p>
+<pre><code>vim /etc/ssh/sshd_config</code></pre>
+<h3 id="挙動">挙動</h3>
+<p>btrfsのsnapshotやsend/receiveについて知識がなかったため、挙動をひとつひとつ確認することにした。</p>
+<p>まず、snapshotはディレクトリに見える。 そのディレクトリにはスナップショットの完全なファイルがあるように見える。常時アクセス可能な凍結された状態が存在するわけだ。</p>
+<p>そして、スナップショットは元となるボリュームにネストされたサブボリュームになる。 つまり、/fooにマウントされているサブボリュームのスナップショットは、/foo/snapshot1のようになるというわけだ。この外、例えば/barには置けない。</p>
+<p>この/foo/snapshot1は<code>mv</code>は可能だが、<code>rm</code>はできない。<code>rm</code>するのであれば、<code>btrfs subvolume delete</code>でなければならない。</p>
+<p>このスナップショットをsendする時、<code>-p</code>オプションがなければそのsnapshotを構成する全体を送信する。あれば、指定されたサブボリューム（マウントされたディレクトリを指定）との差分を送信する。</p>
+<p>内容は標準出力に吐かれ、<code>-f</code>オプションで保存することもできるが、それはリダイレクトで保存しても良いようだ。</p>
+<p>receiveについても、およそ似たような挙動である。 標準出力から読んで再編成するか、もしくは<code>-f</code>オプションでファイルから編成する。 これは、sharのようなものではなく、編成されるのはスナップショットである。 つまり、snapshot1というsnapshotをreceiveした場合、snapshot1というsnapshotが作られる。</p>
+<p>mvで名前が変わった状態で、-pオプション付きで送りつけたsnapshotがどうなるのかは、まだ試していない。</p>
+<p>snapshotにロールバックする場合は、マウントポイントの付け替えと、サブボリュームのデリートでよさそうだ。<code>set-default</code>が必要か？</p>
+<p>多くのスナップショットを維持することでディスク容量やI/Oにどのように影響するのかはわからない。 英語文書を読めばよいのかもしれないが、なかなか大変そうなので、そこには当面手を付ける予定はない。</p>
+<h3 id="思わぬつまづき">思わぬつまづき</h3>
+<p>rootユーザーでRSA鍵でsshログインできないという問題に遭遇した。 一般ユーザーならばできるし、またサーバー側が<code>sshd -d</code>で起動した場合は通る。 デバッグモードなら通るため、メッセージの確認もできない。 かなり困った。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

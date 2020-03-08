@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-06-16T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-06-16T00:00:00+09:00" />
+    <title>「HTML」とwebの話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>「HTML」とwebの話</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>最近、「webエンジニアは閉じた世界しか見ていないのだろうか?」と感じるようなことがいくつもあった。</p>
+<p>例えば</p>
+<ul>
+<li>Ruby on RilasとRubyを混同する</li>
+<li>JavaScriptとJQueryを混同する</li>
+<li>言語処理系と言語を混同する</li>
+<li>著名なフレームワークを使うのが当然であり、それ以外は存在しないものと考える</li>
+<li>全く異なる分野や利用法で使われている技術だということを頑なに認めない</li>
+<li>自分が勤めている会社の構造や手法や評価尺度が社会的絶対基準であると信じる</li>
+</ul>
+<p>などだ。</p>
+<p>で、今回は「HTMLとwebを同一視し、HTMLをwebだけのものであると考える傲慢さ」についてである。</p>
+<h2 id="htmlの歴史と経緯">HTMLの歴史と経緯</h2>
+<p>HTMLとwebは根本的には同一である、というのは正しい。</p>
+<p>多くの人が知るとおり、webはCERNにおいて論文共有・参照手段として登場し、HTMLもまたこのために登場している。</p>
+<p>HTMLはHyper Text Markup Languageなわけだが、「Hyper Text」とはなにかといえば、ハイパーメディアの一部たるテキストである。 じゃあハイパーメディアとはなにかといえば、multimediaに関連性をもたせたものである。</p>
+<p>この場合、ハイパーメディアといいつつも現実的に考えられるのは画像くらいのものであった。 だが、潜在的には画像や動画を含めることができることを意識していた。</p>
+<p>それらを文書でつなぐ、それがHTMLの役割である。 実際、HTMLのアンカーは「ハイパーリンク」と呼ばれている。</p>
+<p>ここでは「マルチメディア」というのがテキスト、文書を含むものであることを忘れてはいけない。 これもまた当然に立派なメディウムである。</p>
+<p>HTML2の時点では構造化文書であることが非常に強く意識されていた。 と、同時に、これが視覚的メディアであることもまた強く意識されていた。 この時点では論理性というよりも、視覚的意味合いによって構造化されるという感覚が強く、この過程は同じく論文のためのフォーマットとして誕生したTeXへの意識(あるいはroffへの意識)が感じられるものであった。</p>
+<p>そう、ここまで構造化文書というのは、「章立て」といった概念はあるにせよ、文書自体が論理的構造を持っている、というのとは少々異なった。 論理的構造と視覚は一体だったのだ。これが当たり前のことであった。</p>
+<p>HTML3によってこれは混迷を極めた。「webをリッチにしたい」という欲求はとどまることを知らず、JavaScriptが誕生し、より装飾的な機能が多く追加された。</p>
+<p>一方で、HTML3時代には2つの、異なる意味が生まれていた。</p>
+<p>ひとつは、web技術の応用だ。 webをあくまでWWWの世界に留めるのではなく、より広く使いたいという考え方があった。 既にWWWはインターネットの主要コンテンツであり、コンピュータはインターネットのためのものになりつつあった。 競争に勝ち抜くにはweb界の覇者となる必要があり、そのために力を注いだ技術を他のところでも使いたいと考えた、という流れだ。 例えばWindows 98のActive desktopなどがそれである。</p>
+<p>もうひとつは、文書フォーマットとしてのHTMLの普及だ。 従来ドキュメントフォーマットというのはあまり良いものがなく、恐らく最善なのはPDFであり、そこにいたるまでのTeXであった。 Windowsは(docドキュメントを含め)いくつものドキュメントフォーマットを持っていたが、それらは標準化されておらず、Microsoftに閉じた存在であった。 roffはman roffであっても「イケてない」と考えられていた。 なにより最大の問題は表示向きでなく、HTMLは圧倒的に表示に適しているということだ。</p>
+<p>だから、HTMLはヘルプドキュメントをはじめ、幅広く使われるようになった。 単にドキュメントファイルとして使われるだけではなく、様々なところで組み込まれて使われるようになった。</p>
+<p>HTML4は決断のフォーマットであった。 HTMLはドキュメントフォーマットである、という立場を明らかにしたのである。</p>
+<p>その上で拡張の余地として、</p>
+<ul>
+<li>動的要素を必要とする場合はクライアントサイドスクリプトを</li>
+<li>視覚的要素を必要とする場合はstylesheetを</li>
+</ul>
+<p>使用するように求めた。 ちなみに、stylesheetとはイコールでCSSのことではなく、それがわからない人はJSSやXSLTについて調べておくとスムーズに理解が進むだろう。</p>
+<p>HTML4は至ってstableであった。 諸々の問題はあれど、それらは取り込まれることなく進んでいた。 XHTMLにおける変更は、微々たるものであると言って差し支えあるまい。</p>
+<p>だが、WWWの世界ではその間に様々なことがあった。 HTML4以降の歴史を動かしたのはGoogleであったと言って差し支えないだろう。 Ajaxが注目されるに至るまでの流れもGoogleのものであったし、HTML5策定時のGoogleに影響力は果てしなかった。</p>
+<p>そして、Googleは明確な「オンライン派」である。 そもそもユーザーが直接にドキュメントを扱うことを良しとしない。だから、「HTMLをオンラインのものにしたい」と考えた。 これに対して反対する声、つまりレガシーなTeXのようなHTMLを尊重すべきだと言う声も強く、初期ではどちらかといえば「ドキュメントフォーマットである」という既定路線を維持する状況にあった。</p>
+<p>だが、WWWがさらに成長し、webアプリケーションが基幹を握るに至り、すなわちGoogleが世界を支配するようになると否とは言えなくなってくる。 最初から「オンラインHTML」寄りだったAppleの存在の存在も多少あるが、この過程においての存在感は小さい。結局のところGoogleに対して否を唱えられる存在は既におらず、競争力という点も鑑みてMozillaがこれに同調したことにより、HTML5は「ウェブアプリケーションを提供する基盤」として位置づけられるようになった。実際、CSSには大手ウェブサイトが導入しているトレンドデザインをより簡単に書く方向となり、ウェブレンダリングの挙動はこれらを優先する(これらとことなるレイアウトデザインを許容しない)方向に振れた。</p>
+<p>だが、必ずしもそれをよしとしない考え方もあって、HTML5というのは様々な思惑が混ざりあった言葉になった。</p>
+<h2 id="htmlとcssとjavascriptecma-script">HTMLとCSSとJavaScript(ECMA Script)</h2>
+<p>HTMLとCSSはW3Cが、JavaScriptの仕様であるところのECMA Scriptの仕様はECMAが標準を策定している。</p>
+<p>重要なのはこれらが「独立したもの」であるということである。 HTMLがCSSとJavaScriptと共に使わなければならないわけではないし、CSSがHTMLと共に使わなければならないわけではない。 それぞれが独立したものであり、これらは「ハンバーガーとポテトとコーラ」のような関係であるといっていいだろう。</p>
+<p>独立した存在であるというのは、それ以外が存在しなくても成り立ち、なおかつそれ以外のものとも組み合わせられる、ということを意味している。</p>
+<p>そもそもECMA Scriptに関していえば、JavaScriptの標準というわけでもない。 JavaScriptはECMA ScriptにないDOMに関する機能があり、こちらはW3Cが策定している。 結果として、JavaScriptに明確な言語仕様というものがなく、複数の(ある程度の互換性を持つ)実装が存在するに過ぎない。</p>
+<p>ちなみに、「JavaScriptの実装」というと、「ChromeとFirefoxでしょ」と言う人がいるのだが、これは間違っている。 まず、Crhomiumが採用する(そしてNodeやElectronも使う)v8 JavaScriptエンジンがあるが、MozillaはC/C++で書かれたSpiderMonkey(Firefoxで使われているもの)のほかに、JavaでかかれたRihnoを持っている。 Safariが使っているJavaScriptエンジンはKJSソフトウェアがベースでv8とも別物。 Internet Explorerの最終的なエンジンはChakraで、Edgeも独自の実装(EdgeHTML)だった。さらに、OperaはPresto(JavaScriptエンジンのコードネームはCarakan)を採用していた。 Prestoは独自エンジンであり、プロプライエタリなので現存しないが、KJS SoftwareベースのJavaScriptエンジンを使うブラウザは(プロジェクトが生きているかどうかは置いておいて)存在するし、w3m-jsなんてものもあったりする。</p>
+<p>webから独立したJavaScriptといえばRhinoを搭載するソフトウェアが実は結構多い。 Javaで書かれているアプリケーションから利用するのが割と簡単なので、SpiderMonkeyが圧倒的にウェブで使われているのに対し、Firefoxでは使われていないRhinoはアプリケーションでプラグイン機能を実現するために使われるようなことが多い。</p>
+<p>また、Node.jsもv8ベースで有名な非ウェブのJavaScript利用例と言えるだろう。 ElectronになるとHTMLやCSSも含めてChromiumの機能を利用する形なので、非ウェブと言い切っていいのかどうか疑わしいが、それでも非WWWであるのは間違いない。</p>
+<p>CSSに関してはほぼHTMLに依存している。XMLで使うこともできるのだが、この場合「XMLをHTML扱いする」という意図になってしまう。 このような場合はどちらかといえばXSLTが好ましく、XML CSSは基本的にウェブブラウザでXMLを表示するためのテクニックだ。</p>
+<p>ただし、HTMLの外観を定義するのはCSSだけというわけではない。 JSS(JavaScript Stylesheet)というのもあるし、これ以外に関しても仕様上制約されているわけではない。 JSSが使われることはごく稀だが、実際に限定的なHTML(あるいはそのサブセット)に対しCSSでもJSSでもないスタイルシートを定義している場合が見られる。近年はレンダリング部分を既存のものに委ねる傾向が強くあまり見られなくなってきてはいるが。</p>
+<h2 id="htmlの用途と位置づけ">HTMLの用途と位置づけ</h2>
+<p>ウェブにしか関心のない人は知らないかもしれないが、HTMLは広くドキュメントフォーマットなのである。</p>
+<p>基本的なものであるにもかかわらず、ドキュメントフォーマットというのは今に至るまで以外なほど発展していない。 Microsoft Wordの強さというのもあるだろうが、ドキュメントフォーマットが「印刷向け」であるのも大きい。</p>
+<p>純粋なドキュメントフォーマットとしては、現在使われるものとしては</p>
+<ul>
+<li>PDF</li>
+<li>PostScript</li>
+<li>DVI</li>
+<li>Microsoft Word</li>
+<li>Open Docuemnt</li>
+<li>RichText</li>
+<li>roff</li>
+<li>ePub</li>
+<li>DocBook</li>
+<li>HTML</li>
+</ul>
+<p>あたり。 それらを生成するフォーマットは多くて</p>
+<ul>
+<li>Markdown</li>
+<li>GFM</li>
+<li>PHP Markdown Extra</li>
+<li>Pandoc Markdown</li>
+<li>その他Markdown方言</li>
+<li>ReSTructured text</li>
+<li>TeX</li>
+<li>LaTeX</li>
+<li>POD</li>
+<li>RDoc</li>
+<li>Plain2</li>
+<li>Asciidoc</li>
+</ul>
+<p>などなどかりなたくさんある。</p>
+<p>これらは「印刷か表示か」という点で性格の違いがある。 例えばLaTeXはプリプロセッサが処理するための正しい情報になる論理性があるが、出力自体は「太字」など視覚的な定義になっている。 これは、印刷してしまう場合、内部的にどのような情報を持っていたとしても失われてしまうことになるので、視覚的な表現が重要になるからだ。</p>
+<p>manroffなどは端末上で表示するためのものだから、端末で表現可能な内容に偏っている。</p>
+<p>Windowsヘルプフォーマット(<code>.HLP</code>や<code>.CHM</code>)やDocBookなどは対応する環境が少ない。 結果的にオンラインドキュメント<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>で汎用性・交換性が高い形式というのはHTMLに限られてしまう。</p>
+<p>次いでePubということになるだろうが、ePubは書籍を前提としており、オンラインドキュメントに最適化されているとは言い難い。<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p>この状況で、人に配布する整形済みドキュメントフォーマットとしては「HTMLが望ましく、HTMLしかない」という状況が存在している。 もちろん、ここではHTMLのサブセットはHTMLに内包するものとする。</p>
+<p>webの世界というのはドキュメントを基本とするものであり、「みんなアプリケーションなんだからHTMLもアプリケーション化すべき」などというのは乱暴を通り越して愚かである。 HTMLの世界はwebに限らず広がっている、というのは、基礎教養と言えるだろうし、それ以上に自分の了見でのみ物事を定めようとすることを愚かと呼ばずしてなんと呼ぼうかという思いだ。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>オンラインドキュメントとは、コンピュータ上で読むドキュメントという意味であり、ウェブという意味ではない。<a href="#fnref1" class="footnote-back" role="doc-backlink">&#x21a9;</a></p></li>
+<li id="fn2" role="doc-endnote"><p>ちなみに、ePubはそもそもXML/XHTMLベースであり、CSSを使用するものだから独立したフォーマットと呼べるかどうかはあやしい。<a href="#fnref2" class="footnote-back" role="doc-backlink">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

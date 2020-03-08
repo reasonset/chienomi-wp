@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-05-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-05-03T00:00:00+09:00" />
+    <title>Linux的にWindowsをバックアップしてみる - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linux的にWindowsをバックアップしてみる</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#バックアップを考える" id="markdown-toc-バックアップを考える">バックアップを考える</a></li>
+  <li><a href="#転送を考える" id="markdown-toc-転送を考える">転送を考える</a></li>
+  <li><a href="#実際にやってみる" id="markdown-toc-実際にやってみる">実際にやってみる</a></li>
+  <li><a href="#クライアント側socatの代替" id="markdown-toc-クライアント側socatの代替">クライアント側socatの代替</a>    <ul>
+      <li><a href="#Zsh" id="markdown-toc-Zsh">Zsh</a></li>
+      <li><a href="#Perl" id="markdown-toc-Perl">Perl</a></li>
+      <li><a href="#Ruby" id="markdown-toc-Ruby">Ruby</a></li>
+      <li><a href="#Bash" id="markdown-toc-Bash">Bash</a></li>
+    </ul>
+  </li>
+  <li><a href="#書き戻しのnetcat代替" id="markdown-toc-書き戻しのnetcat代替">書き戻しのnetcat代替</a>    <ul>
+      <li><a href="#netcat" id="markdown-toc-netcat">netcat</a></li>
+      <li><a href="#socat" id="markdown-toc-socat">socat</a></li>
+      <li><a href="#Zsh-1" id="markdown-toc-Zsh-1">Zsh</a></li>
+      <li><a href="#Perl-1" id="markdown-toc-Perl-1">Perl</a></li>
+      <li><a href="#Ruby-1" id="markdown-toc-Ruby-1">Ruby</a></li>
+      <li><a href="#Bash-1" id="markdown-toc-Bash-1">Bash</a></li>
+    </ul>
+  </li>
+  <li><a href="#この方法の意味と価値" id="markdown-toc-この方法の意味と価値">この方法の意味と価値</a></li>
+</ul>
+
+<p>ClonezillaやMondo Rescueを使えば一発だし簡単なのだけれど、ここはより手軽で確実な方法を模索する。</p>
+
+<p>Clonezillaでいいのであれば(最大の欠点は、より小さいディスクへの復元ができないことだが)、Clonezillaがわかりやすく容易だし、Mondo Rescueも工夫次第でかなり柔軟だ。</p>
+
+<p>しかし、今回はよりテクニカルかつ原始的に解決してみる。</p>
+
+<h3 id="バックアップを考える">バックアップを考える</h3>
+
+<p>ものすごく単純なバックアップ方法として<code>dd</code>がある。この場合、ディスクに記録されている全ビット情報をクローンする。完全なクローンが出来上がるが、20GBを使用している2TBディスクのクローンのために2TBの領域が必要となる。</p>
+
+<p>これを緩和する方法として圧縮があるが、この場合使っていないが書き込まれている「ノイズ」が多い場合は有効に小さくならない。</p>
+
+<p>NTFSであればntfscloneというプログラムによって、必要最低限の領域で正確にクローンができる。特殊イメージ形式は非常にコンパクトだ。</p>
+
+<p>ここで、Windowsディスクの特性と、Windowsシステムの特性を見てみよう。</p>
+
+<pre><code>$ socat tcp-listen:20083 STDOUT
+GPT fdisk (gdisk) version 1.0.1
+
+Partition table scan:
+  MBR: protective
+  BSD: not present
+  APM: not present
+  GPT: present
+
+Found valid GPT with protective MBR; using GPT.
+Disk /dev/sdb: 625142448 sectors, 298.1 GiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): 9AED5CE5-3A6D-469A-BCB0-51F33E062B6F
+Partition table holds up to 128 entries
+First usable sector is 34, last usable sector is 625142414
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 2669 sectors (1.3 MiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          206847   100.0 MiB   EF00  EFI system partition
+   2          206848          468991   128.0 MiB   0C01  Microsoft reserved ...
+   3          468992       625141759   297.9 GiB   0700  Basic data partition
+</code></pre>
+
+<p>これはUEFIシステムのWindows 7だ。</p>
+
+<p>GPTが使用されており、sdb1がUEFI(ESP)で、FAT32またはFAT16である。</p>
+
+<p>sdb2がMSR。sdb3がシステムパーティションだ。</p>
+
+<p>ESPが2048ブロックから開始している。これより手前部分、GPTとUEFIであればなくてもそれほど苦労せずに復元できると思うのだが、一応残しておいたほうがいいだろう。</p>
+
+<p>0, 1, 2はサイズが小さいため、単純にddでもそれほど問題ないだろう。</p>
+
+<p>システムパーティションはWindows XP以降はNTFSであり、ntfscloneが利用可能だ。</p>
+
+<p>Windowsのシステム起動については、ディスクレイアウトがバックアップ時と同じである必要がある。そのため、手前ブロックを含めて復元して同じレイアウトを再現する必要がある。</p>
+
+<p>ただし、ディスクサイズに対してはある程度柔軟だ。大きいシステムパーティションが最後方にあるため、パーティション3を拡張したり切り詰めたりした上でntfscloneで復元することができる。MBRからGPTへの変換などは、同時にはできないと考えたほうが良い。</p>
+
+<h3 id="転送を考える">転送を考える</h3>
+
+<p>バックアップ先は色々考えられるだろう。光学ディスクへのバックアップ、外付けハードディスク、あるいはNAS。</p>
+
+<p>今回の場合は、高性能でストレージ容量の大きいメインデスクトップへと転送する、という方法をとる。デスクトップとラップトップを併用している人などにとっては一般的な要求だろう。</p>
+
+<p>ここでLAN接続の強みが出る。ネットワーク経由で転送することができ、USB2で転送するよりもはるかに速い。
+ちなみに、USB1.1を採用するような古いマシンの場合でも通用する方法であり、100BASE-TXあたりのネットワークに接続できる(外部カードを使う方法を含めて)のであれば、USBドライブよりもはるかに高速だ。汎用性がある。</p>
+
+<p>簡単さで考えればSSH経由が最も楽だ。例えば</p>
+
+<pre><code>$ ssh desktop.local -- sh -c 'cat &gt; backup-sdb1' &lt; /dev/sdb1
+</code></pre>
+
+<p>ただし、SSHによる負荷を嫌うのであれば、rshのほうがいいだろう。しかし、あまり最近はrshを許容していないのではないだろうか。</p>
+
+<p>ほかにもZshを使うとか、FTPを使うとか、FTPFSを使うとか、方法は様々なのだが、ものすごくシンプルに考えると標準入出力渡しが良い。</p>
+
+<p>nc(netcat)だ。</p>
+
+<p>しかし、単純にサーバーで</p>
+
+<pre><code>$ nc -l -p 10000 &gt; sdb1.img
+</code></pre>
+
+<p>クライアントで</p>
+
+<pre><code>$ nc desktop.local 10000 &lt; /dev/sdb2
+</code></pre>
+
+<p>としても、転送終了でコネクションを切ってくれない。切るだけであれば、クライアントを</p>
+
+<pre><code>$ nc -c desktop.local 10000 &lt; /dev/sdb2
+</code></pre>
+
+<p>(GNU netcatの場合)とすれば良いのだが、この場合ちゃんと転送が終わってから切ってくれないため、ちゃんとファイルが転送されない(!)</p>
+
+<p>これを解決するには、クライアント側はsocatを使うようにすれば良い。</p>
+
+<pre><code>$ socat STDIN tcp:desktop.local:10000 &lt; /dev/sdb2
+</code></pre>
+
+<p>別にサーバー側もsocatを使って良い。OPENよりもSTDOUTのほうが安定している。</p>
+
+<pre><code>$ socat tcp-listen:10000 STDOUT &gt; sdb2.img
+</code></pre>
+
+<h3 id="実際にやってみる">実際にやってみる</h3>
+
+<p>まずはオフセット分をコピーする。サーバー側:</p>
+
+<pre><code>$ nc -l -p 10000 &gt; sdb0.img.xz
+</code></pre>
+
+<p>クライアント側:</p>
+
+<pre><code>$ dd if=/dev/sdb bs=512 count=2048 | xz -zev -T 4 | socat STDIN tcp:desktop.local:10000
+</code></pre>
+
+<p>このケースにおいてはクライアントに余力があるため、サーバーに余計な負担をかけないよう、xzはクライアントで行っているが、古いマシンならばサーバー側でしたほうがいいだろう。:</p>
+
+<pre><code>$ nc -l -p 10000 | xz -zev -T 8 &gt; sdb0.img.xz
+</code></pre>
+
+<p>クライアント側:</p>
+
+<pre><code>$ dd if=/dev/sdb bs=512 count=2048 | socat STDIN tcp:desktop.local:10000
+</code></pre>
+
+<p>sdb1以降は少し楽。</p>
+
+<pre><code>$ xz -zev -T 4 &lt; /dev/sdb1 | socat STDIN tcp:desktop.local:10000
+</code></pre>
+
+<p>sdb2も同様。sdb3はntfsclone。</p>
+
+<pre><code>$ ntfsclone --save-image --output - /dev/sdb3 | socat STDIN tcp:desktop.local:10000
+</code></pre>
+
+<p>NTFSクローンでもサーバー側ですることは変わらない。</p>
+
+<h3 id="クライアント側socatの代替">クライアント側socatの代替</h3>
+
+<p>Pythonもやろうとしたが、辛いので諦めた。
+とはいえ、この4つに対応していれば、だいたいの環境でいけるだろう。</p>
+
+<p>もちろん、LuaやJavaScriptやPythonが好きな人は、即席でプログラムを書いても構わない。</p>
+
+<h4 id="Zsh">Zsh</h4>
+
+<p>TCP Function Systemを使う。</p>
+
+<pre><code>$ autoload -U tcp_open
+$ tcp_open desktop.local 10000
+$ tcp_send -c &lt; /dev/sdb1
+$ tcp_close
+</code></pre>
+
+<p>TCP shootのほうが簡単</p>
+
+<pre><code>$ zmodload zsh/net/tcp &amp;&amp;  autoload -U tcp_point
+$ tcp_shoot desktop.local 10000 &lt; /dev/sdb1
+</code></pre>
+
+<p>あるいはzsh/net/tcpを使っても良い</p>
+
+<pre><code>$ zmodload zsh/net/tcp
+$ ztcp -d3 desktop.local 10000 &amp;&amp; ( cat /dev/sdb1 &gt;&amp;3 ) &amp;&amp; ztcp -c 3
+</code></pre>
+
+<h4 id="Perl">Perl</h4>
+
+<pre><code>$ perl -MIO::Socket::INET -e 'BEGIN { $sock = IO::Socket::INET-&gt;new(PeerAddr =&gt; "desktop.local", PeerPort =&gt; 10000, Proto =&gt; "tcp")} while (read(STDIN, $buf, 524288)) { print $sock $buf }' &lt; /dev/sdb1
+</code></pre>
+
+<h4 id="Ruby">Ruby</h4>
+
+<pre><code>$ ruby -rsocket -e 'sock = TCPSocket.open("desktop.local", 10000); buf = "x" * 524288' -e 'sock.write buf while STDIN.read(524288, buf)' &lt; /dev/sdb1
+</code></pre>
+
+<h4 id="Bash">Bash</h4>
+
+<p>意外すぎる必殺技。Zshよりも簡単だったりするので恐ろしい。</p>
+
+<pre><code>$ cat /dev/sdb1 &gt; /dev/tcp/desktop.local/10000
+</code></pre>
+
+<p>ただし、Bashはクライアントのみ。</p>
+
+<h3 id="書き戻しのnetcat代替">書き戻しのnetcat代替</h3>
+
+<p>バックアップを使って書き戻す場合、bashが使えない。</p>
+
+<p>仮にリモート側で</p>
+
+<pre><code>$ xz -dv sda0.img.xz | socat STDIN tcp:laptop:10000
+</code></pre>
+
+<p>とした状況としよう。</p>
+
+<h4 id="netcat">netcat</h4>
+
+<p>まずは基本</p>
+
+<pre><code>$ nc -l -p 10000 &gt; /dev/sdb
+</code></pre>
+
+<h4 id="socat">socat</h4>
+
+<p>こちらも簡単</p>
+
+<pre><code>$ socat tcp-listen:10000 STDOUT &gt; /dev/sdb
+</code></pre>
+
+<h4 id="Zsh-1">Zsh</h4>
+
+<pre><code>$ zmodload zsh/net/tcp &amp;&amp;  autoload -U tcp_point
+$ tcp_point 10000 &gt; /dev/sda
+</code></pre>
+
+<p>もしくは</p>
+
+<pre><code>$ zmodload zsh/net/tcp
+$ ztcp -ld3 10000 &amp;&amp; ztcp -ad4 3 &amp;&amp; cat &lt;&amp;4 &gt; /dev/sdb &amp;&amp; ztcp -c 4
+</code></pre>
+
+<h4 id="Perl-1">Perl</h4>
+
+<pre><code>$ perl -MIO::Socket::INET -e 'BEGIN{$l=IO::Socket::INET-&gt;new(LocalPort=&gt;10000,Proto=&gt;"tcp",Listen=&gt;5,ReuseAddr=&gt;1); $l=$l-&gt;accept} while (read($l, $buf, 524288)) { print $buf }' &gt; /dev/sdb
+</code></pre>
+
+<h4 id="Ruby-1">Ruby</h4>
+
+<pre><code>$ ruby -rsocket -e 's = TCPServer.open(10000).accept' -e 'buf = "x" * 524288 ' -e 'write buf while s.read(524288, buf)' &gt; /dev/sdb
+</code></pre>
+
+<h4 id="Bash-1">Bash</h4>
+
+<p>Bashはリスナーになれないので、リモート側を反転させる必要がある。</p>
+
+<pre><code>$ xz -dv sda0.img.xz | socat STDIN tcp-listen:10000
+</code></pre>
+
+<p>これを受け取る。</p>
+
+<pre><code>$ cat /dev/tcp/desktop.local/10000 &gt; /dev/sdb
+</code></pre>
+
+<p>もちろん、この「クライアントがソケットを読む」デザインを他に適用しても良いのだが、多分あまりメリットがない。</p>
+
+<h3 id="この方法の意味と価値">この方法の意味と価値</h3>
+
+<p>まず、簡単の意味を考えなくてはならない。</p>
+
+<p>この記事の内容は、基本的な知識を網羅していることを前提としている。当然ながら、システムバックアップをするためにLive Linuxを使おう、と発想するくらいには。</p>
+
+<p>だが、理解するのは非常に容易だ。パイプとリダイレクションという、Unixerとしては初歩知識さえあれば十分理解できるレベルだ。</p>
+
+<p>一般の人には難しいだろうと思うが、エンジニアを名乗るのであればこの程度の話は通じて然るべきだと思う。少なくとも、私はそう期待している。</p>
+
+<p>「理解する気はないが、模倣して実行したいだけ」という場合は、わざわざこんな複雑な手順を取る必要はないと考えるだろう。実際、他にもバックアップソリューションはあるのだし、たとえコンピュータの後ろに手を伸ばしてでも、あるいは2度コピーする手間が生じたとしても、そのほうが良いと考えるだろう。</p>
+
+<p>実際、即時参照できるネットワークドライブがあるにも関わらず、USBメモリーで渡せと言う人を、私は身近に知っている。</p>
+
+<p>だが、思ったようにいかなかった時はどうすればいいだろう？例えば、Clonezillaが小さなディスクに復元できると思ったのにいざとなったらできなかった時だ。</p>
+
+<p>特定のソリューションに依存するのは非常にリスクが高い。できるだけ汎用性のある方法で、かつ自分が理解できるもののほうがいい。</p>
+
+<p>実際問題として、Mondo Rescueを使うという選択肢を取った場合は、バックアップ先をどうやってマウントするか、という問題が生じてしまう。</p>
+
+<p>また、圧縮したいが、クライアントはリソースが非常に少ないのでできない、という場合に、一旦ディスクに保存してからの圧縮という方法をとらずに(恐らく復元する時は伸長してからの復元ということになる)行いたいといった要求に対応するのも、標準入出力を使うのであれば非常に容易だ。</p>
+
+<p>技術を使う、知識を使うとはこういうことではないか。</p>
+
+<p>特定の目的のために知識が技術を身に着けたところで、できるのはそれだけだ。それは単に慣れた、覚えたというだけの話であり、「知」ではないと思うのだ。</p>
+
+<p>Windowsをアップグレードする前に元に戻せるようにスナップショットを取っておきたい、というのはごく当たり前にある状況だ。そのための機材が揃わないということも。</p>
+
+<p>原理、物事の仕組みを理解し、方法を考えられることは非常に重要だ。すべてお膳立てされ、整った環境でなければできないのか？それがスキルなのか？</p>
+
+<p>最低限ひとつの方法を知っていて、それで目的が達成できるということは有意なことだ。しかしそれは、楽をしようとして知らず犠牲を払っているということでもある。</p>
+
+<p>覚えたひとつの方法でうまくいかない時、あるいは適切でないとき、適切な別の方法が考えられるか？そこが知なのだろう。</p>
+
+<p>では、すべての人がそうした知識を持たなくてはならないのだろうか？私は、否であると考える。人には無限の時間が与えられているわけではない。知の獲得を志すことを是としても、そこにコンピュータに対するものが含まれているとは限らない。</p>
+
+<p>だから、私の仕事があるのだ。ここに知がある。そして、それは独占するものではなく、分け与えられるべきものだ。私も生きなければならないので、無償で、というわけにはいかないが。</p>
+
+<p>だからこそ、用意した方法が通用しない、しかし知を蓄える労力を払うべきという判断ではない、というのであれば、その時にこそ私を頼ってほしいのだ。</p>
+
+<p>それだけの時間もお金もかけているのだ。それだけ真剣に努力を重ねてのものだ。</p>
+
+<p>もちろん、自ら解決するための力をつけるために、私の手を借りてくれたって構わない。先人の肩を借りてその先までいくのは当然のことだ。このニュートンだって巨人の肩に乗るのだから。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-07-19T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-07-19T00:00:00+09:00" />
+    <title>最小限の環境を作る「フォントえらび」 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>最小限の環境を作る「フォントえらび」</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>私は基本、4台のコンピュータを運用している。これはまんま「3部屋+携行」なのだが、それぞれの最終システムインストール日を見ると</p>
+<ul>
+<li>ThinStation P720 (2019-01)</li>
+<li>FM2A88X (2017-12)</li>
+<li>Z400 Workstation (2019-07)</li>
+<li>ThinkPad X1 Carbon 5thGen (2018-06)</li>
+</ul>
+<p>である。ちなみに、これは<code>journalctl</code>すれば分かる。</p>
+<p>システムセットアップ時に悩ましいのがフォントだ。 ここではManjaroを前提にして語るが、日本語フォント関連のパッケージは“font japanese”で検索すると62ほどあり、うち公式パッケージは源ノ角ゴシック、源ノ明朝、IPAフォント、花園明朝、さざなみフォントである。</p>
+<p>フォント関連のAURパッケージはあまりメンテナンスされないことが多く、多くのフォントを維持するのはかなり厳しい。インストール時間もかかるので入れるのもしんどい。 ひとつにまとめて、それを<code>/usr/local/share/fonts</code>などに入れて運用する方法もあるのだが、商用フォントの除外という手間もあるし、OS側(<code>/usr/share/fonts</code>)との兼ね合いもディストリビューションが違ったりすると特に発生しがちなので割と難しい。</p>
+<p>なにより、「フォントの数」と「画面の総ピクセル数」は <em>ものすっごく</em> 反応速度に影響するのだ。遅い遅いと思っていたマシンをまっさらにして1366*768なディスプレイをつないだら爆速になったりしている。 だから、メインマシン(もしくはフォントを使うようなアートワーク作業をするマシン)だけにフォントを積んで、他はessentialに運用したい。</p>
+<p>ここでは私の経験に基づいてよいと判断したessentialを紹介するが、好みによることはご了承いただきたい。</p>
+<h2 id="先に結論">先に結論</h2>
+<pre><code>% trizen -S adobe-source-han-sans-jp-fonts adobe-source-han-serif-jp-fonts ttf-cica ttf-ume</code></pre>
+<ul>
+<li>商用フォント顔負けのクオリティで出せる源ノ角ゴシック、源ノ明朝</li>
+<li><code>zsh-theme-powerlevel9k</code>や<code>powerline</code>を入れた場合に必要になるpowerlineシンボルなどまでカバーし、日本語コーディングフォントを必要する場合に有用なCica</li>
+<li>MS日本語フォントにメトリック互換の梅フォント</li>
+</ul>
+<p>という構成である。</p>
+<h2 id="好みのちょい足し">好みのちょい足し</h2>
+<p>もう少し意味を補強すると、IPAフォントがあるとLibreofficeで文書をやりとりするようなケースでは有効である。 IPAフォントは公式パッケージなのでインストールしてもいいかもしれない。</p>
+<p>さらにいえば、コーディングフォントは日本語フォントである必要はなかったりする。 私が様々なコーディングフォントで様々なコードや文章を書いた経験で言えば、長時間使っていて快適性が高かったコーディングフォントは</p>
+<ul>
+<li>Hermit</li>
+<li>Input Mono</li>
+<li>Fira Mono</li>
+<li>Meslo</li>
+<li>Camingo Code</li>
+<li>Roboto Mono</li>
+</ul>
+<p>だった。</p>
+<p>あと、私は個人的にMiguも好きなので、</p>
+<pre><code>% trizen -S otf-ipafont ttf-migu otf-hermit</code></pre>
+<h2 id="好みのちょい盛り">好みのちょい盛り</h2>
+<p>ひょっとしたらスタイリッシュな欧文フォントがないことが不満かもしれない。 定番としては<a href="https://philatype.com" rel="external">Sen</a>とかだったと思うのだけれど、今SenはGoogle Fontsから外れてしまった。 <a href="https://fonts.google.com/specimen/Overlock">Overlock</a>も定番。これは個人的には静凛さんのチャット欄がOverlockなので馴染みがある。</p>
+<p>ManjaroのロゴフォントであるComfortaaは最近のManjaroはデフォルトで入っていたりする。</p>
+<p>あと、<a href="https://fonts.google.com/specimen/Josefin+Sans" rel="external">Joseffin Sans</a>も好き。</p>
+<p>かっこいいSerifフォントが欲しい、とかいうと特に定番はないので、GoogleでSerifカテゴリを選択して探していただくのがよかろう。 Serifフォントに関しては私は商用のHumanist Slab 712を使っていたりするし。 どうしてもお勧めというのであれば、<a href="https://fonts.google.com/specimen/Martel" rel="external">Martel</a>とか<a href="https://fonts.google.com/specimen/Cormorant+Garamond" rel="external">Cormorant Garamond</a>とか、<a href="https://fonts.google.com/specimen/Abhaya+Libre" rel="external">Abhaya Libre</a>とかだろうか。</p>
+<p>そして個人的には源ノ角ゴシックも良いが、やっぱりモトヤフォントが好きだ。 それにこのラインナップでは丸ゴシックがない。</p>
+<p>そこで<a href="https://fonts.google.com/specimen/Kosugi" rel="external">小杉ゴシック</a>と<a href="https://fonts.google.com/specimen/Kosugi+Maru" rel="external">小杉丸ゴシック</a>だ。 小杉ゴシックは元「モトヤ Lシーダ W3等幅」、小杉丸ゴシックは「モトヤ Lマルベリ W3等幅」のリネームである。 これらはApache Lisence 2.0でAndroidに載っていたフォントだ。</p>
+<h2 id="好みの盛り盛り">好みの盛り盛り</h2>
+<p>ドキュメントを書く上で使いやすいフォントに欠けるので、<a href="https://okoneya.jp/font/download.html" rel="external">源暎フォント</a>を追加している。 ただし、これはドキュメント生成、つまりPandocを使う端末のみ。</p>
+<p>あと、本文フォントは「源暎ラテミン」よりも「元陽逆アンチック」のほうが人気があるので、<a href="https://osdn.net/users/takahirochou/pf/Mincho_Fonts/files/" rel="external">それも入れておく</a></p>
+<h2 id="セットアップ">セットアップ</h2>
+<p>言葉はいらないよな?</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">&lt;?xml</span> version=&#39;1.0&#39;<span class="kw">?&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="dt">&lt;!DOCTYPE </span>fontconfig SYSTEM &#39;fonts.dtd&#39;<span class="dt">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">&lt;fontconfig&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>    <span class="kw">&lt;its:rules</span><span class="ot"> xmlns:its=</span><span class="st">&quot;http://www.w3.org/2005/11/its&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>        <span class="kw">&lt;its:translateRule</span><span class="ot"> translate=</span><span class="st">&quot;no&quot;</span><span class="ot"> selector=</span><span class="st">&quot;/fontconfig/*[not(self::description)]&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>    <span class="kw">&lt;/its:rules&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a>    <span class="kw">&lt;description&gt;</span>Re-define sans-serif, serif and monospace.<span class="kw">&lt;/description&gt;</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a>            <span class="kw">&lt;string&gt;</span>sans-serif<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-14"><a href="#cb3-14"></a>            <span class="kw">&lt;string&gt;</span>Joseffin Sans<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-15"><a href="#cb3-15"></a>            <span class="kw">&lt;string&gt;</span>MotoyaLCedar<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16"></a>            <span class="kw">&lt;string&gt;</span>Source Han Sans JP<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-17"><a href="#cb3-17"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb3-18"><a href="#cb3-18"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb3-19"><a href="#cb3-19"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-20"><a href="#cb3-20"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a>            <span class="kw">&lt;string&gt;</span>serif<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-22"><a href="#cb3-22"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb3-23"><a href="#cb3-23"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a>            <span class="kw">&lt;string&gt;</span>Overlock<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-25"><a href="#cb3-25"></a>            <span class="kw">&lt;string&gt;</span>GenEi Koburi Mincho<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a>            <span class="kw">&lt;string&gt;</span>Source Han Serif JP<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb3-28"><a href="#cb3-28"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb3-29"><a href="#cb3-29"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-31"><a href="#cb3-31"></a>            <span class="kw">&lt;string&gt;</span>monospace<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-32"><a href="#cb3-32"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb3-33"><a href="#cb3-33"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a>            <span class="kw">&lt;string&gt;</span>Hermit<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-35"><a href="#cb3-35"></a>            <span class="kw">&lt;string&gt;</span>Cica<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-36"><a href="#cb3-36"></a>            <span class="kw">&lt;string&gt;</span>Migu 1M<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb3-37"><a href="#cb3-37"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb3-38"><a href="#cb3-38"></a>        --&gt;</span>
+<span id="cb3-39"><a href="#cb3-39"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb3-40"><a href="#cb3-40"></a><span class="kw">&lt;/fontconfig&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">&lt;?xml</span> version=&#39;1.0&#39;<span class="kw">?&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="dt">&lt;!DOCTYPE </span>fontconfig SYSTEM &#39;fonts.dtd&#39;<span class="dt">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">&lt;fontconfig&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>    <span class="kw">&lt;its:rules</span><span class="ot"> xmlns:its=</span><span class="st">&quot;http://www.w3.org/2005/11/its&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>        <span class="kw">&lt;its:translateRule</span><span class="ot"> translate=</span><span class="st">&quot;no&quot;</span><span class="ot"> selector=</span><span class="st">&quot;/fontconfig/*[not(self::description)]&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>    <span class="kw">&lt;/its:rules&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a>    <span class="kw">&lt;description&gt;</span>Substitude popular Japanese fonts<span class="kw">&lt;/description&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a></span>
+<span id="cb4-10"><a href="#cb4-10"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a>            <span class="kw">&lt;string&gt;</span>ＭＳ Ｐゴシック<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-15"><a href="#cb4-15"></a>            <span class="kw">&lt;string&gt;</span>MS PGothic<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18"></a>            <span class="kw">&lt;string&gt;</span>Ume P Gothic S5<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb4-20"><a href="#cb4-20"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb4-21"><a href="#cb4-21"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-22"><a href="#cb4-22"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-23"><a href="#cb4-23"></a>            <span class="kw">&lt;string&gt;</span>ＭＳ Ｐ明朝<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-24"><a href="#cb4-24"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-25"><a href="#cb4-25"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-26"><a href="#cb4-26"></a>            <span class="kw">&lt;string&gt;</span>MS PMincho<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-27"><a href="#cb4-27"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-28"><a href="#cb4-28"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-29"><a href="#cb4-29"></a>            <span class="kw">&lt;string&gt;</span>Ume P Mincho<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-30"><a href="#cb4-30"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb4-31"><a href="#cb4-31"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb4-32"><a href="#cb4-32"></a>    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-33"><a href="#cb4-33"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-34"><a href="#cb4-34"></a>            <span class="kw">&lt;string&gt;</span>ＭＳ明朝<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-35"><a href="#cb4-35"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-36"><a href="#cb4-36"></a>        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-37"><a href="#cb4-37"></a>            <span class="kw">&lt;string&gt;</span>MS Mincho<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-38"><a href="#cb4-38"></a>        <span class="kw">&lt;/test&gt;</span></span>
+<span id="cb4-39"><a href="#cb4-39"></a>        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb4-40"><a href="#cb4-40"></a>            <span class="kw">&lt;string&gt;</span>Ume Mincho<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb4-41"><a href="#cb4-41"></a>        <span class="kw">&lt;/edit&gt;</span></span>
+<span id="cb4-42"><a href="#cb4-42"></a>    <span class="kw">&lt;/match&gt;</span></span>
+<span id="cb4-43"><a href="#cb4-43"></a><span class="kw">&lt;/fontconfig&gt;</span></span></code></pre></div>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

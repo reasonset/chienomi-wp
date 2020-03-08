@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-12-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-12-27T00:00:00+09:00" />
+    <title>Manjaro LinuxのXが起動しなくなった - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Manjaro LinuxのXが起動しなくなった</h1></header>
+        <article id="MainArticle">
+<p>12-20のシステムアップグレードリリースでManjaroを再起動した際、Xが起動しなくなった。</p><samp style="display: block;white-space: pre-wrap" class="filecontent" title="/var/log/Xorg.0.log (tail)">[ 32.722] (II) fglrx(0): Desc: AMD FireGL DRM kernel module
+[ 32.722] (II) fglrx(0): Kernel Module version matches driver.
+[ 32.722] (II) fglrx(0): Kernel Module Build Time Information:
+[ 32.722] (II) fglrx(0): Build-Kernel UTS_RELEASE: 3.18.0-0-MANJARO
+[ 32.722] (II) fglrx(0): Build-Kernel MODVERSIONS: no
+[ 32.722] (II) fglrx(0): Build-Kernel __SMP__: no
+[ 32.722] (II) fglrx(0): Build-Kernel PAGE_SIZE: 0x1000
+[ 32.722] (II) fglrx(0): [uki] register handle = 0x00016000
+[ 32.722] (II) fglrx(0): DRI initialization successfull
+[ 32.722] (II) fglrx(0): FBADPhys: 0xf400000000 FBMappedSize: 0x010e0000
+</samp><samp style="display: block;white-space: pre-wrap" class="filecontent" title="/var/log/mdm/:0.log (tail)">(==) Log file: "/var/log/Xorg.0.log", Time: Sat Dec 20 23:57:18 2014
+(==) Using config file: "/etc/X11/xorg.conf"
+(==) Using config directory: "/etc/X11/xorg.conf.d"
+(==) Using system config directory "/usr/share/X11/xorg.conf.d"
+(WW) fglrx: No matching Device section for instance (BusID PCI:0@0:1:1) found
+/usr/bin/Xorg.bin: symbol lookup error: /usr/lib/xorg/modules/drivers/fglrx_drv.so: undefined symbol: GlxInitVisuals2D
+</samp><p>検索すると事例はかなり多く見つかるが、そのほとんどは<samp>aticonfig --initial</samp>しろというものだ。</p><p>だが、これでうまくはいかなかった。<tt class="puredoc_idname">nomodeset</tt>しろという声もあったが、それはすでにしてあるし、確認もした。</p><p>そのほかにはflgrxを無効にする方法について記述されたものがある程度で、それ以外はインストールしろか、もしくは解決しないままか、だ。</p><p>かなり深く調べた。エラーでは0:1:1となっているが、本当にBusIDの不一致を疑って調べると0:1:0だったので、それが原因かと思って調べたりもした。だが、結局解決にはつながらなかった。</p><p>バックアップしたイメージでロールバック、ということも考えたのだが、まずは総再ビルド&インストール。もし、パッケージが壊れたためならこれで解決する。もともと壊れていたのなら、ロールバックしてアップグレードしても同じことになる。</p><p>やり方は次のようなもの。</p><code style="display: block;white-space: pre-wrap">for i in $(pacman -Q | cut -f 1 -d " ")
+do
+  yaourt -S --noconfirm "$i"
+done
+</code><p>sudo時間は長くしておくほうが良い。</p><p>だが、うちの場合、頻繁に、長時間に渡ってネットワークダウンが生じる。上流で起きていること（おそらく、回線、集合回線部分のせいだろう）なので私には手出しできない。フルビルドで回っている間ネットワークがダウンすると失敗する。これはなかなか恐ろしい。</p><p>幸いにもネットワークダウンには遭遇せず2回完走したのだが、改善しなかった。そこでロールバックを試みたのだが、dumpしたイメージを<span style="font_style: italic;">restore(8)</span>しようとしたが、<samp>0 inode file</samp>と言われ、14GBもあるファイルにもかかわらずできなかった。</p><p>システム再インストールしかなくなってしまったが、せめてもということで、<code>pacman -Q</code>の結果を外部に保存しておく。</p><p>再インストールだが、Manjaro 0.8.11 Xfce JPのイメージのインストーラではkeymap選択画面でフリーズしてしまい、進まない。0.8.10 XFce JPイメージでインストールする。</p><p><a href="http://reasonset.net/journal/archives/livewithlinux/344" alt="2014-11-05のarticle">2014-11-05のarticle</a>にある手順でセットアップ。</p><ul><li>pacman-keyの再構築、無効なキーの削除</li><li>aticonfig</li><li></li><li>vigrで<tt class="puredoc_value">users</tt>のGIDを<tt class="puredoc_value">500</tt>に</li><li></li></ul><p>そしてパッケージを復帰させる。いくつか試したが、sudoのtimeoutを無効にした上で</p><code style="display: block;white-space: pre-wrap">for i in $(ruby -e 'list1 = `pacman -Q | cut -f 1 -d " "`.split("\n")' -e 'list2 = `cut -f 1 -d " " paclist`.split("\n")' -e 'list2.each {|i| next if list1.include?(i); puts i}' )
+do
+  yes Y | yaourt -S "$i"
+done
+</code><p><tt class="puredoc_value">--noconfirm</tt>ではconfrict時に中止を選択されてしまう。基本的にはこれで通るが、MATE関連でgstreamerかpulseaudioか選べと言われて<tt class="puredoc_value">Y</tt>を返しても通らないため、チェックしてこの時に一旦INTしてmate関連を手動インストールの上、やり直す。ちなみに、依存関係で入るパッケージもこの方法だと再インストールするため、mozc-utなどはfcitx-mozc-utで入るのだから途中で中断してやり直したほうが早い。</p><p>これを避ける方法としては</p><code style="display: block;white-space: pre-wrap">while p=$(ruby -e 'list1 = `pacman -Q | cut -f 1 -d " "`.split("\n")' -e 'list2 = `cut -f 1 -d " " paclist`.split("\n")' -e 'list2.each {|i| next if list1.include?(i); puts i}' | head -n 1)
+      [[ -n "$p" ]]
+do
+  yes Y | yaourt -S "$i"
+done
+</code><p>で、その他の選択肢を要求する場合を除いていけると思う。だだし、そもそもビルドできないパッケージがあると、それはインストールできないため詰んで（ループして）しまう。監視なしにするにはexpectを使うしかない。なお、xpdf関連は無理だった。</p><p>この後は次のようにしてセットアップを進める</p><ul><li>バックアップしたhomeのイメージをrsync。この時、<samp>rsync -av /mnt/1/ --exclude share/ /home/</samp>としてマウントされるユーザーデータは回避する。</li><li>このままではユーザーデータがマウントできないので、<samp>sudo -u aki mkdir ~aki/share ~aki/.share.encfs</samp>とする。</li><li><tt class="puredoc_pathname">/etc/fstab</tt>を編集。tmpfsと<tt class="puredoc_pathname">~/.share.encfs</tt>(btrfsサブボリューム)のマウントを設定。 encfsをマウントするためのスクリプトを<tt class="puredoc_pathname">~/root/bin</tt>に書く。</li><li>これでほぼ通常通り。リブートしてakiでログインし、Catalyst Control Centerを起動、設定すればOKだ。復旧に6日もかかってしまった。</li><li>今回のようなことがか内容にと、今回はインストール時にLVMを使用する設定とした。ちなみに、ディスクのパスフレーズの強度を大幅に高めた。</li><li>だが、標準でLVにVG全域を使用してしまうため、「管理やバックアップを容易にするため」と言いながら、実際は全く柔軟性がない。仕方ないので、SystemRescueCDで起動し、luksOpenしてvgscanし、ルートボリュームをe2fsck+resizefs+e2fsckで縮小した後、<code>lvreduce --size 80G ManjaroVG/ManjaroRoot</code>でOK。アップデート前にスナップショットを取るようにすればロールバックは容易になる。Manjaroでは運用中にこのような事態に陥ることが既に3回めなので必要だろう。また、rsyncでバックアップしておくことも必要かもしれない。</li></ul>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

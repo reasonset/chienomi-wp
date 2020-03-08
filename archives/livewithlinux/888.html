@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-03-19T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-03-19T00:00:00+09:00" />
+    <title>ThinkPad e440 * Manjaro Linux KDE, Fcitx Mozc Neologd UT, Padre - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ThinkPad e440 * Manjaro Linux KDE, Fcitx Mozc Neologd UT, Padre</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#thinkpad-e440manjaro-linux-kde-1512-x8664" id="markdown-toc-thinkpad-e440manjaro-linux-kde-1512-x8664">ThinkPad e440にManjaro Linux KDE 15.12 (x86_64)をインストール</a></li>
+  <li><a href="#wi-fi" id="markdown-toc-wi-fi">Wi-Fiの問題</a></li>
+  <li><a href="#plasma5" id="markdown-toc-plasma5">Plasma5</a></li>
+  <li><a href="#kde-applications" id="markdown-toc-kde-applications">Kde Applications</a></li>
+  <li><a href="#section" id="markdown-toc-section">テーマ</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">アクティビティ</a></li>
+  <li><a href="#fcitx-mozc-neologd-ut" id="markdown-toc-fcitx-mozc-neologd-ut">Fcitx Mozc Neologd UT</a></li>
+  <li><a href="#padre" id="markdown-toc-padre">Padre</a></li>
+</ul>
+
+<h3 id="thinkpad-e440manjaro-linux-kde-1512-x8664">ThinkPad e440にManjaro Linux KDE 15.12 (x86_64)をインストール</h3>
+
+<p>これまでPCLinuxOSで運用してきたThinkPad e440だが、どうしても不安定(KWinがフリーズして再起動することが多い、バッテリーモニターが機能しない、など)なのが気になってManjaro Linuxにしてみた。</p>
+
+<p>私のThinkPad e440はCeleron 2950Mに4GB RAMの貧弱仕様、ピクセル数もWXGAにすぎない。RAMに関しては8GBに拡張してある。これによってようやくまともに動くようになった(その前は遅くて仕方がなかった)。ハードディスクも拡張済みだ。</p>
+
+<p>このRAM拡張のおかげで、以前はまともに動かなかったKDE Plasma Workspaceが動くのだが、それでもかなり重い。それでもKDEが好きなのと、特にシステムを細かく設定し、好みのアプリケーションを使い分けてデータを扱いやすいように保存する…という意図がなければ、ひと揃い便利なものがあるKDEは非常に重宝するのだ。</p>
+
+<p>最新のLXQtもあったが、今回もKDE。これでうちは4台がManjaroに。とうとう残るManjaroじゃないやつはIPFire, linuxbeanだけになってしまった。</p>
+
+<p>e440はWindows 7が入っており(Windows 10にしたものの、結局Sonarがちゃんと動かないので戻してある)、デュアルブートなのがここまでのハードルになっている。</p>
+
+<p>Manjaro Linux KDE 15.12時点ではインストーラは、Thusについては手動パーティショニングについてLUKSは使えるが、LVMは扱えない。また、GrubはMBRのみ。CalamareはLVM及びPBRをサポートするが、LUKSをサポートしない。</p>
+
+<p>今回はLUKS優先でThusでインストールした。レガシーブートなので(Windows 7モデルを選択するとレガシーブートで、Windows 8モデルを選択するとUEFIで来る)問題が起きにくいというのはある。</p>
+
+<h3 id="wi-fi">Wi-Fiの問題</h3>
+
+<p>e440に入っているWi-FiモジュールはLinuxでうまく駆動しない。ある程度通信すると止まるのだ。</p>
+
+<p>Manjaroだとほぼ直ちに止まる。PCLinuxOSだと通信量が少なければなかなか見立たない。openSUSEではストールしたのを見たことがない。</p>
+
+<p>これがPCLinuxOSを選択する大きな理由だったのだが、結局止まるのであれば、あまり意味がなかった。</p>
+
+<p>これを受けて、Wi-Fiはドングルを使うと割り切ってManjaroを導入することにした。</p>
+
+<p>とはいえもしかしたらなんらかの改善方法があるのかもしれない。</p>
+
+<p>以前には<a href="http://nukisakineko.hatenablog.com/entry/2015/03/09/224431">ブログでも</a>その問題をみかけることができるが、バージョンが限定されている。
+Ubuntuでfixが入っただけかもしれないので、特定のカーネルの問題ではないのかもしれない。</p>
+
+<p>また、<a href="http://www.dedoimedo.com/computers/ubuntu-trusty-realtek.html">Dedoimedo</a>でもこの問題について言及されている。こちらでは/etc/modprobe.d/rtl8723be.confとして</p>
+
+<pre><code>options rtl8723be fwlps=N ips=N
+</code></pre>
+
+<p>を記載することを勧めている。</p>
+
+<p>これを受けて試してみたのが、まずkernel headerをインストールした上で、AURからrtl8723bs-dkms-gitをインストール。</p>
+
+<p>そしてdkmsを有効にする</p>
+
+<pre><code># systemctl enable dkms
+</code></pre>
+
+<p>そしてインストール</p>
+
+<pre><code># dkms install rtl8723bs/2
+</code></pre>
+
+<p>これで再起動したところ、3.7GBのファイルのダウンロードに成功した。</p>
+
+<p>ただし、時々不安定になるので、切断・再接続をする必要がある時もあるかもしれない。それでも十分実用になる。yaourt</p>
+
+<h3 id="plasma5">Plasma5</h3>
+
+<p>sniproxy不要になったPlasma5だが、いくつかのアプリケーション(Mono関連, Cloud.ru, Skype, Wineなど)が結局systrayに入らない。
+必要であればtrayerを併用するべき。</p>
+
+<p>非常にアピアランスは良いし(Plasma 4のリッチUIも良いと思うのだけれども、フラットUIになったのに見やすく、美しくなった。元々タブレットやネットブックに向けて作られたフラットUIは、あまり画面解像度もないラップトップには適しているということだろう。非常に見やすい。</p>
+
+<p>全体に優れている。完璧ではないけれども優れている。
+ManjaroをXFceからインストールするとKMailが動かなかったり、Akonadiでエラーが出たりするが、そうした問題はさすがに改善されている。</p>
+
+<p>Kate, Kwriteは、通常のXFceから入れるものとはちょっと違う。違うのだが、PCLinuxOSではRubyの特異クラスをちゃんと理解したように思うのだが、こちらはダメだ。残念。</p>
+
+<p>Manjaro Setting Managerが含まれないため困惑するが、こちらはkcmに統合されている。</p>
+
+<p>バッテリーモニターは適切に動作する。パワーマネジメントもPlasma 5.3で無事追加されている。</p>
+
+<p>パワーマネジメントでバッテリー駆動時の設定を行うためにはバッテリーを取り付けておかなくてはならない。</p>
+
+<p>e440においてのみ発生する現象だが、Super+Shift+→が動作しない。
+quicktileにその設定が使えないのが少々痛い。この問題はThinkPad e440上のKDEで常に発生する。</p>
+
+<p>動作速度は良いが起動・終了は非常に遅い。安定性はPCLinuxOSのKDE4よりも安定している。
+アイコンの通知表示が優れている。ただし、systrayに関しては自然に階層化されるCinnamonのほうが優れている。</p>
+
+<p>クイックランチ的に置かれているアイコンはパネル上のウィジットである。Firefoxが邪魔なのだが、これを削除するにはパネル編集モードから削除する。</p>
+
+<p>ウィジットはまだ少なめだ。リサイズ方法は、余白部分を左ボタンダウンを続けてメニューを表示する、というあまり直感的ではない方式。タッチインターフェイスを意識したのか。しかしそれは右クリック相当じゃないのか。</p>
+
+<h3 id="kde-applications">Kde Applications</h3>
+
+<p>KDEには膨大な、様々な、そして有用なアプリケーションがあることがおおきなアドバンテージだが、Manjaro KDEはその収録量が少ない。Konquerorすら入っていない。</p>
+
+<p>(とはいえ、近年はKonquerorは入れない傾向があるため、それほどめずらしくはないのだけれど)</p>
+
+<p>kde-applicationsグループにまとめられているので、</p>
+
+<pre><code>$ yaourt -S kde-applications
+</code></pre>
+
+<p>でしっかりと入る。</p>
+
+<h3 id="section">テーマ</h3>
+
+<p>ManjaroにはMaiaテーマが採用されている。</p>
+
+<p>緑を用いたなかなかに美しいテーマで、Manjaro色が良いと思うかどうかという問題はあるが、ひと揃いあって統一感は良い。breezeよりも良いので、統一感をもたせにくい他のテーマを採用するのが難しい。</p>
+
+<p>Maiaアイコンテーマの再起動、シャットダウンなどのアイコンは非常に好きで、アイコン自体は個人的にはcompassのほうが好きなのだが、結局Maiaのまま。壁紙もMaiaなのでフルMaia。</p>
+
+<p>ちょっとこれはなんとかしたい。ウィンドウデコ
+レーションはMaiaではなくbreezeなのだが、これは変更した。また、壁紙も変更した。</p>
+
+<p>Plymouthはなぜか他と同じmanjaro-extra-elegantではなく、manjaro-elegantが採用されている。私はmanjaro-redefined-bsplashを採用した。</p>
+
+<h3 id="section-1">アクティビティ</h3>
+
+<p>使い方に困る人の多いアクティビティで、私もご多分に漏れずではあるが、e440においては追加したアクティビティがひとつある。</p>
+
+<p>これはプレゼンテーション用で、パワーマネジメントをACと同じにしてある。
+なお、ACではDim screenやスクリーンのオフなどは切ってあり、ブライトネス設定がない。</p>
+
+<h3 id="fcitx-mozc-neologd-ut">Fcitx Mozc Neologd UT</h3>
+
+<p>つい先日libkkcの話をしたばかりではあるが、やはり入力効率はMozcのほうが良い。しかし、MozcではATOKに及ばないのは当然としても、WindowsのGoogle日本語入力との差が激しい。</p>
+
+<p>PCLinuxOSにおいてTomcatさんの仕事で非常に大きなアドバンテージとなっていたNeologd UTがAURにも来ていたる</p>
+
+<p>これは、UTUMIさんがUTに代えた新たな仕事として作ったもののようだ。UTの35万語から85万語に大幅増となっている(半数は地名とのことだが)ので入力効率が大幅に向上しているのだ。
+確かに出てくる文字が違う。UTだとAndroidのGoogle日本語入力と非常に似た変換候補という印象なのだが、こちらは違う。</p>
+
+<p>ニコニコ大百科が使えなくなるので一部変換できなくなる言葉も出てくるだろう。もしかしたらニコ厨諸兄にあってはMozc UTでnicodicを有効にしたほうがいいのかもしない。</p>
+
+<p>あとは、mecab-ipadic-NEologdがどれだけのものに今後なっていくか次第か。</p>
+
+<p>とりあえず使ってみた感触では従来のMozc-UTよりも良いと思う。
+ただし、サイズ自体もかなり大きいので、ディスク消費量が問題になる場合には不適。また非常にメモリ消費に対して厳しい場合も同様。</p>
+
+<p>その意味ではuim-anthyが使えるPCLinuxOSは有利。Whizもいいのかもしれない。
+とにかくパワフルで効率的な変換をしたい人にとっては、Linuxでは現状の最有力。Wimeを使うという手段もあるのかもしれないが。</p>
+
+<h3 id="padre">Padre</h3>
+
+<p>AURのPadreがPerl::Devel::DumpvcarとPerl::POD::Abstractがビルドにこけるためインストールできない。<code>prove -lr</code>を<code>prove -r</code>にビルドを通すため変更したとあるが、<code>prove -lr</code>に戻さないと通らないので注意。</p>
+
+<p>さらに、perl-wx-scintillaに関しては、OUT OF DATEが立っていてビルドできない。
+そのため、perl-padreのPKGBUILDを編集してperl-wx-scintilla-devに変更することはできるが、いずれにせよこれが原因でビルドできない。</p>
+
+<p>なお、cpanでインストールしようとするとシステムがフリーズする。要注意。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

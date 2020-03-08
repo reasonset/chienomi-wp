@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-24T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-24T00:00:00+09:00" />
+    <title>蘇ったFreetype2 Infinality - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>蘇ったFreetype2 Infinality</h1></header>
+        <article id="MainArticle">
+<p>Archの人たちは本当に熱心だ。</p>
+<p>Infinalityといえば、フォントの美しさにこだわるLinuxerにとってかけがえのないキーワードであり、定番テクニックだった。</p>
+<p>FreeType2が2.7になったとき、同時にInfinalityも消滅した。</p>
+<p>これは、FreeType2がInfinality相当のフォントレンダリングを取り込んだから…でもあるが、実は作者失踪のため、でもある。 FreeType2がInfinality相当のサブピクセル計算方法を取り込んだから十分だと考えたのか、それともやる気を失ったのか、いずれにせよ公式にInfinalityの役割を終了することなく…つまり、Infinalityのまざまな機能は取り込まれなかったが計算式だけは取り込まれる形でInfinalityは消滅した。 もちろん、Infinalityはそれ以前に終わっていたのだが、FreeType 2.6の間は機能していた。2.7になって互換性がなくなり、機能しなくなったのだ。</p>
+<p>これに対して不満を持つ人は多かった。</p>
+<p>まず、Infinalityが終了したことに気づかず、トラブルに巻き込まれた人、というのがとても多い。</p>
+<p>そして次に、<code>FREETYPE_PROPERTIES=&quot;truetype:interpreter-version=38&quot;</code>は十分ではないと考えた人もまた、いたのだ。</p>
+<p>実際、私もFreeType 2.6 InfinalityからFreeType 2.7になってフォントレンダリングの質は落ちた、と感じた。 だが、upstreamの方針ならそれもまた致し方なし…と考えたのだ。</p>
+<p>しかし、そうではなかった。 FreeTypeはInfinalityの機能を取り入れる予定はなかったし、別にInfinalityパッチが不要のものになったわけでもなかった。</p>
+<p>そしてついにFreeTypeパッチは蘇った。</p>
+<p>AURにあるfreetype2-infinalityはFreeType 2.9に対応した新しいInfinalityパッチつきFreeTypeである。 cairo-infinality-ultimate, fontconfig-infinality-ultimateが新たなる対応ソフトウェアとして登場している。 なお、Java用のInfinalityパッチとlib32のFreetypeパッチは投げ捨てられたままだ。</p>
+<p>freetype-ultiamte5はInfinalityではない、さらに別のパッチである。 TomaszGasior氏の作で、Infinalityを使わず、直接にFreeTypeにパッチを当て、Infinality Ultimate5相当のレンダリングを得ているという。 fontconfigやcairoにinfinalityパッチを当てる必要もない、なかなか効率的なパッチだ。</p>
+<p>FreeTypeはClearTypeのフォントレンダリングを取り込もうとしているらしい。 だが、特許上の問題から今のところ難しいらしい。</p>
+<p>この機能自体は実装はされていて、しかし有効にできないオプションとなっている。</p>
+<blockquote>
+<p>Technically, no. The patents cover the whole process of generating and displaying sub-pixel images. Since the font engine doesn’t do the display part, it cannot infringe. Apart from that, FreeType has provided the capability of converting vector shapes into un-filtered sub-pixel images for a long time.</p>
+<p>By default, FreeType’s scan-line converter returns ‘gray’ sub-pixel images, where for each pixel the color components are equal (this is, R=G=B). The result is visually identical to gray anti-aliasing and cannot infringe any of the ClearType patents.</p>
+<p>Similarly, the LCD-specific filtering API is disabled by default, which means that it returns an error and doesn’t alter sub-pixel images.</p>
+<p>You can override these limitations by activating option FT_CONFIG_OPTION_SUBPIXEL_RENDERING in FreeType’s ftoption.h configuration file, but you should do that at your own risk.</p>
+</blockquote>
+<p>この機能を(自己責任において)有効にした状態でビルドしたものがfreetype2-cleartypeである。</p>
+<p>そしてこのいずれも、最も劣悪にまで落ちてしまったLinuxのフォントレンダリングを改善してくれる。</p>
+<p>リスク順に考えてみよう。</p>
+<dl>
+<dt>freetype2-cleartype</dt>
+<dd><p>特許上の問題がある。設定オプションを変更しているだけなので、Infinalityパッチ環境で2.7に上がったときのような問題は起きないと思われる。</p>
+<p>技術的には最も安全。特許状の問題は、個々の環境で有効にする分には問題はない…?</p>
+</dd>
+<dt>freetype2-ultimate5</dt>
+<dd><p>小規模なパッチで、取り残される心配は作者が投げない限りはなさそう。</p>
+<p>動作もinfinalityに比べれば軽く、戻すのも比較的簡単。 ぜひともupstreamに取り込んで欲しい逸品。</p>
+</dd>
+<dt>freetype2-infinality</dt>
+<dd><p>fontconfigとcairoにも依然としてパッチを当てる<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>必要がある。 動作も重く、やや不安定。</p>
+<p>現状では問題なく動作しているが、リスクは最も高いように思われる。</p>
+</dd>
+</dl>
+<p>freetype2-ultimate5とinfinalityパッチは関係がないはずだか、freetype-ultiamte5 + fonconfig-infinality-ultimate のほうが美しいように感じた。</p>
+<p>なお、これらのパッケージはAURのものであり、Arch、あるいはAURを利用する他のディストーション(Anterogos, Manjaro)以外においては導入は難しいかもしれない。</p>
+<hr />
+<p>追記。実際に比較してみた。</p>
+<p>設定を全くせずにインストールだけするとfreetype2, freetype2-cleartype, freetype2-infinalityの結果は全く同じだった (<code>composite -compose Difference afile bfile difffile</code>と<code>identify -format &quot;%[mean]&quot; difffile</code>で確認)。</p>
+<p>freetype2-ultimate5は異なるレンダリングをしている(見た目にも明らかに濃い)が、fontconfig-infinality-ultimateによる違いはなかった。</p>
+<p>繰り返すが、これはあくまで「設定は一切せずに」比較している。</p>
+<p>ただ、結局はfreetype2-ultimate5がよさそうだという感触なのだが。</p>
+
+<figure><a href="/wp-content/uploads/2018/07/freetype2-cleartype-option.png"><img src="/wp-content/uploads/2018/07/freetype2-cleartype-option.png" alt="" width="680" height="480" class="size-full wp-image-1496" /></a><figcaption> FreeType2 ClearType option</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/freetype2-ultimate5-patched.png"><img src="/wp-content/uploads/2018/07/freetype2-ultimate5-patched.png" alt="" width="680" height="480" class="size-full wp-image-1497" /></a><figcaption> FreeType2 Ultimate5 patched</figcaption></figure>
+
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>FontConfigのほうはpatchというか、<code>/etc/fonts/conf.avail.infinality</code>を作ってこれにリンクを張るものだけれども<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

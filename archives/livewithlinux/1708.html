@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-09-23T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-09-23T00:00:00+09:00" />
+    <title>Linux zsh/デュプレクサ/ssh設定の勘所 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linux zsh/デュプレクサ/ssh設定の勘所</h1></header>
+        <article id="MainArticle">
+<p>ここのところ大作をいくつも書いているため、忙しさも手伝ってなかなかアップロードできない。 この話もLinuxを使えるようセットアップする話をまとめようと思っていたのだが、それはあまりに時間がかかってしまうので、かいつまんで解説しようと思う。</p>
+<h2 id="序">序</h2>
+<p>世の中にはLinuxをインストールだけ繰り返すという人もいるのだが、だいたいそういう人はセットアップをしない。</p>
+<p>1台だけのコンピュータを使う人、というのも、実はLinux手練(というよりも達人)の中でも結構多いのだが、1台だけ使っているうちにはその中で順次セットアップを煮詰めていけば良いのだが、Linuxは複数台使ってこそその真価を発揮するし、そうなると素早く適切にセットアップすることが求められる。 特にConoHaでインスタンスを立てたり閉じたりする場合にはなかなか重要だ。</p>
+<p>ここでは頻繁にセットアップを行うがまだ手順を確立していない人、あるいはセットアップ自体確立していない人のために私のコツをご紹介しよう。</p>
+<p>なお、ここでは前提としてManjaro Linuxあるいは(サーバーにおいては)Arch Linuxをセットアップする前提にあり、その中で極力少ない労力でセットアップしようとしている。 基本的な方針は他のディストリビューションでも応用できるはずだが、労力の多寡に関してはこの限りではない。</p>
+<p>また、シェルはZshを使っていることを前提としている。 Bashを使っている人はZshに乗り換えてしまえば良いと思うが、Fishを使っている人に関しては私はわからないので留意していただきたい。</p>
+<h2 id="初期セットアップに関して">初期セットアップに関して</h2>
+<p>とりあえずアップデートして再起動</p>
+<pre><code># pacman -Syu
+# reboot</code></pre>
+<p>vimがないと設定に困るのでvimを用意する。 viも別パッケージであるのだが、むしろ不便なのでシンボリックリンクにする。 vim-pluginsが入っていればだいたい良いので、一緒にいれておく。これでvimで苦痛を感じることなく使うことができるようになる。 (デスクトップでは<code>vim</code>ではなく<code>gvim</code>を入れる。そうするとXセレクションを扱えるようになる)</p>
+<pre><code># pacman -S vim vim-plugins
+# (cd /bin; ln -s vim vi)</code></pre>
+<p>設定ファイルをViなんかで書けるか! Emacsにしろ! という人はEmacsも入れる。 私はEmacsを使わないのであまり詳しくない。 こちらもデスクトップでは<code>emacs</code>パッケージを入れる。</p>
+<pre><code># pacman -S emacs-nox</code></pre>
+<p>ここで一般ユーザーを作っておく。もちろん、Manjaroでは必要のない作業。 Manjaroでは一般的なデスクトップユーザーに追加すべきグループが多いので留意する必要がある。</p>
+<pre><code># useradd -m -U -c &quot;First User&quot; -s /bin/zsh -G wheel,storage,sys,network luser
+# passwd luser</code></pre>
+<p>wheelグループにsudoを許すようにする。 <code>$wheel</code>の行のコメントアウトを外す。<code>NOPASSWD</code>になっている行ではないほうが良いだろう。</p>
+<pre><code># visudo</code></pre>
+<p>Zshをログインシェルにしたが、まだ設定していないのでbashで入る。</p>
+<pre><code># sudo -u luser bash -l</code></pre>
+<p>AURを扱うのであればとりあえずyayを入れるのがお勧め。 Archでも2パッケージで済むからだ。それにタイプ数も少ない</p>
+<pre><code>$ sudo pacman -S go
+$ git clone &#39;https://aur.archlinux.org/yay.git
+$ cd yay
+$ makepkg
+$ sudo pacman -U yay*.pkg.tar.xz</code></pre>
+<p>あとはほしければTrizenでも入れておけば良い。 yaourtとpacaurは「安全ではないソフトウェア」になりつつあるらしいので、とりあえずお勧めはしない。</p>
+<pre><code>$ yay -S trizen</code></pre>
+<p>w3mとlvがあればとりあえず文書を読むのは楽になる。 コンソール作業する場合は必須</p>
+<pre><code>$ yay -S w3m lv</code></pre>
+<p>ターミナルマルチプレクサを入れる。Powerlevel9kはGNU Screenで位置がバグる問題があるので、ここでtmuxを入れておく。 一応、screenも入れておく。</p>
+<pre><code>$ yay -S screen tmux</code></pre>
+<p>Moshは便利だと思うけれど、私はUDPを透過するファイアウォール設定をしたくないため、ここではMoshの話はしない。</p>
+<h2 id="zshとターミナルマルチプレクサ">Zshとターミナルマルチプレクサ</h2>
+<h3 id="とりあえず">とりあえず</h3>
+<p>私が新インスタンスに対して最初にすることは、Zshを導入しセットアップすることである。</p>
+<p>ZshからFishに変えた、あるいはZshが使えなくてBashがいいという人の多くはZshのセットアップができていない。 ディストリビューションに良いZshの設定が含まれていることは稀だし、Zshの設定は非常に多くて難しい。 マニュアルを読んで設定を作り上げてこそなのだが、それをしない人が圧倒的に多い。 (似たようなことはVimにも言えるが、Vimの場合はそれが気になるケースは少ないかもしれない)</p>
+<p>実は話は実に簡単で</p>
+<pre><code>$ sudo pacman -S grml-zsh-config zsh-completions</code></pre>
+<p>これで再ログインすれば立派に使えるZshが出来上がっている。</p>
+<p>grmlの設定は非常に練られていて、多くの場合これで十分だろう。 (場合によっては調整がいるかもしれない)</p>
+<p>なお、Archのgrml-zsh-configはskelが含まれているのだが、Manjaroは含まれていない。 skelのほうは便利ツールがコメントアウトされているものなので、別になくても構わない。</p>
+<p>なお、Zshの設定ファイルに日本語を使うとサーバーではトラブルのもとになるので注意してほしい。</p>
+<h3 id="オプション">オプション</h3>
+<p>だが、もう少し練ることにしよう。 まず、grmlの設定では<code>AUTO_CONTINUE</code>が有効ではないので、間違ってフォアグラウンドで起動してdisownしたあとSIGCONTをわざわざ送る必要がある(実際はこのケースではbgしてからdisownするほうが良い)。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="kw">setopt</span> AUTO_CONTINUE</a></code></pre></div>
+<p>重複する部分が多いが、重要なオプションは設定しておこう。</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">setopt</span> NO_GLOB_DOTS</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="kw">setopt</span> NO_NUMERIC_GLOB_SORT</a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="kw">setopt</span> HUP</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="kw">setopt</span> PRINT_EIGHT_BIT</a>
+<a class="sourceLine" id="cb13-5" data-line-number="5"><span class="kw">setopt</span> PROMPT_CR</a>
+<a class="sourceLine" id="cb13-6" data-line-number="6"><span class="kw">setopt</span> SHARE_HISTORY</a>
+<a class="sourceLine" id="cb13-7" data-line-number="7"><span class="kw">setopt</span> APPEND_HISTORY</a>
+<a class="sourceLine" id="cb13-8" data-line-number="8"><span class="kw">setopt</span> EXTEND_HISTORY</a>
+<a class="sourceLine" id="cb13-9" data-line-number="9"><span class="kw">setopt</span> HIST_ALLOW_CLOBBER</a>
+<a class="sourceLine" id="cb13-10" data-line-number="10"><span class="kw">setopt</span> NO_CLOBBER</a>
+<a class="sourceLine" id="cb13-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb13-12" data-line-number="12"><span class="co"># 以下はZshの機能に慣れている人向け。そうでない人はNO_をつけるか、unsetopt</span></a>
+<a class="sourceLine" id="cb13-13" data-line-number="13"><span class="kw">setopt</span> EXTENDED_GLOB</a>
+<a class="sourceLine" id="cb13-14" data-line-number="14"><span class="kw">setopt</span> EQUALS</a>
+<a class="sourceLine" id="cb13-15" data-line-number="15"><span class="kw">setopt</span> BRACE_CCL</a>
+<a class="sourceLine" id="cb13-16" data-line-number="16"><span class="kw">setopt</span> BARE_GLOB_QUAL</a>
+<a class="sourceLine" id="cb13-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb13-18" data-line-number="18"><span class="co"># 次はセットするのか、アンセットするのか好みが分かれるので試してから</span></a>
+<a class="sourceLine" id="cb13-19" data-line-number="19"><span class="kw">setopt</span> AUTO_PARAM_SLASH</a>
+<a class="sourceLine" id="cb13-20" data-line-number="20"><span class="kw">setopt</span> AUTO_REMOVE_SLASH</a></code></pre></div>
+<p>私は次も設定しているが、多分いらない。(<code>RC_EXPAND_PARAM</code>はgrmlではオフかも)</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="kw">setopt</span> RC_EXPAND_PARAM</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="kw">setopt</span> NOTIFY</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="kw">setopt</span> MENU_COMPLETE</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="kw">setopt</span> LIST_TYPES</a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="kw">setopt</span> REC_EXACT</a></code></pre></div>
+<h3 id="シンタックスハイライト">シンタックスハイライト</h3>
+<p>プラグインの中では便利なもの。 ただし、いくつかのオプションが制限される。</p>
+<pre><code>% sudo pacman -S zsh-syntax-highlighting</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="kw">if [[</span> <span class="ot">-f</span> /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh<span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">    <span class="kw">source</span> /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh</a>
+<a class="sourceLine" id="cb16-4" data-line-number="4"><span class="kw">fi</span></a></code></pre></div>
+<h3 id="履歴の機能を拡張">履歴の機能を拡張</h3>
+<p>grmlの履歴機能は<code>history-beginning-{for,back}ward-end</code>を採用している。 これは、「コマンド部分は途中ならその位置、コマンド部分が入力されていればその部分を維持し、カーソル位置を末尾としてヒストリをたどる」というものだ。</p>
+<p>だが、個人的にはオプションも含めてカーソル位置まで維持してくれるほうが好きだ。 全面的に書き換えるのではなく、PgUp/PgDown時はカーソル位置を維持してヒストリをたどるようにする。</p>
+<p>本来は記述が足りていないが、この内容はgrmlを前提としている。</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="kw">autoload</span> -U history-search</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"><span class="kw">bindkey</span> <span class="st">&quot;\e[5~&quot;</span> history-beginning-search-backward</a>
+<a class="sourceLine" id="cb17-3" data-line-number="3"><span class="kw">bindkey</span> <span class="st">&quot;\e[6~&quot;</span> history-beginning-search-forward</a></code></pre></div>
+<p>履歴を残す量も設定しておこう。 <code>HISTSIZE</code>は検索で辿れる量、<code>SAVEHIST</code>はファイルに残す量だ。</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="ot">HISTFILE=$HOME</span>/.zhistory</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="ot">HISTSIZE=</span>10000</a>
+<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="ot">SAVEHIST=</span>5000000</a></code></pre></div>
+<h3 id="viモード">viモード</h3>
+<p>私はviモード使いなので、設定しておく。</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">setopt</span> vi</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"><span class="ot">KEYTIMEOUT=</span>1</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"><span class="kw">bindkey</span> -M viins <span class="st">&quot;\e[5~&quot;</span> history-beginning-search-backward</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="kw">bindkey</span> -M viins <span class="st">&quot;\e[6~&quot;</span> history-beginning-search-forward</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6"><span class="kw">bindkey</span> -M vicmd <span class="st">&quot;\e[5~&quot;</span> history-beginning-search-backward</a>
+<a class="sourceLine" id="cb19-7" data-line-number="7"><span class="kw">bindkey</span> -M vicmd <span class="st">&quot;\e[6~&quot;</span> history-beginning-search-forward</a></code></pre></div>
+<p>なお、逆にEmacsキーバインドで使いたい人で、<code>EDITOR</code>を<code>vi</code>や<code>vim</code>や<code>nvim</code>にしている人はちゃんと設定する必要がある。</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb20-1" data-line-number="1"><span class="kw">setopt</span> emacs</a></code></pre></div>
+<h3 id="ターミナルマルチプレクサ">ターミナルマルチプレクサ</h3>
+<p>SSHの場合は切れないとか、セッション増やしたいとかだいたい起きるので、使用させることにする。</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb21-1" data-line-number="1"><span class="kw">if [[</span> ( <span class="st">&quot;</span><span class="ot">$TERM</span><span class="st">&quot;</span> != <span class="st">&quot;dumb&quot;</span> ) &amp;&amp; ( <span class="st">&quot;</span><span class="ot">$TERM</span><span class="st">&quot;</span> == xterm* ) &amp;&amp; <span class="ot">-n</span> <span class="st">&quot;</span><span class="ot">$SSH_TTY</span><span class="st">&quot;</span><span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3">  <span class="ot">_DEFAULT_SHELLMODE=</span>9k tmux</a>
+<a class="sourceLine" id="cb21-4" data-line-number="4">  <span class="co">#_DEFAULT_SHELLMODE=9k screen -xR</span></a>
+<a class="sourceLine" id="cb21-5" data-line-number="5">  <span class="kw">if [[</span> <span class="st">&quot;</span><span class="ot">$TERM</span><span class="st">&quot;</span> <span class="ot">!=</span> screen*<span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb21-6" data-line-number="6">  <span class="kw">then</span></a>
+<a class="sourceLine" id="cb21-7" data-line-number="7">    <span class="kw">exit</span></a>
+<a class="sourceLine" id="cb21-8" data-line-number="8">  <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb21-9" data-line-number="9"><span class="kw">fi</span></a></code></pre></div>
+<p>なお、これでtmuxの設定で</p>
+<pre class="tmux"><code>set -g default-terminal &quot;xterm-256color&quot;</code></pre>
+<p>とかすると地獄をみるので絶対にしてはいけない。 必ず</p>
+<pre class="tmux"><code>set -g default-terminal &quot;screen.xterm-256color&quot;</code></pre>
+<p>または</p>
+<pre class="tmux"><code>set -g default-terminal &quot;screen-256color&quot;</code></pre>
+<p>とすること。</p>
+<p>なお、私はGNU Screen使いなので、tmuxのキーバインドはscreen互換にしてある。</p>
+<h3 id="プロンプトとテーマモード">プロンプトとテーマモード</h3>
+<p>私は普段はgrmlプロンプトテーマを使っているが、SSHではPowerlevel9kを使っている。 これは、見やすく、わかりやすいため。普段から使わないのはプロンプトが戻るのがちょっと遅いからだ。</p>
+<pre><code>% sudo pacman -S zsh-theme-powerlevel9k awesome-terminal-fonts powerline-fonts</code></pre>
+<p>私はテーマ読み込みにこんなことをしている。</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="fu">prm()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb26-2" data-line-number="2">  <span class="kw">if [[</span> <span class="ot">-e</span> <span class="st">&quot;</span><span class="ot">$HOME</span><span class="st">/.zshextend.d/prompt/</span><span class="ot">$1</span><span class="st">&quot;</span><span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb26-3" data-line-number="3">  <span class="kw">then</span></a>
+<a class="sourceLine" id="cb26-4" data-line-number="4">    <span class="kw">source</span> <span class="st">&quot;</span><span class="ot">$HOME</span><span class="st">/.zshextend.d/prompt/</span><span class="ot">$1</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb26-5" data-line-number="5">  <span class="kw">else</span></a>
+<a class="sourceLine" id="cb26-6" data-line-number="6">    <span class="kw">print</span> -P <span class="st">&quot;%F{red}NO PROMPT PROFILE </span><span class="ot">$1</span><span class="st">%f&quot;</span></a>
+<a class="sourceLine" id="cb26-7" data-line-number="7">  <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb26-8" data-line-number="8"><span class="kw">}</span></a>
+<a class="sourceLine" id="cb26-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb26-10" data-line-number="10"><span class="kw">if [[</span> <span class="ot">-n</span> <span class="ot">$_DEFAULT_SHELLMODE</span><span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb26-11" data-line-number="11"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb26-12" data-line-number="12">  prm <span class="ot">$_DEFAULT_SHELLMODE</span></a>
+<a class="sourceLine" id="cb26-13" data-line-number="13"><span class="kw">fi</span></a></code></pre></div>
+<p>前述の<code>$_DEFAULT_SHELLMODE</code>はこのためのものだ。 だが、常にPowerlevel9kで良いのなら、別にロード部分を直接書いてもいい。</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb27-1" data-line-number="1">prompt off</a>
+<a class="sourceLine" id="cb27-2" data-line-number="2"><span class="ot">POWERLEVEL9K_MODE=</span>awesome-fontconfig</a>
+<a class="sourceLine" id="cb27-3" data-line-number="3"><span class="kw">source</span> /usr/share/zsh-theme-powerlevel9k/powerlevel9k.zsh-theme</a></code></pre></div>
+<p>grmlと競合してしまうので、<code>prompt off</code>すること。</p>
+<p>私の設定はこんな感じ。</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="fu">zle-keymap-select()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb28-2" data-line-number="2">  <span class="kw">zle</span> reset-prompt</a>
+<a class="sourceLine" id="cb28-3" data-line-number="3">  <span class="kw">zle</span> -R</a>
+<a class="sourceLine" id="cb28-4" data-line-number="4"><span class="kw">}</span></a>
+<a class="sourceLine" id="cb28-5" data-line-number="5"><span class="kw">zle</span> -N zle-keymap-select</a>
+<a class="sourceLine" id="cb28-6" data-line-number="6"><span class="ot">POWERLEVEL9K_SHORTEN_STRATEGY=</span>truncate_from_right</a>
+<a class="sourceLine" id="cb28-7" data-line-number="7"><span class="ot">POWERLEVEL9K_SHORTEN_DIR_LENGTH=</span>5</a>
+<a class="sourceLine" id="cb28-8" data-line-number="8"><span class="ot">POWERLEVEL9K_SHORTEN_DELIMITER=</span><span class="st">&quot;..&quot;</span></a>
+<a class="sourceLine" id="cb28-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb28-10" data-line-number="10"><span class="co"># Colorize</span></a>
+<a class="sourceLine" id="cb28-11" data-line-number="11"><span class="ot">POWERLEVEL9K_OS_ICON_BACKGROUND=</span><span class="st">&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb28-12" data-line-number="12"><span class="ot">POWERLEVEL9K_OS_ICON_FOREGROUND=</span><span class="st">&quot;blue&quot;</span></a>
+<a class="sourceLine" id="cb28-13" data-line-number="13"><span class="ot">POWERLEVEL9K_USER_DEFAULT_BACKGROUND=</span>white</a>
+<a class="sourceLine" id="cb28-14" data-line-number="14"><span class="ot">POWERLEVEL9K_USER_DEFAULT_FOREGROUND=</span>111</a>
+<a class="sourceLine" id="cb28-15" data-line-number="15"><span class="ot">POWERLEVEL9K_USER_ROOT_BACKGROUND=</span>red</a>
+<a class="sourceLine" id="cb28-16" data-line-number="16"><span class="ot">POWERLEVEL9K_USER_ROOT_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb28-17" data-line-number="17"><span class="ot">POWERLEVEL9K_USER_SUDO_BACKGROUND=</span>051</a>
+<a class="sourceLine" id="cb28-18" data-line-number="18"><span class="ot">POWERLEVEL9K_USER_SUDO_FOREGROUND=</span>052</a>
+<a class="sourceLine" id="cb28-19" data-line-number="19"><span class="ot">POWERLEVEL9K_USER_ICON=</span><span class="st">&quot;\uF415&quot;</span></a>
+<a class="sourceLine" id="cb28-20" data-line-number="20"><span class="ot">POWERLEVEL9K_ROOT_ICON=</span><span class="st">&quot;#&quot;</span></a>
+<a class="sourceLine" id="cb28-21" data-line-number="21"><span class="ot">POWERLEVEL9K_SUDO_ICON=</span><span class="st">&quot;\uF09C&quot;</span></a>
+<a class="sourceLine" id="cb28-22" data-line-number="22"><span class="ot">POWERLEVEL9K_VI_MODE_NORMAL_FOREGROUND=</span>051</a>
+<a class="sourceLine" id="cb28-23" data-line-number="23"><span class="ot">POWERLEVEL9K_VI_MODE_INSERT_FOREGROUND=</span>168</a>
+<a class="sourceLine" id="cb28-24" data-line-number="24"><span class="ot">POWERLEVEL9K_VCS_CLEAN_BACKGROUND=</span>147</a>
+<a class="sourceLine" id="cb28-25" data-line-number="25"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND=</span>174</a>
+<a class="sourceLine" id="cb28-26" data-line-number="26"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_BACKGROUND=</span>139</a>
+<a class="sourceLine" id="cb28-27" data-line-number="27"><span class="ot">POWERLEVEL9K_VCS_CLEAN_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb28-28" data-line-number="28"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb28-29" data-line-number="29"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb28-30" data-line-number="30"><span class="ot">POWERLEVEL9K_HOST_REMOTE_FOREGROUND=</span>069</a>
+<a class="sourceLine" id="cb28-31" data-line-number="31"><span class="ot">POWERLEVEL9K_HOST_REMOTE_BACKGROUND=</span>153</a>
+<a class="sourceLine" id="cb28-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb28-33" data-line-number="33"><span class="ot">POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(</span>os_icon vi_mode battery user host dir newline<span class="ot">)</span></a>
+<a class="sourceLine" id="cb28-34" data-line-number="34"><span class="ot">POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(</span>status background_jobs command_execution_time vcs<span class="ot">)</span></a></code></pre></div>
+<p>このあたりは好みなのだが、実はPowerlevel9kの公式マニュアルにはあるが動かないものというのが結構合ったりする。 典型的には<code>$POWERLEVEL9K_SHORTEN_STRATEGY</code>は多くがうまく動かない。</p>
+<p>ポイントになるのが、プロンプトに<code>context</code>を使わず<code>user host</code>と分けた上でホストのREMOTEのみ色を設定していること。</p>
+<p>基本的には「ローカルの場合はどのマシンでも同じ色でいいが、リモートの場合はどのマシンか判別できたほうがよい」と思う。 別にこれ以外のプロンプトテーマでもホスト名は出しているのだが、現在作業中のホストを勘違いしてやっちまった、ということはしょっちゅうある。</p>
+<p>まずホスト名に一貫性があってわかりやすい名前をつけることが大切だ。</p>
+<pre><code>% sudo hostnamectl set-hostname thinkpad-x1</code></pre>
+<p>私の場合は花の名前をつけることにしている。 実はこれは1993年の出来事に由来しており、運用は1998年から、と私としてはとても歴史がある。</p>
+<p>さらにメリットとして花なので、色が連想できる。私は<code>$POWERLEVEL9K_HOST_REMOTE_{FORE,BACK}GROUND</code>はその花の代表的な色をモチーフにした色使いにしている。 それぞれのマシンでイメージが離れた花の名前をつけているため、色被りも少ない。</p>
+<p>簡単でわかりやすいのは、機種名とケースの色だろうか。VPSは難しい。</p>
+<p>なお、</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb30-1" data-line-number="1"><span class="fu">zle-keymap-select()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2">  <span class="kw">zle</span> reset-prompt</a>
+<a class="sourceLine" id="cb30-3" data-line-number="3">  <span class="kw">zle</span> -R</a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="kw">}</span></a>
+<a class="sourceLine" id="cb30-5" data-line-number="5"><span class="kw">zle</span> -N zle-keymap-select</a></code></pre></div>
+<p>は<code>vi_mode</code>を正しく表示するために必要な部分。</p>
+<h2 id="ssh">SSH</h2>
+<h3 id="基本的なssh">基本的なSSH</h3>
+<p>とりあえずroot鍵を登録してパスワード認証は閉じる。</p>
+<p>まずはログインするほうで<code>ssh-keygen -f &lt;file&gt;</code>によって生成した<code>.pub</code>のほうのファイルを ログインされるほうの<code>~root/.ssh/authorized_keys</code>にコピーする。</p>
+<p>なお、<code>.ssh</code>はパーミッション<code>0600</code>であること。</p>
+<p>このroot鍵を登録するステップはサーバーに対するもので、直接ログインできるのであればスキップすべき作業である。</p>
+<p>そして<code>/etc/ssh/sshd_config</code> (<code>ssh_config</code>ではない!)を</p>
+<pre><code>PasswordAuthentication no</code></pre>
+<p>としておく。 この時点で一旦リロード</p>
+<pre><code>% sudo systemctl reload sshd</code></pre>
+<p>同じ要領でユーザー鍵を登録する。 鍵そのものも分けたほうがいい。</p>
+<pre><code>% ssh-keygen -f server-luser_rsa
+% rsync -e &quot;ssh -i server-root_rsa&quot; server-luser_rsa.pub root@server:/home/luser/.ssh/authorized_keys
+% ssh -i server-root_rsa root@server &quot;chown luser:luser -R /home/luser</code></pre>
+<p>以降のために<code>~/.ssh/config</code>に設定しておく。</p>
+<pre class="sshconfig"><code>Host server-luser
+  User luser
+  Port 22
+  HostName server.example.org
+  IdentityFile ~/.ssh/server-luser_rsa</code></pre>
+<p>これで<code>ssh server-luser</code>として入れるようになる。</p>
+<p>なお、<code>HostName</code>だが、LANで同じセグメント内にいるのであればZeroconfによる<code>.local</code>を使えばいいだろう。 あるいは、各マシンを固定アドレスとして<code>/etc/hosts</code>に書いておくというのも手。 <code>/etc/hosts</code>上の名前は1マシン1つではなく、役割ごとに名前をつけておくと、その役割が他のマシンに移ったときにあまり苦労しなくて済む。dnsmasqで配るという方法もある。</p>
+<p><a href="/archives/livewithlinux/1301">SSHに関する話は以前にしたので</a>、応用技としてはそのあたりを参考にしてくれると良い。</p>
+<h3 id="いざというときのための暗号化経路">いざというときのための暗号化経路</h3>
+<p>なにかのときのため、ネットワークごとに1台は透過的にアクセスできると良いだろう。 これはいくつかの方法がある。</p>
+<p>最も簡単なのは、Socksプロキシを使うことだ。</p>
+<pre><code>% ssh -TND 4711 -o ServerAliveInterval 10 -o ServerAliveCountMax 3 luser@server</code></pre>
+<p>これで<code>localhost:4711</code>をSOCKS5プロキシとして使用すればSSHサーバーを経由してアクセスすることが可能になる。 これは、ウェブブラウザやメールクライアントで有用である。これは公衆Wi-Fiからアクセスする程度の場合に有効だ。</p>
+<p>もうひとつは、SSH経由の環境から利用できるようにしておくことだ。 w3mやMutt, Vim, Emacs, lvなど端末から利用できるアプリケーションを一通り揃えておけば、GUIは使えなくてもひととおりの作業が可能だろう。</p>
+<p>本当にそのネットワークを通じてアクセスする必要が生じた場合はどうだろうか? 私はそんなサバイバルな経験を何度かしているが、普通の人はあまりない。 常時必要とするのであればVPNを用意しておけば良いのたでが、緊急避難的に使用できるようにしておくと何かと便利だ。</p>
+<p>まずは双方にpppをインストールしておく。</p>
+<pre><code>% sudo pacman -S ppp</code></pre>
+<p>ログインするサーバーに対してはパスワードをかけたコマンド用rootキーを使うのが最も確実で安全。</p>
+<pre><code>command=&quot;/usr/sbin/pppd nodetach notty noauth&quot;,pty,no-X11-forwarding,no-port-forwarding,no-agent-forwarding ssh-rsa ...</code></pre>
+<p>さらに実際に使うときにログインした上でフォワーディングを許す。</p>
+<pre><code># echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+# iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE</code></pre>
+<p>そしてつなぐ。</p>
+<pre><code>% sudo pppd updetach noauth silent nodeflate pty &quot;sudo -u luser ssh server-ssh-ppp&quot; ipparam vpn 192.168.32.1:192.168.32.2</code></pre>
+<p>192.168.64.0/24に対してアクセスできるようにしたい場合:</p>
+<pre><code>% sudo ip route add 192.168.64.0/24 via 192.168.32.1</code></pre>
+<p>すべての未知のホストにこの経路でアクセスしたい場合。サーバーのアドレスは10.0.8.1、現在のデフォルトゲートウェイは192.168.1.1だとすると:</p>
+<pre><code>% sudo ip route add 10.0.8.1 via 192.168.1.1
+% sudo ip route replace default via 192.168.32.1 proto static metric 101</code></pre>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

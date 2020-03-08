@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-07-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-07-03T00:00:00+09:00" />
+    <title>誤家庭のLinuxで大規模ストレージを取り扱う - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>誤家庭のLinuxで大規模ストレージを取り扱う</h1></header>
+        <article id="MainArticle">
+<nav id="TOC">
+<ul>
+<li><a href="#前提">前提</a></li>
+<li><a href="#機材">機材</a></li>
+<li><a href="#構成">構成</a></li>
+<li><a href="#構築">構築</a></li>
+</ul>
+</nav>
+<p>ストレージ規模がどんどん大きくなる当システム。次期再編成のためのメモである。 なお、話を一般化するために特殊な箇所は変更してあり、このまま適用できるわけではない。</p>
+<h3 id="前提">前提</h3>
+<p>メインとなるホスト(Host Master A)と冗長ホスト(Host Master B)から60TBに及ぶ巨大なストレージを取り扱えるようにする。</p>
+<p>バックアップとしてサーバー(Host Slave)を用いてデータの冗長化を行う。</p>
+<p>基本的には無停止が可能なようにするが、HAのような完全無停止を要求するわけではない。</p>
+<h3 id="機材">機材</h3>
+<p>安価に拡張可能なストレージ群を構築するには、NetGear ReadyNAS RN316が良いようだ。 これにNetGear ReadyNAS EDA500を追加することで10万円以内で筐体を用意することができる。ディスクとあわせると、20台60TBで約40万円が必要だ(2017年6月現在)。</p>
+<p>バックアップは実際には現在はサーバーによる内蔵とAoEの組み合わせ、とするが、将来的には同様の方法をとるのが望ましいだろう。</p>
+<h3 id="構成">構成</h3>
+<p>NetGearで用意したディスクを、NetGearの機能でRAID5化し(つまり有効ディスク数は18となる)、これをiSCSIで提供する。</p>
+<p>iSCSIディスクはHost Master Anyがイニシエータとなり、これをLUKSデバイスとして暗号化/復号化し、その上にbtrfsを構築して利用する。</p>
+<p>2台ひと組と考えることで、<code>-m1 -d1</code>オプションを使って無停止性を確保することができる。 だが、実際は一般の利用ではディスク故障を除いたデータが損失するファイルシステム事故は割と少ないので、<code>-m1 -d0</code>あるいは<code>-m1 -dsingle</code>構成にしたほうが良いと考えられる。 <code>-m1 -d1</code>とした場合、ディスク30台を使用して使える容量は9台分となる。</p>
+<p>バックアップも基本的には同様に構築する。異なるグループのiSCSIを用意し、btrfsボリュームを作成する。</p>
+<h3 id="構築">構築</h3>
+<h4 id="接続">接続</h4>
+<p>iSCSIによる通信でほぼネットワークはあふれることになるため、ネットワークは分離することにする。</p>
+<p>上流側は主にはクライアントユースになる、と考えれば、上流側をUSBアダプタとすることでホストの切り替えを容易にすることが考えられる。</p>
+<p>Host Master AをHost Masterと考えた場合、Host Master A及びHost Slaveが2つのNICを持っている状態 となる。 このとき、両者が所属するネットワーク(サブネット1)はホストネットワークであり、下流側はストレージのみを接続する、という形態にすることでiSCSIの通信を混在することを避けられる。</p>
+<p>Host Master Bを使用する場合はHost Master AからUSB NICを取り外し、Host Master Aに接続されていたUSB NICにHost Master Bにささっている(サブネット1の)ケーブルを接続し、Host Master B内蔵NICにはHost Master Aに接続されていたサブネット2のケーブルを接続すれば良い。</p>
+<h4 id="nasの用意">NASの用意</h4>
+<p>NASのディスクを各NAS上でRAID5で構成する。</p>
+<p>2台ひと組にしておけば、btrfsは<code>-d1</code>であってもディスクを使い切ってくれる。 <code>-dsingle</code>にする場合は、NAS内のディスクは容量を揃える必要があるが、NASの合計容量を揃える必要はなくなる。</p>
+<p>全ディスクを連結してRAID5を作ってしまうと、ディスク容量の制約が厳しくなるので、この方法のほうが良いだろう。 性能面でも、暗号化とRAIDの組み合わせはかなり重いので、速度を考えればハードウェアRAIDのほうが望ましい。</p>
+<p>RAID5を構成したディスク上にLUNを作る。 グループはMasterとSlaveで異なるものにしたほうが良いが、Master NASはサブネット2、Slave NASはサブネット3に置かれるため、実際に混在することはない。</p>
+<h4 id="ホストのセットアップ">ホストのセットアップ</h4>
+<p>iSCSIイニシエータとして利用するため、iSCSIイニシエータutilのインストールと、iscsiサービスの起動が必要になる。</p>
+<p>利用方法については、<a href="https://wiki.archlinuxjp.org/index.php/ISCSI_イニシエータ">archwiki</a>参照のこと。</p>
+<p>全てのiSCSIターゲットにログインした上、これをluksFormatする。 ディスクは増えていくことになるので、キーファイルを使ったほうがスクリプトにする際に良いだろう。</p>
+<pre><code># cryptsetup luksFormat /dev/sdb /path/to/keyfile</code></pre>
+<p>そしてオープンする</p>
+<pre><code># cryptsetup luksOpen --keyfile-/path/to/keyfile /dev/sdb Crypt1
+# cryptsetup luksOpen --keyfile-/path/to/keyfile /dev/sdc Crypt2</code></pre>
+<p>btrfsファイルシステムの作成</p>
+<pre><code># mkfs.btrfs -L MasterBtrfs -m1 -dsingle /dev/mapper/Crypt[12]</code></pre>
+<p>追加で、サブボリュームの作成や、<code>fstab</code>の編集などを行っておく。</p>
+<p>iSCSIターゲットの探索とログイン、ディスクの復号化とマウントの一連の流れはスクリプトにしておいたほうが良いだろう。</p>
+<h4 id="利用">利用</h4>
+<p>まずNASを起動し、次にホストを起動する。そして、スクリプトによってマウントする。 セットアップが終われば非常にシンプルである(ただし、スクリプトにしていないと打つコマンドの量は多い。それはそれでセキュアだが)</p>
+<p>スクリプトをsystemdユニットにしておくのは良い考えだが、コケる可能性の高いユニットなので、<code>enable</code>にはしないほうが良いだろう。</p>
+<h4 id="nfsとファイル配置">NFSとファイル配置</h4>
+<p>NFS v4を提供する。Manjaro Linuxでの手順である。</p>
+<p>まず、btrfsのマウントポイントは<code>/mnt/master</code>であるとする。 しかし、実際には特定ユーザーのデータが配置されるのであり、<code>~foo/.masterfs</code>がマウントポイントである。</p>
+<p>そこで、これを反映できるようにするため、スクリプトの先頭で次のようにしておく</p>
+<pre><code>mount --bind /mnt/master /mnt/master
+mount --make-rshared /mnt/master
+mount --bind /mnt/master ~foo/.masterfs</code></pre>
+<p>これにより、ふたつのマウントポイントを意識せずに共有することができるようになる。</p>
+<p>さらに、ここではNFSのマウントポイントも別に用意する。</p>
+<pre><code>mount --bind /mnt/master /srv/nfs4/masterfs
+mount --make-slave /srv/nfs4/masterfs</code></pre>
+<p>ここまではスクリプトに含めると良いだろう。</p>
+<p>NFSパッケージのインストール。</p>
+<pre><code># pacman -S nfs-utils</code></pre>
+<p><code>/etc/exports</code>の設定</p>
+<pre><code>/srv/nfs4/masterfs 192.168.1.0/24(rw,no_subtree_check,nohide)</code></pre>
+<p>v2, v3の無効化(<code>/etc/conf.d/nfs-server.conf</code>)</p>
+<pre><code>NFSD_OPTS=&quot;-N 2 -N 3&quot;</code></pre>
+<p>起動。マウントを手動で行っているため、<code>enable</code>は非推奨。</p>
+<pre><code># systemctl start nfs-server</code></pre>
+<p>他ホスト(サブネット1のホスト)からマウントするためには、次のようにする。</p>
+<pre><code># mount -t nfs -o vers=4 masterhost1:/masterfs /mnt/masterfs</code></pre>
+<p><code>-t nfs4</code>とする必要がある場合、サーバー側パスにエクスポートルートを含める必要がある場合があるという。</p>
+<h4 id="cifs">CIFS</h4>
+<p>Arch系ディストリビューションにおけるSambaのセットアップ手順は<a href="https://wiki.archlinuxjp.org/index.php/Samba">Archwiki</a>が参考になるだろう。</p>
+<p>Linuxを中心に使っているユーザーにとっては、常時マウントするわけではないから、ファイルマネージャでのusershareシェアで十分かもしれない。</p>
+<p>ただし、AndroidユーザーにとってはCIFSで構築したほうがメディアファイルの再生も容易になる。</p>
+<h4 id="dlna">DLNA</h4>
+<p>メディアファイルを広く再生する方法として有効なDLNA。</p>
+<p>DLNA対応のプレイヤーがあり、それによって大画面で見られるといった場合には役立つだろう。</p>
+<p>主にHost Masterを使い、Host Masterにログインすることが前提であるならばRygelで良いと思う。 そうでない場合は、ReadyMedia(minidlnaパッケージ)を利用することが推奨されているようだ。</p>
+<p>Archのminidlnaは<code>minidlna</code>ユーザー, <code>minidlna</code>グループで動作する。 そのため、ライブラリはこのユーザーでアクセス可能でなくてはいけない。</p>
+<p>また、面倒を避けるためには、<code>/etc/minidlna.conf</code>の<code>inotify</code>を<code>no</code>にしておくのが良いだろう。</p>
+<p>あるいはユーザーで実行したい場合は</p>
+<pre><code>$ install -Dm644 /etc/minidlna.conf ~/.config/minidlna/minidlna.conf
+$ vim ~/.config/minidlna/minidlna.conf
+$ minidlnad -f ~/.config/minidlna/minidlna.conf -P ~/.config/minidlna/minidlna.pid</code></pre>
+<p>のようにする。</p>
+<h4 id="daap">DAAP</h4>
+<p>iTunesを使用しているユーザーにとっては軽快に動作する音楽ストリーミング方法。 <code>forked-daapd</code>が推奨されているが、AURにしか存在しない。</p>
+<p><code>forked-daapd</code>をインストールし、<code>library</code>セクションの<code>directories</code>を設定、当該ディレクトリをdaapd実行ユーザー(デフォルトで<code>daapd:daapd</code>)がアクセス可能な状態にして</p>
+<pre><code># systemctl start forked-daapd</code></pre>
+<p>で動作する。</p>
+<p>LinuxではAmarokあるいはRhythemboxで再生できる。 Androidスマートフォンでは、DAAP Media Playerなどがあるようだ。</p>
+<p>2008年頃に流行したDAAPだが、既にだいぶ廃れている印象はある。</p>
+<h4 id="ストレージとの分離">ストレージとの分離</h4>
+<p>ユーザーデータ(dotfileなど)にも容量の大きなものがあるため、ストレージに退避したいと考えるかもしれないが、割とそれはリスキーである。</p>
+<p>dotfileの場合、ファイルシステムをまたぐと動作しないもの、シンボリックリンクをこえられないものがあったりする。 また、ログイン時においてはストレージから切り離された状態にある可能性もあり、またストレージがダウンする可能性もあると考えなくてはいけない。</p>
+<p>つまり、ストレージが切り離されても動作する状態を保ったほうが良い、ということである。</p>
+<p>また、作業中のファイルなどは、ストレージとは別にシステム側にもあったほうが良い。ストレージが切り離された時に作業不能になる度合いを軽減するためである。</p>
+<p>さらに、xdgディレクトリはシンボリックリンクが切れているとログイン時に変更されてしまう。 そのため、データが大きい<code>~/Pictures</code>や<code>~/Video</code>などは、単純なディレクトリとして、その下にシンボリックリンクを配置したほうが良い。</p>
+<p>運用の一例としてだが、次のようなストレージ構成だとする</p>
+<pre><code>sda      Internal SSD      System
+sda1     Internal SSD      System, /
+sda2     Internal SSD      System, Swap
+sdb      iSCSI 1GbE        Data, Btrfs
+sdc      iSCSI 1GbE        Data, Btrfs</code></pre>
+<p>次のようなマウント結果となる</p>
+<pre><code>/dev/mapper/luks-xxxxxxxxxxxxxxxxx on / type ext4 (rw,relatime,data=ordered)
+/home/foo/.storage on type btrfs (rw,noatime,compress=lzo,space_cache,subvolid=258,subvol=/master)</code></pre>
+<p>ストレージへ同期されるべきものとして以下のように構成する</p>
+<pre><code>WorkSpace
++ Documents
++ Dotfiles</code></pre>
+<p>製作中のメディアファイルはDocumentsではなく<code>~/.storage/user/art/</code>以下に配置し、Documentsは文書ファイルのみを配置することで軽量なディレクトリにすることができる。</p>
+<p>次のようなスクリプトを作っておく</p>
+<pre><code>#!/bin/zsh
+
+WS=$HOME/WorkSpace
+
+update() {
+  rsync -avH &quot;$@&quot;
+}
+
+sync() {
+  rsync -avH --delete &quot;$@&quot;
+}
+
+gitup() {
+  (
+      cd &quot;$1&quot;
+        git add .
+        git commit -m &quot;Synced at $(date +%y%m%d)&quot;
+        git push
+    )
+}
+
+hgup() {
+  (
+      cd &quot;$1&quot;
+        hg add .
+        hg commit -m &quot;Synced at $(date +%y%m%d)&quot;
+        hg push
+    )
+}
+
+gitup $WS/Documents
+for i in $WS/Dotfiles/*
+do
+  hgup $i
+done
+sync ~/Pictures ~/.storage/XDG/
+sync ~/Videos ~/.storage/XDG/
+sync ~/Mail ~/.storage/</code></pre>
+<h4 id="slave系">slave系</h4>
+<p>これでmaster系は54TB(3TB * 20 disks)ものスペースを一台に集約し、そのファイルを他のホストでアクセスするようにすることができた。 NFS/CIFS/DLNA/DAAPでアクセスできるため、ファイルの取り扱いは非常に良いはずだ。</p>
+<p>加えてRAID5によりディスク故障やディスク破壊にも対応する。</p>
+<p>だが、これでも壊れる可能性はある。誤消去や誤った更新・上書き、NASの故障、Btrfsの修復不能なクラッシュにどう対応するのだろうか?</p>
+<p>ここでRAIDとバックアップは違う、という基本に立ち戻る必要がある。 つまり、このように堅牢なシステムを作っても、あるいはBtrfsクラッシュに備えてRAID5 NASにBtrfs RAID1を組み合わせたとしても、バックアップは別途必要なのである。</p>
+<p>基本的にバックアップはメインストレージと同等の設備が必要になる。 もしメインストレージをBtrfs RAID1としているのであれば、バックアップにおける無停止性はそれほど重要ではないため、その場合はメインストレージの半分で済むということになる。</p>
+<p>つまりおおよそシンメトリカルな2つのストレージ群とホストが編成されることになる。 ただし、slave系のコントローラホストはサーバーであり、処理性能よりも省電力性や静音性が重要となるだろう。 とはいえ、あまりにも処理性能をおざなりにすると、SSHの処理でもたついて時間がかかることになる。</p>
+<p>現状で当環境においてはProLiant MicroServerを使用しているが、どちらかといえばラップトップのほうが適性があるとされている。 標準でコンソールを備え、無停電電源装置を内蔵した状態になるからだ。しかも省電力で静音性も高い。 メインホストからみた速度向上のためにはメモリは多目であったほうがいいだろう。</p>
+<p>構築、ストレージへの接続、Btrfsの作成は同様である。</p>
+<p>バックアップはBtrfsのsend/receive機能を使うことができる。 差分バックアップも用意で、本当に変更されたものだけを転送するため、非常に効率が良い。</p>
+<p>次のようなスクリプトを用意する。</p>
+<pre><code>#!/bin/zsh
+
+notify-send &quot;BtrSnapSync: Woke&quot;
+
+if ! btrfs subvolume snapshot -r /mnt/master /mnt/master/snapshots/snapshot-new
+then
+  print &quot;BtrSnapSync: **CRITICAL** Failed to create new snapshot&quot;
+  exit 2
+fi
+
+sync
+
+notify-send &quot;BtrSnapSync: Snapshot.&quot;
+
+if [[ -e /mnt/master/snapshots/snapshot-old ]]
+then
+  if btrfs send -v -p /mnt/master/snapshots/snapshot-old /mnt/master/snapshots/snapshot-new/
+  then
+    notify-send &quot;Send Snapshot.&quot;
+    btrfs subvolume delete /mnt/master/snapshots/snapshot-old
+    mv /mnt/master/snapshots/snapshot-new /mnt/master/snapshots/snapshot-old
+    notify-send &quot;Deleted old Snapshot.&quot;
+  else
+    notify-send &quot;Failed to send Snapshot&quot;
+    btrfs subvolume delete /mnt/master/snapshots/snapshot-new
+  fi
+else
+  if btrfs send -v /mnt/master/snapshot-new
+  then
+    notify-send &quot;Send Snapshot.&quot;
+    mv /mnt/master/snapshots/snapshot-new /mnt/master/snapshots/snapshot-old
+    notify-send &quot;Deleted old Snapshot.&quot;
+  else
+    notify-send &quot;Failed to send Snapshot&quot;
+    btrfs subvolume delete /mnt/master/snapshots/snapshot-new
+  fi
+fi</code></pre>
+<p>また、slave側は次のようなスクリプトを用意する。</p>
+<pre><code>#!/bin/sh
+btrfs receive /MirrorRoot &amp;&amp; mv /MirrorRoot/snapshot-new /MirrorRooot/snapshot`date +%y%m%d%H%M`</code></pre>
+<p>あとは次のようにすることで転送する。</p>
+<pre><code>$ btrfssend.zsh | ssh -i /root/.ssh/btrfssnapsync root@slave.local /usr/local/sbin/btrfsreceiver.sh</code></pre>
+<p>暗号化を行わず処理を軽減するには、まずslave側で次のように実行する(OpenBSD Netcatを使用している)</p>
+<pre><code># nc -l 12358 | btrfsreceiver.sh</code></pre>
+<p>続いてmaster側。ここではbashを使っている。</p>
+<pre><code>$ btrfssend.zsh &gt; /dev/tcp/slave.local/12358</code></pre>
+<p>暗号化の必要がないとしても、危険だと考えられるため、SSHの利用が推奨される。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

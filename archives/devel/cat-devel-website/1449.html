@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-03T00:00:00+09:00" />
+    <title>静的ウェブページでタグ機能を提供する - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>静的ウェブページでタグ機能を提供する</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p><a href="https://www.mimir.yokohama/">Mimir Yokohama</a>のページでタグ機能がバージョンアップし、完全に動作するようになった。</p>
+<p>もともとWordPressで提供していたMimir Yokohamaのウェブページだが、独自システムに移行する際には「WordPressで利用していた機能はすべて提供する」という方針のもと、新しいサイト構築システム<a href="https://github.com/reasonset/purebuilder-simply">PureBuilder Simply</a>を開発して構築した。</p>
+<p>PureBuilder Simplyは静的ページを生成するプログラムであり、webサーバーには静的ファイルを配置する。 これはパフォーマンス、セキュリティ、管理、リソースいずれにおいてもメリットが大きい。</p>
+<p>基本的にこの考え方は「異なる内容を生成するタイミングより、同一の内容を返すタイミングのほうがずっと多い」ということに基づいており、キャッシュよりも合理的である。 一方、どうしても難しい要素もある。ひとつはページ生成パターンが無限である検索機能、そしてもうひとつはヒントを日本語のみにした場合のタグ機能だ。</p>
+<p>検索機能はGoogleに頼っているが、タグ機能は難関だった。</p>
+<h2 id="タグ機能を作る">タグ機能を作る</h2>
+<h3 id="方針">方針</h3>
+<ul>
+<li>要求タイミングでの動的生成は行わない</li>
+<li>PureBuilder Simplyの枠内で解決する。 もし解決不能な場合はPureBuilder Simplyを拡張する</li>
+<li>(PureBuilder Simplyでサポートされている) eRubyテンプレートは使わない。あくまでPandocテンプレートで生成する</li>
+<li>ファイル名が日本語になることはやむを得ないものとする (Nginxは日本語ファイル名に対してURIエンコーディングされたパスでアクセスできる)</li>
+<li>リンクを日本語で書く(エンコードをブラウザに委ねる)ことは許容しない</li>
+<li>ユーザー (この場合自分だけど) にタグに関して文書にタグ付けする以上の手間をかけさせない</li>
+</ul>
+<h3 id="タグをつける">タグをつける</h3>
+<p>既にPureBuilder Simplyでは 「Frontmatterに文書に関する追加的情報を書く」 という仕様となっている。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>単純にこれを反映したタグを書けば良い。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">tags:</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="kw">-</span> ねこ</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">  <span class="kw">-</span> かわいい</a></code></pre></div>
+<h3 id="ページにタグ情報をつける">ページにタグ情報をつける</h3>
+<p>Pandocテンプレートで簡単につけることができる。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb2-1" data-line-number="1">$if(tags)$</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">&lt;!-- TAGS --&gt;</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">&lt;nav</span><span class="ot"> id=</span><span class="st">&quot;TagBox&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  <span class="kw">&lt;h4&gt;</span>タグ<span class="kw">&lt;/h4&gt;</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  <span class="kw">&lt;ul</span><span class="ot"> id=</span><span class="st">&quot;TagCloud&quot;</span><span class="ot"> class=</span><span class="st">&quot;tagcloud&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">$for(tags)$</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">        <span class="kw">&lt;li</span><span class="ot"> class=</span><span class="st">&quot;tag&quot;</span><span class="kw">&gt;&lt;a</span><span class="ot"> href=</span><span class="st">&quot;/tags/$tags$.html&quot;</span><span class="kw">&gt;</span>#$tags$<span class="kw">&lt;/a&gt;&lt;/li&gt;</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">$endfor$</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="kw">&lt;/ul&gt;</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="kw">&lt;/nav&gt;</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">$endif$</a></code></pre></div>
+<p>英語なら割とこれで済む話なのだけど<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>、日本語だと当然</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">&lt;li</span><span class="ot"> class=</span><span class="st">&quot;tag&quot;</span><span class="kw">&gt;&lt;a</span><span class="ot"> href=</span><span class="st">&quot;/tags/ねこ.html&quot;</span><span class="kw">&gt;</span>#ねこ<span class="kw">&lt;/a&gt;&lt;/li&gt;</span></a></code></pre></div>
+<p>みたいなHTMLが生成されてしまう。</p>
+<p>そこで、post generate機能を利用する。 post generate機能はページを生成したあと生成ページを加工できるものだ。 基本的に第一引数として生成されたファイルパスが渡される。 このほか環境変数を通じて他の情報にもアクセスできたりするのだが、これはあまり利用を想定していない。</p>
+<p>post generateは<code>.post_generate</code>ディレクトリ内のファイルを順次Perlに渡す形で実行される。 Perlはshebang行を解釈するので、Perlで書かなければならないわけではない。 そして、スクリプトの出力にファイルは置き換えられる。</p>
+<p>これは例えば</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode perl"><code class="sourceCode perl"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">#!/usr/bin/perl -p</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw">s/</span><span class="ot">foo</span><span class="kw">/</span><span class="st">bar</span><span class="kw">/g</span></a></code></pre></div>
+<p>のような非常に簡単なフィルタが書けるということだ。</p>
+<p>これを使って</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">require <span class="st">&#39;cgi&#39;</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">while</span> line = <span class="dt">ARGF</span>.gets</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    <span class="kw">if</span>(line.include?(<span class="st">&quot;&lt;!-- TAG_CONVERTING_TARGET --&gt;&quot;</span>) .. line.include?(<span class="st">&quot;&lt;!-- /TAG_CONVERTING_TARGET --&gt;&quot;</span>))</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">        line = line.gsub(<span class="ot">/href=&quot;\/tags\/([^&quot;]*)&quot;/</span>) {|i| <span class="st">&#39;href=&quot;/tags/%s&quot;&#39;</span> % <span class="dt">CGI</span>.escape(<span class="dt">$1</span>) }</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">    print line</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="kw">end</span></a></code></pre></div>
+<p>のように変換してあげればタグのタイトルは日本語だがURIはエンコード済み、という形ができあがる。 もちろんスラッグへのマップを書いてもいいのだが、タグを管理するのは手間なので避けた。</p>
+<h3 id="タグページを作る">タグページを作る</h3>
+<p>生成されたページの情報は<code>indexes.rbm</code>というファイルにRuby Mershal形式で保存される。 ここには本文は含まれないが、大概メタ情報にアクセスしたい場合と本文にアクセスしたい場合は別なので、分けている。</p>
+<p>PureBuilder Simplyにおいて、「メタ情報を文書に書き、処理した情報はデータベースに書いておく」というのは設定上の核であると行って過言ではない。 これにより、文書のメタ情報を扱うことはPureBuilder Simplyの外で行うことができるのだ。</p>
+<p>タグページは<code>.tagcloud.rb</code>というスクリプトによって生成しているが、 これはMarkdownページを生成する。つまり、「タグページ自体をPureBuilder Simplyによって生成すべきページとして生成する」のである。 タグを含むページを生成・更新した場合は再度タグページを生成し直すことになり、そのためにrefreshというスクリプトもある。この場合、文書ページではないタグのindexを処理されてしまうと困るので次のような処理になっている。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb6-1" data-line-number="1">pbsimply-pandoc.rb <span class="kw">.</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">ruby .tagcloud.rb **/.indexes.rbm~tags/.indexes.rbm</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">pbsimply-pandoc.rb tags</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="kw">rm</span> tags/.indexes.rbm</a></code></pre></div>
+<p>では<code>.tagcloud.rb</code>は、というとこちらも結構単純。</p>
+<p>見ての通り著しい力技でデータベースを集計し、最終的にはMarkdownを出力している。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">require <span class="st">&#39;date&#39;</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">require <span class="st">&#39;yaml&#39;</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">require <span class="st">&#39;cgi&#39;</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="dt">$tags</span> = <span class="dt">Hash</span>.new {|h,k| h[k] = [] }</a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">accs = <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="dt">ARGV</span>.each <span class="kw">do</span> |arg|</a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">  <span class="kw">if</span>(<span class="dt">File</span>.exist?(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/.accs.yaml&quot;</span>))</a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">    accs = <span class="dt">YAML</span>.load(<span class="dt">File</span>.read(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/.accs.yaml&quot;</span>))</a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">  <span class="kw">else</span></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">    accs = <span class="dv">nil</span></a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">  <span class="dt">Marshal</span>.load(<span class="dt">File</span>.read arg).each <span class="kw">do</span> |k,v|</a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">    <span class="kw">if</span> v.key?(<span class="st">&quot;tags&quot;</span>)</a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">      v[<span class="st">&quot;tags&quot;</span>].each <span class="kw">do</span> |tag|</a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">        <span class="dt">$tags</span>[tag].push({</a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">          <span class="st">title: </span>v[<span class="st">&quot;title&quot;</span>],</a>
+<a class="sourceLine" id="cb7-20" data-line-number="20">          <span class="st">path: </span>(<span class="dt">File</span>.dirname(arg) + <span class="st">&quot;/&quot;</span> + k.sub(<span class="ot">/\.md$/</span>, <span class="st">&quot;.html&quot;</span>)),</a>
+<a class="sourceLine" id="cb7-21" data-line-number="21">          <span class="st">date: </span>v[<span class="st">&quot;date&quot;</span>],</a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">          <span class="st">corner: </span>( accs &amp;&amp; accs[<span class="st">&quot;title&quot;</span>]),</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">          <span class="st">category: </span>v[<span class="st">&quot;category&quot;</span>]</a>
+<a class="sourceLine" id="cb7-24" data-line-number="24">        })</a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-27" data-line-number="27">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-28" data-line-number="28"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb7-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb7-31" data-line-number="31"><span class="dt">$tags</span>.each <span class="kw">do</span> |tag, v|</a>
+<a class="sourceLine" id="cb7-32" data-line-number="32">  <span class="dt">File</span>.open(<span class="st">&quot;tags/</span><span class="ot">#{</span>tag<span class="ot">}</span><span class="st">.md&quot;</span>, <span class="st">&quot;w&quot;</span>) <span class="kw">do</span> |f|</a>
+<a class="sourceLine" id="cb7-33" data-line-number="33">    f.puts &lt;&lt;-<span class="kw">EOF</span></a>
+<a class="sourceLine" id="cb7-34" data-line-number="34"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb7-35" data-line-number="35"><span class="ot">title: &#39;タグ &quot;\##{</span>tag<span class="ot">}&quot; の検索&#39;</span></a>
+<a class="sourceLine" id="cb7-36" data-line-number="36"><span class="ot">date: #{</span><span class="dt">Date</span>.today<span class="ot">}</span></a>
+<a class="sourceLine" id="cb7-37" data-line-number="37"><span class="ot">pagetype: accsindex</span></a>
+<a class="sourceLine" id="cb7-38" data-line-number="38"><span class="ot">indexpage: yes</span></a>
+<a class="sourceLine" id="cb7-39" data-line-number="39"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb7-40" data-line-number="40"></a>
+<a class="sourceLine" id="cb7-41" data-line-number="41"><span class="ot">  EOF</span></a>
+<a class="sourceLine" id="cb7-42" data-line-number="42"><span class="ot">    v.sort_by {|i| [i[:date], i[:corner].to_s, i[:category].to_s, i[:title]] }.reverse.each do |i|</span></a>
+<a class="sourceLine" id="cb7-43" data-line-number="43"><span class="ot">      if i[:path] !~ %r:^/:</span></a>
+<a class="sourceLine" id="cb7-44" data-line-number="44"><span class="ot">        i[:path] = &quot;/&quot; + i[:path]</span></a>
+<a class="sourceLine" id="cb7-45" data-line-number="45"><span class="ot">      end</span></a>
+<a class="sourceLine" id="cb7-46" data-line-number="46"><span class="ot">      f.printf(&quot;* [%s](%s) \\\n  %s%s @%s\n&quot;, i[:title], i[:path], i[:corner].to_s, (i[:category] &amp;&amp; &quot;/&quot; + i[:category]).to_s, i[:date])</span></a>
+<a class="sourceLine" id="cb7-47" data-line-number="47"><span class="ot">    end</span></a>
+<a class="sourceLine" id="cb7-48" data-line-number="48"><span class="ot">  end</span></a>
+<a class="sourceLine" id="cb7-49" data-line-number="49"><span class="ot">end</span></a>
+<a class="sourceLine" id="cb7-50" data-line-number="50"></a>
+<a class="sourceLine" id="cb7-51" data-line-number="51"><span class="ot">File.open(&quot;tags/index.md&quot;, &quot;w&quot;) do |f|</span></a>
+<a class="sourceLine" id="cb7-52" data-line-number="52"><span class="ot">  f.puts &lt;&lt;-EOF</span></a>
+<a class="sourceLine" id="cb7-53" data-line-number="53"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb7-54" data-line-number="54"><span class="ot">title: &#39;タグ一覧&#39;</span></a>
+<a class="sourceLine" id="cb7-55" data-line-number="55"><span class="ot">date: #{</span><span class="dt">Date</span>.today<span class="ot">}</span></a>
+<a class="sourceLine" id="cb7-56" data-line-number="56"><span class="ot">pagetype: accsindex</span></a>
+<a class="sourceLine" id="cb7-57" data-line-number="57"><span class="ot">indexpage: yes</span></a>
+<a class="sourceLine" id="cb7-58" data-line-number="58"><span class="ot">---</span></a>
+<a class="sourceLine" id="cb7-59" data-line-number="59"></a>
+<a class="sourceLine" id="cb7-60" data-line-number="60"><span class="ot">EOF</span></a>
+<a class="sourceLine" id="cb7-61" data-line-number="61"><span class="ot">  $tags.keys.sort.each do |k|</span></a>
+<a class="sourceLine" id="cb7-62" data-line-number="62"><span class="ot">    f.puts &quot;* [#{</span>k<span class="ot">}](/tags/#{</span><span class="dt">CGI</span>.escape k<span class="ot">}.html) (#{</span><span class="dt">$tags</span>[k].length<span class="ot">})&quot;</span></a>
+<a class="sourceLine" id="cb7-63" data-line-number="63"><span class="ot">  end</span></a>
+<a class="sourceLine" id="cb7-64" data-line-number="64"><span class="ot">end</span></a></code></pre></div>
+<p>従来もほとんどこうだったのだが、ページ側でエスケープしていないという理由でエスケープしていなかったので追加した。</p>
+<h2 id="おわりに">おわりに</h2>
+<p>もう少し難しいかと思っていたのだが、どうやらPureBuilder Simplyの設計が思っていた以上に優れていたようで、タグ機能もスムーズに実装することができた。</p>
+<p>PureBuilder Simplyは傑作といって差し支えない出来になっている。 もともと思っていたよりもずっと優れたツールになっているのだ。</p>
+<p>PureBuilder SimplyはPureBuilderとしては実に3作目である。 Zshの機能をフル活用したPureBuilder, Windowsでも動作可能なようRubyで書かれたPureBuilder2。ページの生成にはいずれも活用できたが、サイト構築労力が高く、安価な案件で利用するにはしんどいものがあった。 また、構築できる内容も割と画一的だったため、様々な要求に応えるのは難しかった。 Zshで書かれたPureBuilderは構築時に任意のZshスクリプトを実行できる方式だったため、なんでもできるといえばできるのだが、サイト構築がプログラミング色の強いものになっていた。これはちょっとユーザーフレンドリーではない。</p>
+<p>PureBuilder Simplyは名前の通りずっとシンプルだが、いままでよりずっと強力になった。</p>
+<p>小さなスクリプトを書くことは、多くのプログラマにとってはあまり馴染みのないことかもしれないが<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>、やろうと思えば発想さえ知れば決して難しいことではないはずだ。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>これはReSTでもdocutilが許容しないような規格化されていないメタ情報を書くということだ。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>ちなみに、Chienomiではタグはすべて英語になっている<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>Unixに浸っている人はむしろ息をするようにのように行動するだろう。PureBuilder Simplyの考え方はこれに基づいている。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

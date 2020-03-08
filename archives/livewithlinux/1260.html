@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-04-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-04-27T00:00:00+09:00" />
+    <title>【Linux複合技】 SSHポートフォワーディングしてセッションを維持しつつ多段SSHでファイル転送 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>【Linux複合技】 SSHポートフォワーディングしてセッションを維持しつつ多段SSHでファイル転送</h1></header>
+        <article id="MainArticle">
+<h2 id="sshでリモートからポートフォワーディング">SSHでリモートからポートフォワーディング</h2>
+<p>例えばNAT内に存在するコンピュータに対してサーバーに代理応答してもらう方法になる。</p>
+<p>この方法を使えばNAT内のコンピュータに対してサーバーを経由してアクセスすることが可能になる。</p>
+<p>このポートフォワーディングは以下のように行う。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">ssh</span> -R 5000:host:10000</a></code></pre></div>
+<p><code>-L</code>と比べ<code>-R</code>はその意味を見失いやすい。</p>
+<p><code>5000</code>はリモートホスト側のポートであり、リモートホストのこのポートにアクセスすることによりローカルホスト側にアクセスすることができるようになる。</p>
+<p>hostはローカルホストからみたポートだ。 <code>ssh</code>を実行しているコンピュータ自身に転送するのであれば<code>localhost</code>だし、LANの他のコンピュータ、例えば<code>bob</code>にアクセスしたいのなら<code>bob</code>になる。</p>
+<p><code>10000</code>はhostのポートである。 ここではSSHに対してログインさせたいので、変更していなければ<code>22</code>になるだろう。</p>
+<p>リモート側ポートはそのポートを開くため、1024より小さい値を指定するには特権がいる。 逆にホスト側ポートは単にそのポートに転送するだけなので転送したいポートを指定する。</p>
+<p>このままだとログインしてしまうのでバックグラウンドで実行するオプション<code>-f</code>と、何もコマンドを実行しない<code>-N</code>を組み合わせるのが一般的だ。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">ssh</span> -f -N -R 5000:localhost:22</a></code></pre></div>
+<p>なお、<code>-g</code>をつけない限りはリモートホストではループバックネットワークインターフェイスにのみバインドされるため、リモートホストに対して外部からアクセス可能になるわけではない。</p>
+<p>セキュリティを考えれば、公開はせずにSSHでサーバーにログインし、そこから転送するようにしたほうがいいだろう。</p>
+<h2 id="接続を維持する">接続を維持する</h2>
+<p>このままでは環境によっては入出力がないSSHセッションはすぐ切断されてしまう。 そこで、このSSHセッションは維持してもらいたい。</p>
+<h3 id="ピンポンのための双方向入出力">ピンポンのための双方向入出力</h3>
+<p>結局使わなかったアイディア。</p>
+<p>通常のシェルスクリプトではあるプロセスに対して別のプロセスが読むことも書くこともする、ということはできない。 そういうことがしたい場合の方法は主にふたつ。</p>
+<h4 id="procfs">Procfs</h4>
+<p><code>/proc/&lt;PID&gt;/fd/0</code>に対して書き込めば標準入力に入力が与えられる。</p>
+<p>このとき注意すべきは、標準入力がつながっているのが端末だと端末に書いてしまうので、標準入力はパイプにつながっている必要がある。 特にパイプから何も入れる予定がないのであれば<code>sleep</code>につなぐと良いだろう。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">sleep</span> 30 d <span class="kw">|</span> <span class="fu">tr</span> <span class="st">&#39;a-z&#39;</span> <span class="st">&#39;A-Z&#39;</span></a></code></pre></div>
+<p>出力はパイプで受け取れば良い。</p>
+<h4 id="fifo">FIFO</h4>
+<p>こっちのほうが普通。 FIFOを使えばそこに書かれた出力を一括して受け取れる。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="va">fifoname=</span><span class="st">&quot;</span><span class="va">$$</span><span class="st">.sshsession&quot;</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="fu">mkfifo</span> /tmp/<span class="va">$fifoname</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="fu">tr</span> <span class="st">&#39;a-z&#39;</span> <span class="st">&#39;A-Z&#39;</span> <span class="op">&lt;</span> <span class="va">$fifoname</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="fu">rm</span> <span class="va">$fifoname</span></a></code></pre></div>
+<p>複数のプロセスが書く場合はちゃんと排他制御すること。 また、後処理を忘れないこと。</p>
+<h3 id="リモートがぽん">リモートがぽん</h3>
+<p>こんな感じでよかった。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">while</span> <span class="kw">sleep</span> 30 <span class="kw">do</span>; <span class="kw">print</span> PING; <span class="kw">done</span> <span class="kw">|</span> <span class="kw">ssh</span> somehost pong.sh <span class="kw">|</span> <span class="kw">(</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">  <span class="kw">while</span> <span class="kw">read</span> -t 45</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">    <span class="kw">:</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="kw">done</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="kw">)</span></a></code></pre></div>
+<p>pong.sh</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">while</span> <span class="kw">read</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">  [[ <span class="st">&quot;</span><span class="ot">$REPLY</span><span class="st">&quot;</span> == PING ]] <span class="kw">&amp;&amp;</span> <span class="kw">print</span> PONG</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="kw">done</span></a></code></pre></div>
+<p>readの<code>-t</code>オプションでタイムアウトしている。Zshスクリプト。</p>
+<p>30秒ごとにPINGしていて、45秒間PONGが返ってこなかったら、たぶんコネクションは死んでいる。 まぁ、多分ぴんぽんする必要はないけど。(片方が送り続けていればいいはず)</p>
+<p>ただ、死活チェックのために返してほしい。 どちらかといえば向こう側に送り続けてもらう必要がある。</p>
+<h3 id="コネクションが切れたら確実に死んでもらおう">コネクションが切れたら確実に死んでもらおう</h3>
+<p>こんな感じ。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">export</span> <span class="ot">mainpid=$$</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw">ssh</span> somehost pong.sh <span class="kw">|</span> <span class="kw">(</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">  <span class="kw">while</span> <span class="kw">read</span> -t 45</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">    <span class="kw">:</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">  <span class="kw">done</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    <span class="kw">kill</span> -TERM <span class="ot">$mainpid</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="kw">)</span></a></code></pre></div>
+<p>もしくはこんな感じ。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">ssh</span> somehost pong.sh <span class="kw">|</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">  <span class="kw">while</span> <span class="kw">read</span> -t 45</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">    <span class="kw">:</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">  <span class="kw">done</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">    <span class="kw">exit</span> 1</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="kw">}</span></a></code></pre></div>
+<h2 id="systemdでrespawn">Systemdでrespawn</h2>
+<p>systemdで起動させることにして、死んだら復活させてもらう。</p>
+<pre class="systemd"><code>[Unit]
+Description=Connect for SSH port forwarding
+
+[Service]
+ExecStart=/home/jrh/bin/sshforward.zsh
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=always</code></pre>
+<p>enableする予定はないので、<code>Install</code>は省略。</p>
+<p>プロセスが死んだら<code>Restart=always</code>なので復活する。 停止するときはユニットを<code>stop</code>すること。</p>
+<p>ちなみに、<code>KillMode</code>を省略しているので、停止時にはsshもkillされる。</p>
+<h2 id="sshの設定">SSHの設定</h2>
+<h3 id="sshログインできるようにする">SSHログインできるようにする</h3>
+<p>ここらへんは基本手順。</p>
+<p>まず鍵の生成</p>
+<pre><code>$ ssh-keygen -f ~/.ssh/server_rsa</code></pre>
+<p>これを何らかの方法でサーバーの<code>~/.ssh/authorized_keys</code>に追記する。 ない場合は作成。パーミッションは<code>600</code>であること。</p>
+<p>続いて<code>~/.ssh/config</code>に設定</p>
+<pre class="sshconfig"><code>Host server
+  Uesr jrh
+  Port 22
+  HostName server.example.com
+  IdentityFile ~/.ssh/server_rsa</code></pre>
+<p>これで簡単にログインできるようになった。</p>
+<pre><code>$ ssh server</code></pre>
+<p>こちらはログインする側の端末の設定である。</p>
+<h3 id="コマンド専用鍵を作る">コマンド専用鍵を作る</h3>
+<p>まずは前項と同じように鍵を作って登録する。</p>
+<p>転送は許可しないといけないので、こんな感じ。</p>
+<p><code>authorized_keys</code>のコマンド用鍵の行の先頭に以下のようなフィールドを追加する。</p>
+<pre><code>command=&quot;/usr/local/bin/pong.sh&quot;,no-pty,no-X11-forwarding</code></pre>
+<p>今回は<code>no-port-forwarding</code>してしまうと動作しなくなる。 ポートフォワーディングと、標準入出力を使ったやりとりを行うためだ。</p>
+<p>なお、この時SSH鍵を使用してアクセスした場合 <em>コマンドは入れなくて良い。</em> そのコマンドしか実行できないので、勝手にそのコマンドが実行される。</p>
+<p>なお、configファイルには<code>RemoteForward</code>の項目を入れるようにすると良いだろう。 次のように。</p>
+<pre><code>Host proxy-server
+  User jrh
+  Port 22
+  HostName server.example.com
+  RemoteForward 10000 localhost:22
+  IdentityFile ~/.ssh/server-proxy_rsa</code></pre>
+<p>こちらはログインされる側の端末の設定。</p>
+<h2 id="多段ログイン">多段ログイン</h2>
+<p>ログインする端末はサーバーにログインしたあと、SSHポートフォワーディングを利用してログインされる端末にログインする。 ログインする端末から見るとSSHを二度行うことになる。</p>
+<p>もちろん、このようなことはできないわけではないのだが、これだとSCPやSFTPなどは利用しづらい。 また、できればコマンド一発で簡単にログインしたいところだ。</p>
+<p>そこで、まずはログインする側の鍵をログインされる側に登録する。 これでまず、サーバーを経由せず直接に鍵認証可能な状態になる。</p>
+<p>その上で設定ファイル(<code>~/.ssh/config</code>)にProxyCommandとしてサーバーのSSHを経由して接続する設定を記述する。</p>
+<pre class="sshconfig"><code>Host target-proxy
+  user jrh
+  Port 10000
+  HostName localhost
+  IdentityFile ~/.ssh/proxylogin_rsa
+  ProxyCommand ssh -CW %h:%p server</code></pre>
+<ul>
+<li><code>Port</code>は<code>-R</code>によってサーバーに開かれているポート</li>
+<li><code>HostName</code>はサーバーにログインしてから接続するものなので、<code>localhost</code></li>
+<li><code>IdentityFile</code>は直接のログインにも使用できるログインされる側に登録されているもの</li>
+<li><code>ProxyCommand</code>として先程の設定に記載した<code>Host</code>の値を利用する</li>
+</ul>
+<p>これで外出中でもサーバーを経由して端末にログイン可能になった。</p>
+<h2 id="複雑なので手順のまとめ">複雑なので手順のまとめ</h2>
+<p>本文は知識順に記述しているが、ここではミニマムな達成順で記述する。</p>
+<p>ここではログインする側の端末を<code>laptop</code>、ログインされる側の端末を<code>desktop</code>、サーバーを<code>server</code>と呼称する。</p>
+<ol type="1">
+<li><code>desktop</code>で鍵を生成し、<code>server</code>の<code>authorized_keys</code>に登録する</li>
+<li><code>laptop</code>で鍵を生成し、<code>server</code>の<code>authorized_keys</code>に登録する</li>
+<li><code>laptop</code>で鍵を生成し、<code>desktop</code>の<code>authorized_keys</code>に登録する</li>
+<li><code>server</code>で動作するPONGコマンドを作成する</li>
+<li><code>server</code>上の<code>desktop</code>の鍵をPONGコマンドに結びつける。</li>
+<li><code>desktop</code>上で<code>server</code>に接続するためのコマンドを作成する。このコマンドは基本的に <code>&lt;PING&gt; | &lt;SSH&gt; | &lt;READ&gt;</code></li>
+<li><code>desktop</code>で作成したコマンドを反復起動するためのsystemdユーザーユニットを作成する</li>
+<li><code>desktop</code>の<code>~/.ssh/config</code>にコマンドに結びつけられた<code>server</code>にログインする設定を記述する。ポートフォワーディングも記述する</li>
+<li><code>laptop</code>の<code>~/.ssh/config</code>に<code>server</code>へのログイン、及び<code>desktop</code>に対して<code>ProxyCommand</code>で<code>server</code>を通じてログインする設定を記述する</li>
+</ol>
+<p>これで準備は完了。あとは<code>desktop</code>でユニットを起動し、<code>laptop</code>から<code>server</code>経由<code>desktop</code>ログインのsshを実行するだけ。</p>
+<h2 id="おわりに">おわりに</h2>
+<p>SSHの応用, systemdユーザーユニット, シェルスクリプト, 入出力とファイルデスクリプタ, procfs, FIFO, プロセスとシグナルなど一般デスクトップユーザーは触れずにいるような基礎知識が詰まったものになり、計らずもさながら中級Linuxer認定試験のような内容になった。</p>
+<p>基礎に関する知識と理解があればこのように便利に利用することもできるので、 この記事がmagicalに見える方はぜひがんばって取り組んでいただきたいと思う。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

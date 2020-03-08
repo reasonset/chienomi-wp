@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-09-09T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-09-09T00:00:00+09:00" />
+    <title>GoogleはURLをやめたいらしい? - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>GoogleはURLをやめたいらしい?</h1></header>
+        <article id="MainArticle">
+<h2 id="wiredの記事はいくらなんでも釣りタイトルだろう">WIREDの記事はいくらなんでも釣りタイトルだろう</h2>
+<p><a href="https://wired.jp/2018/09/09/google-wants-to-kill-the-url/" rel="external">WIREDになかなか刺激的な記事が出ている</a>。</p>
+<p>タイトルの</p>
+<blockquote>
+<p>グーグルは「URLがない世界」をつくろうとしている</p>
+</blockquote>
+<p>は明らかに釣りタイトルだろう。WIREDだし。ちなみに、USの記事では</p>
+<blockquote>
+<p>GOOGLE WANTS TO KILL THE URL</p>
+</blockquote>
+<p>とさらに釣りタイトルである。</p>
+<h2 id="少なくともurlの表示をやめたいのは確か">少なくともURLの表示をやめたいのは確か</h2>
+<h3 id="そもそもurlとは">そもそもURLとは</h3>
+<p>まずURIとURLの関係を説明しておこう。</p>
+<p>URIはURN/URC/URLを包括した呼び方である。</p>
+<p>URNはWikipediaによれば</p>
+<blockquote>
+<p>URNは個人の名前のようなもので、URLは個人の住所のようなものと言える。URNは何かの識別子を定義したもので、URLはその何かを探す方法を提供する。つまり、“what” と “where” の関係である。</p>
+<p>URNはしばしば、本を一意に識別するISBNと比較される（実際、ISBNをURNとしてエンコードできる）。本の一意な識別子があることで、その本について議論できる（その本を読んだかどうか、面白かったかどうかなど）。しかし、実際にその本を読むには、本の在り処（例えば、ベッドの脇のテーブルの上など）を知る必要がある。したがってURNとURLは相補的である。例えば、あるRFCについて議論するとき、両方の概念を使って「urn:ietf:rfc:3187 (URN) は http://tools.ietf.org/html/rfc3187.html (URL) にある」ということができる。</p>
+</blockquote>
+<p>とのことだが、URNはNIDが公式に登録されたものだけ、と限定されるため使い勝手は全くよくない。 そもそもURNで書く必要性が乏しいのだ。URNで書いたところでほとんどの場合リソースにアクセスする方法はなく、識別子として書くのであればURNの書式に従う必要性が非常に乏しい。<code>urn:ietf:rfc:3187</code>と書かなくても、RFC3187と書けば十分だからだ。</p>
+<p>対してURLは極めて馴染み深いものだろう。例えば <code>https://chienomi.reasonset.net/</code> である。</p>
+<p>URLの構造は<code>&lt;scheme&gt;:&lt;location&gt;</code>である。locationはschemeが何であるかによって全く異なる。</p>
+<p>最もよく見かける<code>http</code>スキームでは、</p>
+<pre><code>http://[user[:password]@]domain[:port]/path</code></pre>
+<p>となっている。pathはquery <code>[?key=value[&amp;key=value...]]</code> とfragment <code>[#fragment]</code> をオプションで含んでいる。 この形式は<code>https</code>, <code>ftp</code>, <code>sftp</code>スキームでも同様だ。</p>
+<p>URLスキームは<a href="https://wiki.suikawiki.org/n/URL%20scheme%E3%81%AE%E4%B8%80%E8%A6%A7$889" rel="external">ものすごくたくさんあり</a>、IANAが定めるオフィシャルなもの<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>以外にもたくさんある。 広く通用している<code>mailto</code>や<code>javascript</code>、<code>tel</code>や、最近はアプリ専用の<code>line</code>のようなURLも増えている。</p>
+<h3 id="実際にchromeがurlを隠し始めた">実際にChromeがURLを隠し始めた</h3>
+<p>従来もアドレスバーにアクセスしない限りパスなどを隠匿していたのだが、 Chrome 69からは<code>www.</code>や<code>m.</code>といったアドレスを省略するようになった。</p>
+<p>だが、これは明らかに問題である。</p>
+<p>例えば<code>m.github.io</code>は<code>m</code>というGitHubユーザーのページだが、Chromeはこれを<code>github.io</code>とオフィシャルページであるかのように表示してしまう。</p>
+<p>また、URL途中にあったとしても省略するため、<code>www.com</code>というドメインを取得すれば、<code>google.www.com</code>というアドレスを用意するだけで、<code>google.com</code>に見せかけることができる。</p>
+<p>これはフィッシングにおいて極めて有用で、重大なセキュリティホールである。 なお、この機能はChromiumには載っていない。</p>
+<p>私としては、すっごく迷惑な話である。 普通に<code>www.</code>のあるページとないページは別にページにマップされていたりするのだから。</p>
+<h2 id="ほんとにurlいらないのか">ほんとにURLいらないのか</h2>
+<h3 id="使われなくなってきたアドレスバー">使われなくなってきたアドレスバー</h3>
+<p>Internet Explorer 5やNetscape Navigator 4に関してはアドレスバーはアドレスバーであり、アドレスを入力するところで、検索に利用することはできなかった。</p>
+<p>Netscape 6ではアドレスバーに検索機能が追加された。 実はこのときは現在のChromeと同じように統合されたアドレスバーがあるだけで、現在も(NetscapeのベースであるMozillaの後継の)SeaMonkeyではそうなっている。Firefoxは最初からアドレスバーと検索窓が別で、Konquerorも別だった。</p>
+<p>昔は「検索」というのはあまりメジャーな手段ではなくて、主なインターネットブラウジングの方法は「リンク」だった。 有名なサイトやコミュニティページ、あるいはリンク集から辿っていく、というのが主な手段であり、検索エンジンは登録式だったりした。</p>
+<p>だが、いつしか検索が当たり前になっていった。 恐らく「アドレスバーに入力したらデフォルトの動作が検索になったので、それが検索するものだと認識された」というのが大きいだろう。</p>
+<p>なぜかこの頃(2005年ころ)から「アドレスバー」の存在を認識しておらず、いくら説明しても通じないという人が増えた。 検索するのには使っているはずなのだが。 もしかしてスタートページから検索していて、アドレスバーで検索したことがないのだろうか。</p>
+<p>だが、私は普通に使う。 だいたい私が使う主要なサイト及びページのURLは覚えているから直接入力するし、そもそも私はVivaldiのセッティングでアドレスバーの検索機能を切ってある。Twitterの通知を見たいときは<code>https://twitter.com/i/notifications</code>だ。</p>
+<p>パスでサイト自体が区分されているという環境も今も普通にあるので(たとえばAmeblo)アドレスバーは常に見ているし、入力もする。ページがなんのパラメーターを渡しているか、というのは、サイト側に悪意がないかをチェックする簡単な方法でもあるのでクエリも見ている。</p>
+<h3 id="少なくともurlはそれだけのものではない">少なくともURLはそれだけのものではない</h3>
+<p>URLは「リソースの表し方」である。</p>
+<p>ウェブだけでなくSSHやGitなど様々なソフトウェアが、その場所を表すために利用している。 であるから、Googleごときが「なくす」ことができるようなものではない。</p>
+<p>だいたい、なんらかの形で同じリソースを表さなければならないことにはかわりない。 それもやめたいのならHTTP自体をやめるところからはじめなくてはならないし、URLを利用している他の様々なりソースも滅ぼさなければならない。</p>
+<p>URLをやめたところで、</p>
+<pre><code>site:example.com&amp;path=/a/b/c.html&amp;query={a:abc,b:128}</code></pre>
+<p>みたいな書き方をするのだろうか。 URLよりも良い書き方を考えるのは大変だし、考えたところで問題は何も変わらない。</p>
+<h2 id="問題はファシズム">問題はファシズム</h2>
+<p>例えばGoogleが「パス部を一切示さない」という仕様にした場合、 パス部をサイトパートとして用いているサイトは機能性を大幅に失うことになる。</p>
+<p>これを検索エンジンの仕様にも含めけてしまうと、そのようなサイトは壊滅状態になるため、 現実的にはこれに抗う方法がなく、パス部をサイトに含まないという変更を強要されることになる。</p>
+<p>あるいはそのような場合でも直接に不利益を受けるのはプロバイダーではなくユーザーであるため、プロバイダーはそのような変更を拒むかもしれない。</p>
+<p>「WIREDの釣りタイトル」というのはその部分だ。 あまりに問題が大きく、さすがにそんなことはしないだろう、ということなのだ。</p>
+<p>もししてしまうと、これは恐ろしいファシズムである。 Googleが検索エンジンを握っている状況を利用してすべての者が従わざるをえないという前提のもとに望む変更を加える、ということになるからだ。</p>
+<p>実際のところGoogleにはややその傾向があり、本来はそのような世の中を維持するために機能しているものを変更することに対しては、保守的であるべきで、多数派と利益だけで決めていいものではないのだが、とも思う。</p>
+<p>だが、さすがに今回のはWIREDの拡大解釈しすぎだろう。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>インターネットの標準をIANAが定めるというのはさすがに問題があると思うが<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-12-05T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-12-05T00:00:00+09:00" />
+    <title>理系でも文系でも2時間で書けるようになるMarkdown講座 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>理系でも文系でも2時間で書けるようになるMarkdown講座</h1></header>
+        <article id="MainArticle">
+<p>「Markdown書きたいけど難しい」と言われる方がちらほらおられるので優しくお教えしよう。</p>
+<h2 id="markdownとは">Markdownとは</h2>
+<p>普通のテキストなんだけれど、強調したり箇条書きしたりできる。</p>
+<p>さらに、ウェブ表示用とか印刷用とかに変換したりもできる。 主には変換するために使うのだけれど、ウェブサービスではそのままMarkdownで書いたら勝手に変換していい感じにしてくれたりもするものもある。</p>
+<p>Markdownは「見た目」を決めるものではない。 だから、華やかなチラシを書いたりするためのものではない。 意味を持った文章を書くためのものだ。 論文やレポートや記事や本を書くのに適している。</p>
+<h2 id="必要なもの">必要なもの</h2>
+<p>とりあえずコンピュータ。</p>
+<p>あとは特別なものはいらない。 テキストエディタで書く。 Windowsならばメモ帳でいいし、LinuxならGeditでもPlumaでもKwriteでもMousepadでもVimでも良い。</p>
+<p>ただ、できればWindowsならば良いテキストエディタを入手することをおすすめしたい。 高機能なのはAtom、複雑なのは苦手ならMarkdownPadあたりでどうだろう。</p>
+<h2 id="基本的な機能">基本的な機能</h2>
+<p>Markdownには様々な事情や拡張や機能があるが、 それを覚えなければ書けないわけではない。</p>
+<p>基本的には</p>
+<ul>
+<li>段落</li>
+<li>強調</li>
+<li>箇条書き</li>
+<li>章立て</li>
+</ul>
+<p>があれば十分機能的に記述できるだろう。</p>
+<h3 id="段落">段落</h3>
+<p>段落というのは、文のまとまりだ。</p>
+<p>ウェブページ上では行間が広くとられて空行があるように見える(一般的には)。</p>
+<p>日本語の文章では、改行して、書き出しを一文字下げるアレだ。</p>
+<p>Markdownは「見た目」ではなく、意味を定義する。 だから、段落によって「ひとまとまりの文が終わって次の文のまとまりになる」ことを示す。</p>
+<p>Markdownで改行することはできないことはないが、基本的には使用しない。 「行を変える」という見た目ではなく、「ひとまとまり」を示す段落を使おう。</p>
+<p>段落を示すには「空行を開ける」。次のようにだ。</p>
+<pre class="sourceCode markdown" id="cb1"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" data-line-number="1">段落1</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">段落2</a></code></pre>
+<p>改行は単なるスペースだとみなされる。 だから、次の例</p>
+<pre class="sourceCode markdown" id="cb2"><code class="sourceCode markdown"><a class="sourceLine" id="cb2-1" data-line-number="1">段落1</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">段落1</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">段落2</a></code></pre>
+<p>は次と同じ意味になる。</p>
+<pre class="sourceCode markdown" id="cb3"><code class="sourceCode markdown"><a class="sourceLine" id="cb3-1" data-line-number="1">段落1 段落1</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">段落2</a></code></pre>
+<p>だから、次のように書けばいい。</p>
+<pre><code>吾輩は猫である。
+名前はまだない。
+
+ところで君。
+月が綺麗ですね。</code></pre>
+<h3 id="強調">強調</h3>
+<p>書いていると、<em>特に</em>重要な部分があったりする。</p>
+<p><strong>声を大にして</strong>言いたいようなことだ。</p>
+<p><em>強調</em>をするには強調したい部分を<code>*</code>で囲む。</p>
+<pre class="sourceCode markdown" id="cb5"><code class="sourceCode markdown"><a class="sourceLine" id="cb5-1" data-line-number="1">あなたのことが*好き*です。</a></code></pre>
+<p>もっと強調したい場合は<code>**</code>で囲む。</p>
+<pre class="sourceCode markdown" id="cb6"><code class="sourceCode markdown"><a class="sourceLine" id="cb6-1" data-line-number="1">あなたのことが*好き*です。**愛して**います。</a></code></pre>
+<p>なお、気にしなくても良いが、<code>*</code>で囲む場合は文を囲ってもよいのだが、 <code>**</code>は単語を囲むことになっている。 日本語の場合は単語を囲むのは難しいので、文節を囲むことになると思うが。</p>
+<h3 id="箇条書き">箇条書き</h3>
+<p>箇条書きもよく使うだろう。 箇条書きをするには行頭に<code>*</code>を書いてスペースを開ける。 前後の段落はあけなくてはならない。</p>
+<pre class="sourceCode markdown" id="cb7"><code class="sourceCode markdown"><a class="sourceLine" id="cb7-1" data-line-number="1">今日のご飯は</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">* <span class="fl">カツ丼</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="fl">* 秋刀魚丼</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="fl">* ご飯ドーン</span></a></code></pre>
+<p>番号つきで箇条書きしたい場合は、数字の後に<code>.</code>をつけてスペースをあける。 数字は<code>1</code>, <code>2</code>…と書かなくて良い。 変換するときに勝手に番号が振られる。</p>
+<pre class="sourceCode markdown" id="cb8"><code class="sourceCode markdown"><a class="sourceLine" id="cb8-1" data-line-number="1">あなたがするべきこと</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">0. <span class="fl">私のTwitterページにアクセスします</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="fl">0. 「フォロー」と書かれたボタンをクリックします</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"><span class="fl">0. 愛の告白をします</span></a></code></pre>
+<p>他にも書き方はあるが、一種類覚えれば書けるだろう。</p>
+<h3 id="章立て">章立て</h3>
+<p>長い文章は1章, 2章, 1節, 2節と分けたほうが見やすいだろう。 この記事もそのように書かれている。</p>
+<p>章立てを行うには、先頭に<code>#</code>を並べた上でスペースをあけて、見出しを書く。 <code>#</code>の数が多いほど細かな分け方になる。</p>
+<pre class="sourceCode markdown" id="cb9"><code class="sourceCode markdown"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="fu"># 第一章</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="fu">## 第一章第一節</span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="fu">## 第一章第二節</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="fu"># 第二章</span></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="fu">## 第二章第一節</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb9-11" data-line-number="11"><span class="fu">### 第二章第一節第一項</span></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"><span class="fu">### 第二章第一節第二項</span></a></code></pre>
+<p>先頭にまとめて書くわけではなく、章や節が切り替わるところで書く。</p>
+<h3 id="キャンセル">キャンセル</h3>
+<p>例えば<code>*</code>のような文字は特別な意味に取られてしまう。 そのようなことを避けて、「単に*という文字を書きたい」という場合には、 特別な意味にとられてしまう文字の前に<code>\</code>と書いて<code>\*</code>のようにする。</p>
+<h2 id="もうちょっと書きたい">もうちょっと書きたい</h2>
+<p>コード類の記述はプログラムを書く人しか使わないし、 そのような人はMarkdownのリファレンスを読むなどたやすいだろうから、 それ以外のものを少し。</p>
+<h3 id="リンク">リンク</h3>
+<p>クリックして他のページに飛ぶことができるリンクを表現するには</p>
+<pre class="sourceCode markdown" id="cb10"><code class="sourceCode markdown"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="ot">[タイトル](アドレス)</span></a></code></pre>
+<p>とする。 つまり</p>
+<pre class="sourceCode markdown" id="cb11"><code class="sourceCode markdown"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="ot">[Chienomiブログ](http://chienomi.reasonset.net/)</span></a></code></pre>
+<p>のようにだ。</p>
+<h3 id="画像">画像</h3>
+<p>Markdownで画像を表現するには</p>
+<pre class="sourceCode markdown" id="cb12"><code class="sourceCode markdown"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="al">![タイトル](アドレス)</span></a></code></pre>
+<p>と書く。アドレスなので、基本的にインターネット上にあるものを書くことになるだろう。 印刷用に変換する場合はローカルで必要となり、<em>画像を扱う場合は出力先のことを意識して書くことになる</em>。</p>
+<p>次のように書く</p>
+<pre class="sourceCode markdown" id="cb13"><code class="sourceCode markdown"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="al">![誰かのアイコン](http://example.com/img/icon.png)</span></a></code></pre>
+<h2 id="変換する">変換する</h2>
+<p>PandocとかKramdownとかとても便利なのだが、 だいたいエディタにはエクスポート機能があるので、とりあえずそれを使えば良い。</p>
+<p>Atomであれば<code>Ctrl+Shift+M</code>でプレビューを開き、プレビューウィンドウ上で右クリックして<code>Save As HTML</code>を選択すれば良い。</p>
+<h2 id="おまけ-この記事のmarkdownは">おまけ: この記事のMarkdownは</h2>
+<p>この記事はMarkdownで書かれている。</p>
+<pre class="sourceCode markdown" id="cb14"><code class="sourceCode markdown"><a class="sourceLine" id="cb14-1" data-line-number="1">---</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">title: 理系でも文系でも2時間で書けるようになるMarkdown講座</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">cats: [ digi.it ]</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">tags: [ markdown, howto ]</a>
+<a class="sourceLine" id="cb14-5" data-line-number="5">---</a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7">「Markdown書きたいけど難しい」と言われる方がちらほらおられるので優しくお教えしよう。</a>
+<a class="sourceLine" id="cb14-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb14-9" data-line-number="9"><span class="fu">## Markdownとは</span></a>
+<a class="sourceLine" id="cb14-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb14-11" data-line-number="11">普通のテキストなんだけれど、強調したり箇条書きしたりできる。</a>
+<a class="sourceLine" id="cb14-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb14-13" data-line-number="13">さらに、ウェブ表示用とか印刷用とかに変換したりもできる。</a>
+<a class="sourceLine" id="cb14-14" data-line-number="14">主には変換するために使うのだけれど、ウェブサービスではそのままMarkdownで書いたら勝手に変換していい感じにしてくれたりもするものもある。</a>
+<a class="sourceLine" id="cb14-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb14-16" data-line-number="16">Markdownは「見た目」を決めるものではない。</a>
+<a class="sourceLine" id="cb14-17" data-line-number="17">だから、華やかなチラシを書いたりするためのものではない。</a>
+<a class="sourceLine" id="cb14-18" data-line-number="18">意味を持った文章を書くためのものだ。</a>
+<a class="sourceLine" id="cb14-19" data-line-number="19">論文やレポートや記事や本を書くのに適している。</a>
+<a class="sourceLine" id="cb14-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb14-21" data-line-number="21"><span class="fu">## 必要なもの</span></a>
+<a class="sourceLine" id="cb14-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb14-23" data-line-number="23">とりあえずコンピュータ。</a>
+<a class="sourceLine" id="cb14-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb14-25" data-line-number="25">あとは特別なものはいらない。</a>
+<a class="sourceLine" id="cb14-26" data-line-number="26">テキストエディタで書く。</a>
+<a class="sourceLine" id="cb14-27" data-line-number="27">Windowsならばメモ帳でいいし、LinuxならGeditでもPlumaでもKwriteでもMousepadでもVimでも良い。</a>
+<a class="sourceLine" id="cb14-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb14-29" data-line-number="29">ただ、できればWindowsならば良いテキストエディタを入手することをおすすめしたい。</a>
+<a class="sourceLine" id="cb14-30" data-line-number="30">高機能なのはAtom、複雑なのは苦手ならMarkdownPadあたりでどうだろう。</a>
+<a class="sourceLine" id="cb14-31" data-line-number="31"></a>
+<a class="sourceLine" id="cb14-32" data-line-number="32"><span class="fu">## 基本的な機能</span></a>
+<a class="sourceLine" id="cb14-33" data-line-number="33"></a>
+<a class="sourceLine" id="cb14-34" data-line-number="34">Markdownには様々な事情や拡張や機能があるが、</a>
+<a class="sourceLine" id="cb14-35" data-line-number="35">それを覚えなければ書けないわけではない。</a>
+<a class="sourceLine" id="cb14-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb14-37" data-line-number="37">基本的には</a>
+<a class="sourceLine" id="cb14-38" data-line-number="38"></a>
+<a class="sourceLine" id="cb14-39" data-line-number="39">* <span class="fl">段落</span></a>
+<a class="sourceLine" id="cb14-40" data-line-number="40"><span class="fl">* 強調</span></a>
+<a class="sourceLine" id="cb14-41" data-line-number="41"><span class="fl">* 箇条書き</span></a>
+<a class="sourceLine" id="cb14-42" data-line-number="42"><span class="fl">* 章立て</span></a>
+<a class="sourceLine" id="cb14-43" data-line-number="43"></a>
+<a class="sourceLine" id="cb14-44" data-line-number="44">があれば十分機能的に記述できるだろう。</a>
+<a class="sourceLine" id="cb14-45" data-line-number="45"></a>
+<a class="sourceLine" id="cb14-46" data-line-number="46"><span class="fu">### 段落</span></a>
+<a class="sourceLine" id="cb14-47" data-line-number="47"></a>
+<a class="sourceLine" id="cb14-48" data-line-number="48">段落というのは、文のまとまりだ。</a>
+<a class="sourceLine" id="cb14-49" data-line-number="49"></a>
+<a class="sourceLine" id="cb14-50" data-line-number="50">ウェブページ上では行間が広くとられて空行があるように見える(一般的には)。</a>
+<a class="sourceLine" id="cb14-51" data-line-number="51"></a>
+<a class="sourceLine" id="cb14-52" data-line-number="52">日本語の文章では、改行して、書き出しを一文字下げるアレだ。</a>
+<a class="sourceLine" id="cb14-53" data-line-number="53"></a>
+<a class="sourceLine" id="cb14-54" data-line-number="54">Markdownは「見た目」ではなく、意味を定義する。</a>
+<a class="sourceLine" id="cb14-55" data-line-number="55">だから、段落によって「ひとまとまりの文が終わって次の文のまとまりになる」ことを示す。</a>
+<a class="sourceLine" id="cb14-56" data-line-number="56"></a>
+<a class="sourceLine" id="cb14-57" data-line-number="57">Markdownで改行することはできないことはないが、基本的には使用しない。</a>
+<a class="sourceLine" id="cb14-58" data-line-number="58">「行を変える」という見た目ではなく、「ひとまとまり」を示す段落を使おう。</a>
+<a class="sourceLine" id="cb14-59" data-line-number="59"></a>
+<a class="sourceLine" id="cb14-60" data-line-number="60">段落を示すには「空行を開ける」。次のようにだ。</a>
+<a class="sourceLine" id="cb14-61" data-line-number="61"></a>
+<a class="sourceLine" id="cb14-62" data-line-number="62">```markdown</a>
+<a class="sourceLine" id="cb14-63" data-line-number="63">段落1</a>
+<a class="sourceLine" id="cb14-64" data-line-number="64"></a>
+<a class="sourceLine" id="cb14-65" data-line-number="65">段落2</a>
+<a class="sourceLine" id="cb14-66" data-line-number="66">```</a>
+<a class="sourceLine" id="cb14-67" data-line-number="67"></a>
+<a class="sourceLine" id="cb14-68" data-line-number="68">改行は単なるスペースだとみなされる。</a>
+<a class="sourceLine" id="cb14-69" data-line-number="69">だから、次の例</a>
+<a class="sourceLine" id="cb14-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb14-71" data-line-number="71">```markdown</a>
+<a class="sourceLine" id="cb14-72" data-line-number="72">段落1</a>
+<a class="sourceLine" id="cb14-73" data-line-number="73">段落1</a>
+<a class="sourceLine" id="cb14-74" data-line-number="74"></a>
+<a class="sourceLine" id="cb14-75" data-line-number="75">段落2</a>
+<a class="sourceLine" id="cb14-76" data-line-number="76">```</a>
+<a class="sourceLine" id="cb14-77" data-line-number="77"></a>
+<a class="sourceLine" id="cb14-78" data-line-number="78">は次と同じ意味になる。</a>
+<a class="sourceLine" id="cb14-79" data-line-number="79"></a>
+<a class="sourceLine" id="cb14-80" data-line-number="80">```markdown</a>
+<a class="sourceLine" id="cb14-81" data-line-number="81">段落1 段落1</a>
+<a class="sourceLine" id="cb14-82" data-line-number="82"></a>
+<a class="sourceLine" id="cb14-83" data-line-number="83">段落2</a>
+<a class="sourceLine" id="cb14-84" data-line-number="84">```</a>
+<a class="sourceLine" id="cb14-85" data-line-number="85"></a>
+<a class="sourceLine" id="cb14-86" data-line-number="86">だから、次のように書けばいい。</a>
+<a class="sourceLine" id="cb14-87" data-line-number="87"></a>
+<a class="sourceLine" id="cb14-88" data-line-number="88">```</a>
+<a class="sourceLine" id="cb14-89" data-line-number="89">吾輩は猫である。</a>
+<a class="sourceLine" id="cb14-90" data-line-number="90">名前はまだない。</a>
+<a class="sourceLine" id="cb14-91" data-line-number="91"></a>
+<a class="sourceLine" id="cb14-92" data-line-number="92">ところで君。</a>
+<a class="sourceLine" id="cb14-93" data-line-number="93">月が綺麗ですね。</a>
+<a class="sourceLine" id="cb14-94" data-line-number="94">```</a>
+<a class="sourceLine" id="cb14-95" data-line-number="95"></a>
+<a class="sourceLine" id="cb14-96" data-line-number="96"><span class="fu">### 強調</span></a>
+<a class="sourceLine" id="cb14-97" data-line-number="97"></a>
+<a class="sourceLine" id="cb14-98" data-line-number="98">書いていると、*特に*重要な部分があったりする。</a>
+<a class="sourceLine" id="cb14-99" data-line-number="99"></a>
+<a class="sourceLine" id="cb14-100" data-line-number="100">**声を大にして**言いたいようなことだ。</a>
+<a class="sourceLine" id="cb14-101" data-line-number="101"></a>
+<a class="sourceLine" id="cb14-102" data-line-number="102">*強調*をするには強調したい部分を<span class="bn">`*`</span>で囲む。</a>
+<a class="sourceLine" id="cb14-103" data-line-number="103"></a>
+<a class="sourceLine" id="cb14-104" data-line-number="104">```markdown</a>
+<a class="sourceLine" id="cb14-105" data-line-number="105">あなたのことが*好き*です。</a>
+<a class="sourceLine" id="cb14-106" data-line-number="106">```</a>
+<a class="sourceLine" id="cb14-107" data-line-number="107"></a>
+<a class="sourceLine" id="cb14-108" data-line-number="108">もっと強調したい場合は<span class="bn">`**`</span>で囲む。</a>
+<a class="sourceLine" id="cb14-109" data-line-number="109"></a>
+<a class="sourceLine" id="cb14-110" data-line-number="110">```markdown</a>
+<a class="sourceLine" id="cb14-111" data-line-number="111">あなたのことが*好き*です。**愛して**います。</a>
+<a class="sourceLine" id="cb14-112" data-line-number="112">```</a>
+<a class="sourceLine" id="cb14-113" data-line-number="113"></a>
+<a class="sourceLine" id="cb14-114" data-line-number="114">なお、気にしなくても良いが、<span class="bn">`*`</span>で囲む場合は文を囲ってもよいのだが、</a>
+<a class="sourceLine" id="cb14-115" data-line-number="115"><span class="bn">`**`</span>は単語を囲むことになっている。</a>
+<a class="sourceLine" id="cb14-116" data-line-number="116">日本語の場合は単語を囲むのは難しいので、文節を囲むことになると思うが。</a>
+<a class="sourceLine" id="cb14-117" data-line-number="117"></a>
+<a class="sourceLine" id="cb14-118" data-line-number="118"><span class="fu">### 箇条書き</span></a>
+<a class="sourceLine" id="cb14-119" data-line-number="119"></a>
+<a class="sourceLine" id="cb14-120" data-line-number="120">箇条書きもよく使うだろう。</a>
+<a class="sourceLine" id="cb14-121" data-line-number="121">箇条書きをするには行頭に<span class="bn">`*`</span>を書いてスペースを開ける。</a>
+<a class="sourceLine" id="cb14-122" data-line-number="122">前後の段落はあけなくてはならない。</a>
+<a class="sourceLine" id="cb14-123" data-line-number="123"></a>
+<a class="sourceLine" id="cb14-124" data-line-number="124">```markdown</a>
+<a class="sourceLine" id="cb14-125" data-line-number="125">今日のご飯は</a>
+<a class="sourceLine" id="cb14-126" data-line-number="126"></a>
+<a class="sourceLine" id="cb14-127" data-line-number="127">* <span class="fl">カツ丼</span></a>
+<a class="sourceLine" id="cb14-128" data-line-number="128"><span class="fl">* 秋刀魚丼</span></a>
+<a class="sourceLine" id="cb14-129" data-line-number="129"><span class="fl">* ご飯ドーン</span></a>
+<a class="sourceLine" id="cb14-130" data-line-number="130"><span class="fl">```</span></a>
+<a class="sourceLine" id="cb14-131" data-line-number="131"></a>
+<a class="sourceLine" id="cb14-132" data-line-number="132">番号つきで箇条書きしたい場合は、数字の後に<span class="bn">`.`</span>をつけてスペースをあける。</a>
+<a class="sourceLine" id="cb14-133" data-line-number="133">数字は<span class="bn">`1`</span>, <span class="bn">`2`</span>...と書かなくて良い。</a>
+<a class="sourceLine" id="cb14-134" data-line-number="134">変換するときに勝手に番号が振られる。</a>
+<a class="sourceLine" id="cb14-135" data-line-number="135"></a>
+<a class="sourceLine" id="cb14-136" data-line-number="136">```markdown</a>
+<a class="sourceLine" id="cb14-137" data-line-number="137">あなたがするべきこと</a>
+<a class="sourceLine" id="cb14-138" data-line-number="138"></a>
+<a class="sourceLine" id="cb14-139" data-line-number="139">0. <span class="fl">私のTwitterページにアクセスします</span></a>
+<a class="sourceLine" id="cb14-140" data-line-number="140"><span class="fl">0. 「フォロー」と書かれたボタンをクリックします</span></a>
+<a class="sourceLine" id="cb14-141" data-line-number="141"><span class="fl">0. 愛の告白をします</span></a>
+<a class="sourceLine" id="cb14-142" data-line-number="142"><span class="fl">```</span></a>
+<a class="sourceLine" id="cb14-143" data-line-number="143"></a>
+<a class="sourceLine" id="cb14-144" data-line-number="144">他にも書き方はあるが、一種類覚えれば書けるだろう。</a>
+<a class="sourceLine" id="cb14-145" data-line-number="145"></a>
+<a class="sourceLine" id="cb14-146" data-line-number="146"><span class="fu">### 章立て</span></a>
+<a class="sourceLine" id="cb14-147" data-line-number="147"></a>
+<a class="sourceLine" id="cb14-148" data-line-number="148">長い文章は1章, 2章, 1節, 2節と分けたほうが見やすいだろう。</a>
+<a class="sourceLine" id="cb14-149" data-line-number="149">この記事もそのように書かれている。</a>
+<a class="sourceLine" id="cb14-150" data-line-number="150"></a>
+<a class="sourceLine" id="cb14-151" data-line-number="151">章立てを行うには、先頭に<span class="bn">`#`</span>を並べた上でスペースをあけて、見出しを書く。</a>
+<a class="sourceLine" id="cb14-152" data-line-number="152"><span class="bn">`#`</span>の数が多いほど細かな分け方になる。</a>
+<a class="sourceLine" id="cb14-153" data-line-number="153"></a>
+<a class="sourceLine" id="cb14-154" data-line-number="154">```markdown</a>
+<a class="sourceLine" id="cb14-155" data-line-number="155"><span class="fu"># 第一章</span></a>
+<a class="sourceLine" id="cb14-156" data-line-number="156"></a>
+<a class="sourceLine" id="cb14-157" data-line-number="157"><span class="fu">## 第一章第一節</span></a>
+<a class="sourceLine" id="cb14-158" data-line-number="158"></a>
+<a class="sourceLine" id="cb14-159" data-line-number="159"><span class="fu">## 第一章第二節</span></a>
+<a class="sourceLine" id="cb14-160" data-line-number="160"></a>
+<a class="sourceLine" id="cb14-161" data-line-number="161"><span class="fu"># 第二章</span></a>
+<a class="sourceLine" id="cb14-162" data-line-number="162"></a>
+<a class="sourceLine" id="cb14-163" data-line-number="163"><span class="fu">## 第二章第一節</span></a>
+<a class="sourceLine" id="cb14-164" data-line-number="164"></a>
+<a class="sourceLine" id="cb14-165" data-line-number="165"><span class="fu">### 第二章第一節第一項</span></a>
+<a class="sourceLine" id="cb14-166" data-line-number="166"></a>
+<a class="sourceLine" id="cb14-167" data-line-number="167"><span class="fu">### 第二章第一節第二項</span></a>
+<a class="sourceLine" id="cb14-168" data-line-number="168">```</a>
+<a class="sourceLine" id="cb14-169" data-line-number="169"></a>
+<a class="sourceLine" id="cb14-170" data-line-number="170">先頭にまとめて書くわけではなく、章や節が切り替わるところで書く。</a>
+<a class="sourceLine" id="cb14-171" data-line-number="171"></a>
+<a class="sourceLine" id="cb14-172" data-line-number="172"><span class="fu">### キャンセル</span></a>
+<a class="sourceLine" id="cb14-173" data-line-number="173"></a>
+<a class="sourceLine" id="cb14-174" data-line-number="174">例えば<span class="bn">`*`</span>のような文字は特別な意味に取られてしまう。</a>
+<a class="sourceLine" id="cb14-175" data-line-number="175">そのようなことを避けて、「単に*という文字を書きたい」という場合には、</a>
+<a class="sourceLine" id="cb14-176" data-line-number="176">特別な意味にとられてしまう文字の前に<span class="bn">`\`</span>と書いて<span class="bn">`\*`</span>のようにする。</a>
+<a class="sourceLine" id="cb14-177" data-line-number="177"></a>
+<a class="sourceLine" id="cb14-178" data-line-number="178"><span class="fu">## もうちょっと書きたい</span></a>
+<a class="sourceLine" id="cb14-179" data-line-number="179"></a>
+<a class="sourceLine" id="cb14-180" data-line-number="180">コード類の記述はプログラムを書く人しか使わないし、</a>
+<a class="sourceLine" id="cb14-181" data-line-number="181">そのような人はMarkdownのリファレンスを読むなどたやすいだろうから、</a>
+<a class="sourceLine" id="cb14-182" data-line-number="182">それ以外のものを少し。</a>
+<a class="sourceLine" id="cb14-183" data-line-number="183"></a>
+<a class="sourceLine" id="cb14-184" data-line-number="184"><span class="fu">### リンク</span></a>
+<a class="sourceLine" id="cb14-185" data-line-number="185"></a>
+<a class="sourceLine" id="cb14-186" data-line-number="186">クリックして他のページに飛ぶことができるリンクを表現するには</a>
+<a class="sourceLine" id="cb14-187" data-line-number="187"></a>
+<a class="sourceLine" id="cb14-188" data-line-number="188">```markdown</a>
+<a class="sourceLine" id="cb14-189" data-line-number="189"><span class="ot">[タイトル](アドレス)</span></a>
+<a class="sourceLine" id="cb14-190" data-line-number="190">```</a>
+<a class="sourceLine" id="cb14-191" data-line-number="191"></a>
+<a class="sourceLine" id="cb14-192" data-line-number="192">とする。</a>
+<a class="sourceLine" id="cb14-193" data-line-number="193">つまり</a>
+<a class="sourceLine" id="cb14-194" data-line-number="194"></a>
+<a class="sourceLine" id="cb14-195" data-line-number="195">```markdown</a>
+<a class="sourceLine" id="cb14-196" data-line-number="196"><span class="ot">[Chienomiブログ](http://chienomi.reasonset.net/)</span></a>
+<a class="sourceLine" id="cb14-197" data-line-number="197">```</a>
+<a class="sourceLine" id="cb14-198" data-line-number="198"></a>
+<a class="sourceLine" id="cb14-199" data-line-number="199">のようにだ。</a>
+<a class="sourceLine" id="cb14-200" data-line-number="200"></a>
+<a class="sourceLine" id="cb14-201" data-line-number="201"><span class="fu">### 画像</span></a>
+<a class="sourceLine" id="cb14-202" data-line-number="202"></a>
+<a class="sourceLine" id="cb14-203" data-line-number="203">Markdownで画像を表現するには</a>
+<a class="sourceLine" id="cb14-204" data-line-number="204"></a>
+<a class="sourceLine" id="cb14-205" data-line-number="205">```markdown</a>
+<a class="sourceLine" id="cb14-206" data-line-number="206"><span class="al">![タイトル](アドレス)</span></a>
+<a class="sourceLine" id="cb14-207" data-line-number="207">```</a>
+<a class="sourceLine" id="cb14-208" data-line-number="208"></a>
+<a class="sourceLine" id="cb14-209" data-line-number="209">と書く。アドレスなので、基本的にインターネット上にあるものを書くことになるだろう。</a>
+<a class="sourceLine" id="cb14-210" data-line-number="210">印刷用に変換する場合はローカルで必要となり、*画像を扱う場合は出力先のことを意識して書くことになる*。</a>
+<a class="sourceLine" id="cb14-211" data-line-number="211"></a>
+<a class="sourceLine" id="cb14-212" data-line-number="212">次のように書く</a>
+<a class="sourceLine" id="cb14-213" data-line-number="213"></a>
+<a class="sourceLine" id="cb14-214" data-line-number="214">```markdown</a>
+<a class="sourceLine" id="cb14-215" data-line-number="215"><span class="al">![誰かのアイコン](http://example.com/img/icon.png)</span></a>
+<a class="sourceLine" id="cb14-216" data-line-number="216">```</a>
+<a class="sourceLine" id="cb14-217" data-line-number="217"></a>
+<a class="sourceLine" id="cb14-218" data-line-number="218"><span class="fu">## 変換する</span></a>
+<a class="sourceLine" id="cb14-219" data-line-number="219"></a>
+<a class="sourceLine" id="cb14-220" data-line-number="220">PandocとかKramdownとかとても便利なのだが、</a>
+<a class="sourceLine" id="cb14-221" data-line-number="221">だいたいエディタにはエクスポート機能があるので、とりあえずそれを使えば良い。</a>
+<a class="sourceLine" id="cb14-222" data-line-number="222"></a>
+<a class="sourceLine" id="cb14-223" data-line-number="223">Atomであれば<span class="bn">`Ctrl+Shift+M`</span>でプレビューを開き、プレビューウィンドウ上で右クリックして<span class="bn">`Save As HTML`</span>を選択すれば良い。</a></code></pre>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

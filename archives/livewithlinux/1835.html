@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-11-09T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-11-09T00:00:00+09:00" />
+    <title>アプリケーションに固有のfonts.confを使用させる - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>アプリケーションに固有のfonts.confを使用させる</h1></header>
+        <article id="MainArticle">
+<h2 id="意図">意図</h2>
+<p>私はどうしても、どうしても!!! ウェブサイトが無意味にフォントを固定してくるのが気に入らない。</p>
+<p>いくらでもいいフォントはあるのに、よりによってなぜＭＳ ＰゴシックだのArialだのHerveticaだの気に食わないフォントを強制されなくてはいけないのか。</p>
+<p>「ＭＳ Ｐゴシックはないんだからいいじゃん」と思うかもしれないが、それでは済まない。 「完全にＭＳ Ｐゴシックに決め打ちしているもの」というのも世の中には存在するので(一番はMSWord文書)どうしてもＭＳ Ｐゴシックはメトリック互換フォントを設定せざるをえないのだ。</p>
+<p>Arialに関してはUI部品に本当に使っていて、はみだすケースが少なくないので、変更はより難しい。</p>
+<p>そうでなくても指定されるのは気に入らない。 必要ないのではないか。 私としては読みやすいフォントを使いたいのだ。</p>
+<p>最も望ましいのはユーザースタイルシートで上書きすることである。 だが、ご丁寧にどのサイトも<code>body</code>や<code>p</code>ではなくスコアの高いところにフォント指定してくれやがるのでそうはいかない。滅びてしまえ。</p>
+<p>幸いにも私の場合プロファイル切り替えプログラムを使っているのでそのブラウザで見るサイトというのは決まっている。 だから手っ取り早いのはサイトで指定されているフォントをoverrideすることである。</p>
+<p>実際、</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb1-1" title="1"> <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="kw">&lt;test</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-3" title="3">   <span class="kw">&lt;string&gt;</span>Arial<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-4" title="4">  <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb1-5" title="5">  <span class="kw">&lt;edit</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-6" title="6">   <span class="kw">&lt;string&gt;</span>Raleway-v4020<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-7" title="7">  <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-8" title="8">  <span class="kw">&lt;edit</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;spacing&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-9" title="9">   <span class="kw">&lt;int&gt;</span>0<span class="kw">&lt;/int&gt;</span></a>
+<a class="sourceLine" id="cb1-10" title="10">  <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-11" title="11"> <span class="kw">&lt;/match&gt;</span></a></code></pre></div>
+<p>とかやっているのだが、やはり弊害が大きく、条件は限定したい。</p>
+<h2 id="意外とイケてないfontconfigの仕様">意外とイケてないFontConfigの仕様</h2>
+<p>FontConfigって結構イケてるソフトウェアだと思っていたのだけれど、そうでもない。</p>
+<p>設定にXMLを使っている時点で微妙だし、その文法はさらに微妙だが、 環境変数のような動的要素は全然使えない。</p>
+<p><code>XDG_CONFIG_HOME</code>だけは理解するのだけど、そのロジックは<code>include</code>内の<code>prefix=&quot;xdg&quot;</code>である。 この<code>prefix</code>は<code>default</code> (<code>/</code>)か<code>xdg</code> (<code>$XDG_CONFIG_HOME | ~/.config</code>)のどちらかだけ。 かろうじて<code>~</code>は使えるのだが…</p>
+<p>条件式も書けないし、アプリケーションごとの設定もできない。 とにかく自由度が低い。というか、設計がイケてない。</p>
+<p>方法はいくつかある。</p>
+<p>例えば、<code>~/.application.font.conf.d/</code>をincludeするようにしておいて、 これをシンボリックリンクとして切り替える、というような方法だ。 だが、これは優先度が高いところでincludeするほど影響が大きく、制約される。</p>
+<p>ただし、この方法ではアプリケーションがFreeTypeをロードしたあとであればこのリンクを切ってもリンク先のディレクトリをホールドし続ける。FontConfigが再度シンボリックリンクを解決することはない。</p>
+<p>だが、よりよいのは環境変数<code>$FONTCONFIG_FILE</code>を使う方法だ。 これによりカスタムのfonts.confを使わせることができる。</p>
+<p>だが、これも罠が多い。</p>
+<p>まず、ファイル向けの<code>$FONTCONFIG_FILE</code>とディレクトリ向けの<code>$FONTCONFIG_PATH</code>があるのだが、<code>$FONTCONFIG_PATH</code>にしても<code>NN-XXXX.conf</code>をロードするわけではなく、単にそのディレクトリの<code>fonts.conf</code>をロードするだけである。 しかも、どちらも複数指定はできない。</p>
+<p>このふたつがある意味がないし、柔軟性が全くない。 やっぱりFontConfigがいまいちだ。</p>
+<h2 id="固有のfonts.confを使わせる">固有のfonts.confを使わせる</h2>
+<p>だいたいこんな感じである。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="co">#!/bin/bash</span></a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="bu">export</span> <span class="va">FONTCONFIG_FILE=$HOME</span>/.config/extra-fontconfig/browser.conf</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="bu">exec</span> chromium</a></code></pre></div>
+<p>この設定ファイルにはしたいことだけ書けばいいわけではなく、<code>/etc/fonts</code>以下でやっているようなことが全て必要になる。 手っ取り早い方法としては</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot;<span class="kw">?&gt;</span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="dt">&lt;!DOCTYPE </span>fontconfig SYSTEM &quot;fonts.dtd&quot;<span class="dt">&gt;</span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="kw">&lt;fontconfig&gt;</span></a>
+<a class="sourceLine" id="cb3-4" title="4">  <span class="kw">&lt;its:rules</span><span class="ot"> xmlns:its=</span><span class="st">&quot;http://www.w3.org/2005/11/its&quot;</span><span class="ot"> version=</span><span class="st">&quot;1.0&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb3-5" title="5">    <span class="kw">&lt;its:translateRule</span><span class="ot"> translate=</span><span class="st">&quot;no&quot;</span><span class="ot"> selector=</span><span class="st">&quot;/fontconfig/*[not(self::description)]&quot;</span><span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb3-6" title="6">  <span class="kw">&lt;/its:rules&gt;</span></a>
+<a class="sourceLine" id="cb3-7" title="7"></a>
+<a class="sourceLine" id="cb3-8" title="8">  <span class="kw">&lt;description&gt;</span>Load application special configuration.<span class="kw">&lt;/description&gt;</span></a>
+<a class="sourceLine" id="cb3-9" title="9">        <span class="kw">&lt;include</span><span class="ot"> ignore_missing=</span><span class="st">&quot;yes&quot;</span><span class="ot"> prefix=</span><span class="st">&quot;xdg&quot;</span><span class="kw">&gt;</span>/etc/fonts/conf.d<span class="kw">&lt;/include&gt;</span></a>
+<a class="sourceLine" id="cb3-10" title="10">        <span class="kw">&lt;include</span><span class="ot"> ignore_missing=</span><span class="st">&quot;yes&quot;</span><span class="ot"> prefix=</span><span class="st">&quot;xdg&quot;</span><span class="kw">&gt;</span>/etc/fonts/fonts.conf<span class="kw">&lt;/include&gt;</span></a>
+<a class="sourceLine" id="cb3-11" title="11"><span class="kw">&lt;/fontconfig&gt;</span></a></code></pre></div>
+<p>のように書いておくことだ (いや、多分<code>/etc/fonts/conf.d</code>をここで指定する必要はない)。 これで通常の設定ファイルがロードされる。</p>
+<p>この設定ファイル内で書いた内容は<code>include</code>の前でも後でも優先され、overrideできる。 だから、この内容を基本として固有の内容を書き足せば良い。</p>
+<p>ただし、効力は通常されるどの設定ファイルよりも強いので注意が必要。</p>
+<p>この方法は汎用性があり、エディタでフォントを使い分けたいときにも有効に働く。 例えば<code>sans-serif</code>や<code>monospace</code>のような抽象フォントを指定しておき、それをoverrideすれば良い。 <code>arial</code>や<code>helvetica</code>, <code>ＭＳ Ｐゴシック</code>などをグローバルに置き換えることも避けられる。</p>
+<h2 id="web-browser-profile-chooser-version-2.0">Web browser profile chooser version 2.0</h2>
+<p><a href="https://github.com/reasonset/my-browser-profile-chooser">My browser profile chooser</a>が従来はこのような余計なコマンドの実行に適していなかったので、特殊なことをしなくても実現できるように変更した。 これは、既に廃止されたブラウザの削除、設定ファイル指定オプションがなくなったMidoriの削除など懸案だった変更を多数含み、 <em>従来とは互換性がない</em> 。</p>
+<p>従来の強引な手法が訂正されたため、設計も改善された。 これで例えば次のようにして任意のフォントプロファイルで起動できる。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">webpf_sample()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb4-2" title="2">  <span class="kw">export</span> <span class="ot">FONTCONFIG_FILE=</span><span class="st">&quot;</span><span class="ot">$HOME</span><span class="st">/fontprofiles/browser.conf&quot;</span></a>
+<a class="sourceLine" id="cb4-3" title="3">  <span class="ot">cliarg=(</span>--incognito <span class="st">&quot;</span><span class="ot">$cliarg[@]</span><span class="st">&quot;</span><span class="ot">)</span></a>
+<a class="sourceLine" id="cb4-4" title="4">  <span class="ot">profile=</span><span class="st">&quot;</span><span class="ot">$HOME</span><span class="st">/browserprofiles/sample&quot;</span></a>
+<a class="sourceLine" id="cb4-5" title="5">  viv</a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="kw">}</span></a></code></pre></div>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

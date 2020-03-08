@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-28T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-28T00:00:00+09:00" />
+    <title>P720 (Xeon Silver 4114 * Quadro P400) を半年以上使ってのインプレッション - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>P720 (Xeon Silver 4114 * Quadro P400) を半年以上使ってのインプレッション</h1></header>
+        <article id="MainArticle">
+<h2 id="ざっくり印象">ざっくり印象</h2>
+<p>基本的には「あまりよくはないが不満もない」というのが印象である。</p>
+<ul>
+<li>体感的には速くない。実際処理時間は劇的には速くなっていない</li>
+<li>だが、従来のものと比べると随所で性能差を感じる</li>
+<li>多プロセスを走らせたときでもすごく速いとは感じない。1プロセスごとに結構時間がかかるので、量を消化したいときは厳しめ</li>
+<li>コンシュマーCPUと比べて優れているのかどうかはだいぶ怪しい</li>
+<li>「速くはないけど余裕はある」という不思議な挙動。フルロードでもCPUに空きがなくて処理ができないというようなことは起きない</li>
+<li>ファンの回転数があまり上がらず、結構静か</li>
+<li>安定性があまりない。特にフロントUSBデバイスがごく限られた条件でした機能しないのが結構痛い</li>
+<li>再起動したときにUSBデバイスが使えなくなったり、よくわからない不具合がとても多い</li>
+<li>HTTはまったくいらない。フルロードしているとき、きっかり50%になる</li>
+<li>重量はとても重いけれど、取手があるためそれほど取り回しはきつくない</li>
+<li>インパクトはそれなりにある。現状、7980XEでも18コアなので、20コア40スレッドというのは「桁違い」と捉えてもらえる。しかし、2990WXが32コアであることから、「圧倒的」という感覚は相当薄れている</li>
+<li>Windows 7が動く最終機という意味合いがあったため、Windows 7でASIOが動作しなかったのは致命的だった</li>
+<li>内部がhpほど整理されておらず、電源パーツなどが不足しているため拡張性はあまり高くない</li>
+<li>「良い」とはあまり思ってないけれどあまり不満はなくてそこそこ満足している</li>
+</ul>
+<p>つまりコレ自体に不満はそれほどないのだが、値段的に40万円を越える程度であることから、ゲーミングPCと比べて2倍程度の価格的価値があるかというとちょっと難しい。</p>
+<p>ただし長期運用を考えるとトラブルに対応しやすく、帯域的には拡張性が高いという点は評価できる。 ちゃんとWindows 7が動作していて、かつ拡張が楽な構造をしていたら性能の問題は「織り込み済み」だったので、なにも気にしなかったと思うのだけど…</p>
+<h2 id="拡張プランは延期">拡張プランは延期</h2>
+<p>しかし、もともと「64GB RAM, GTX1080Ti, Xeon Gold 6138に換装」と予定されていたが、現在そのプランは延期、変更されている。</p>
+<p>理由は、</p>
+<ul>
+<li>通常利用では有り余っているので強化の必要性が全くない</li>
+<li>メモリを増やしてもプロセス数増加によるパフォーマンス増加がいまひとつ望めない。ディスク速度の問題もあり、それをやるならプログラム側に大改修が必要で、追いついていない</li>
+<li>メモリが高い。DDR4 ECC Regメモリの高さは半端ない</li>
+<li>QuadroのNVENCがそれなりの速度が出ること、画質を問題にするとNVENCならとても使っていられないことからNVENC目当てが成り立たなくなった</li>
+<li>「ゲームしようかなぁ」とか思っていたけれど、やろうとしているゲームがなくなってしまった</li>
+<li>引っ越さないことにはRCSはできない</li>
+<li>まぁまぁ性能が良い割に消費電力が少ないというのにすっかりやられて、爆熱仕様にする気にならない (すでに十分熱いし)</li>
+</ul>
+<p>Quadro P400はTDPが40Wとビデオカードとしては非常に消費電力が小さく、Xeon Silver 4114も85Wと控えめ。 加えて4114がコア数が多いため、「軽い処理が色々ある」という状況ではより省電力に動作することができる。 <code>powersave</code>ガバナーとの相性がよく、通常のデスクトップ使用で90-145Wと電力的に軽い。 これは多数のスクリプトを回していてもあまり変わらない。</p>
+<p>TDP130Wのプロセッサを使うZ400では120-190Wとひとまわり多く電気を使う。恐らくCore XクラスのCPUでも同じような事情だろう。 TDP95WのA10-7870Kは80-140Wといったところ。性能の割にかなり電気を使う、という印象だが、それでも消費電力は少なめだ。</p>
+<p>「性能が高い割には普通に使っていればエコで、いざとなれば高性能」というのはなかなか魅力的だ。 ただ、デュアルソケットなので素の状態でも割と消費電力は高く、ピーク性能があまりないため、Core i7と比べて良いのか、というと難しい話になってくる。 Core i7マシンでこのような細かい測定をすることがないためわからないのだが、Core i7のほうが全方位に渡って良い、という可能性は普通にある。</p>
+<p>Xeon Gold 6138は1機30万円ほどするのだが、比較可能なベンチマークとしてはOpenSSL Signが2500を越える程度であるのに対し、Ryzen Threadripper 2990WXが5862に達している。</p>
+<p>なお、Passmarkスコアはまるで伸びず、23927点にとどまる。 これはInterger Maths, Floating Point Mathは7980XEにダブルスコアをつける一方、Prime Number, PhysicsはRyzen 7 2700と同等以下、ということでこのスコアになっているらしい。</p>
+<p>Cinebench R15ではXeon Gold 6138が3069点、Ryzen Threadripper 2990WXが5267点。</p>
+<p>つまり、性能的にはXeon Gold 6138と比べても2990WXは「下手すれば倍」という性能である。 CPUを2機積んでも「倍」にはなかなかならないので、Xeon Goldに換装しても2990WXに届かない可能性は高い。</p>
+<p>そしてお値段が、GELLERIA TRZ(2990WX + GTX1080Ti)が60万円、V-SPECではGTX1060と組み合わせて50万円、サイコムはGT710と組み合わせて42万円、2x GTX1080 SLIで60万円といったもので、「Xeon Goldへの換装をするくらいなら2990WXマシンを追加するほうが良い」という判断が働いている。</p>
+<h2 id="消費電力の比較">消費電力の比較</h2>
+<p>まずはP720のスペック。スピーカーやディスプレイなどのパワードデバイス、キーボードとマウスは含めていない。</p>
+<table>
+<caption>P720</caption>
+<thead>
+<tr class="header">
+<th>パーツ</th>
+<th>使用部品</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CPU</td>
+<td>2x Intel Xeon Bronze 4114</td>
+</tr>
+<tr class="even">
+<td>メモリ</td>
+<td>DDR4 ECC Registered 16GB</td>
+</tr>
+<tr class="odd">
+<td>ビデオカード</td>
+<td>Nvidia Quadro P400</td>
+</tr>
+<tr class="even">
+<td>ディスク</td>
+<td>NVMe SSD, SATA3 SSD, SATA3 2.5&quot; HDD 5400rpm, SATA3 2.5&quot; HDD 5400rpm</td>
+</tr>
+<tr class="odd">
+<td>NIC</td>
+<td>Intel GbE(l219-LM), Intel GbE(l210)</td>
+</tr>
+<tr class="even">
+<td>その他 デバイス</td>
+<td>NI Audio4 DJ, TASCAM US-366</td>
+</tr>
+<tr class="odd">
+<td>電源</td>
+<td>900W Gold</td>
+</tr>
+</tbody>
+</table>
+<p>比較対象は2015年のエントリーグレードのPCであるAMD A10-7870K (Godavari) APU搭載マシンである。</p>
+<table>
+<caption>A10</caption>
+<thead>
+<tr class="header">
+<th>パーツ</th>
+<th>使用部品</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>APU</td>
+<td>AMD A10-7870K</td>
+</tr>
+<tr class="even">
+<td>メモリ</td>
+<td>DDR3 32GB</td>
+</tr>
+<tr class="odd">
+<td>ビデオカード</td>
+<td>APU内蔵</td>
+</tr>
+<tr class="even">
+<td>ディスク</td>
+<td>SATA2 SSD, SATA2 3.5&quot; HDD 5400rpm</td>
+</tr>
+<tr class="odd">
+<td>NIC</td>
+<td>Atheos GbE</td>
+</tr>
+<tr class="even">
+<td>その他 デバイス</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>電源</td>
+<td>750W Bronze</td>
+</tr>
+</tbody>
+</table>
+<p>もう一台は先代メインマシンであるhp Z400 Workstation。 2010年のメインストリームワークステーションで、性能的にはA10とあまり変わらない(若干良い程度)。 CPUはXeon W3565()</p>
+<table>
+<caption>Z400</caption>
+<thead>
+<tr class="header">
+<th>パーツ</th>
+<th>使用部品</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CPU</td>
+<td>Intel Xeon W3565</td>
+</tr>
+<tr class="even">
+<td>メモリ</td>
+<td>DDR3 ECC Unbuffered 24GB</td>
+</tr>
+<tr class="odd">
+<td>ビデオカード</td>
+<td>Nvidia Quadro 2000</td>
+</tr>
+<tr class="even">
+<td>ディスク</td>
+<td>SATA3 SSD, SATA3 2.5&quot; HDD 5400rpm</td>
+</tr>
+<tr class="odd">
+<td>NIC</td>
+<td>Broadcom GbE</td>
+</tr>
+<tr class="even">
+<td>その他 デバイス</td>
+<td>SATA3 DVD Multi</td>
+</tr>
+<tr class="odd">
+<td>電源</td>
+<td>500W</td>
+</tr>
+</tbody>
+</table>
+<p>実際の計測。 P720についてはデフォルトの電力プランが<code>powersave</code>で、<code>performance</code>との差が大きいため、起動後については<code>performance</code>時のものも記載する。</p>
+<table>
+<caption>消費電力(W)</caption>
+<thead>
+<tr class="header">
+<th>条件</th>
+<th>P720</th>
+<th>P720 Performance</th>
+<th>A10</th>
+<th>Z400</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>電源投入時</td>
+<td>132</td>
+<td>-</td>
+<td>70</td>
+<td>128</td>
+</tr>
+<tr class="even">
+<td>Grub起動時</td>
+<td>125</td>
+<td>-</td>
+<td>148</td>
+<td>127</td>
+</tr>
+<tr class="odd">
+<td>Grub LUKS 耐機中</td>
+<td>132</td>
+<td>-</td>
+<td>167</td>
+<td>134</td>
+</tr>
+<tr class="even">
+<td>ログイン アイドル</td>
+<td>76</td>
+<td>-</td>
+<td>48</td>
+<td>84</td>
+</tr>
+<tr class="odd">
+<td>Cinnamon アイドル</td>
+<td>70</td>
+<td>71</td>
+<td>50</td>
+<td>121</td>
+</tr>
+<tr class="even">
+<td>Firefox起動中</td>
+<td>101-126</td>
+<td>131-140</td>
+<td>86-117</td>
+<td>147-175</td>
+</tr>
+<tr class="odd">
+<td>GPU Test (FurMark)</td>
+<td>110</td>
+<td>93-135</td>
+<td>93</td>
+<td>133-146</td>
+</tr>
+<tr class="even">
+<td>フルロード</td>
+<td>193</td>
+<td>192</td>
+<td>168</td>
+<td>219</td>
+</tr>
+</tbody>
+</table>
+<p>ManjaroはGrubでLUKSを解除する仕組みだが、このときパスフレーズを入力せずに放置すると果てしなく電力を使う、ということが分かっている。</p>
+<p>フルロードは動画ファイルを<code>xz -t 0 -zce &gt; /dev/null</code>をコア数行うという方法で試している。 CPUとGPUの両方をフルロードにするテストは、マシンへの負荷や温度的な理由からしていない。</p>
+<p>参考として、STH(Server The Home)でXeon Gold 6138の消費電力が示されており、</p>
+<ul>
+<li>Idle: 75W</li>
+<li>70% Load: 203W</li>
+<li>100% Load: 232W</li>
+<li>Peak: 241W</li>
+</ul>
+<p>とのことである。(208Vの電源を使用) 4114と比べるとだいたい倍ぐらい、という感じだろうか。STHでは4114について、最大で101Wに到達したことが書かれている。</p>
+<p><a href="https://akiba-pc.watch.impress.co.jp/img/ah/docs/1013/427/html/mdosv1609_0013.jpg.html">Akiba PCの記事では</a> Core i7-6700Kの高負荷時システム電力が128.1Wとあり、6950Xで175.1Wとのことだ。</p>
+<p>また、Core i7-8700Kユーザーの報告で、アイドル時21W、高負荷時135Wが報告されている。</p>
+<p>もう少し詳しい話として見ると<a href="https://news.mynavi.jp/article/20171005-coffeelake/27">マイナビニュースで8700Kや1800Xの計測がされていて</a>、これを見ると80-220Wという感じだ。ちなみに、これはGTX1080を載せているらしい。</p>
+<p>やはりメインストリームワークステーションのZ400はP720よりも一回り消費電力が大きい。 また、Z400は消費電力が上がりやすく、実用しているとだいたい130W前後で動作する。P720は85W程度であるため、結構差が大きい。</p>
+<p>さらに、Xeon W3565のTDPが135Wなのに220Wに達するのは「TDP越えてないか?」と大変心配になる。 Z400は水冷であり、冷却容量はそれなりに余裕があるので問題になっていないが、これはきつそう。</p>
+<p>期待したほどではないが、基本的に余裕をもってP720は常に省電力である。 Xeon Gold 6138 2x + SLI GTX1080Tiというような構成も考えていた(これだけでTDPは750Wに達する)のだが、結局900W電源は過剰だったようだ。</p>
+<h2 id="総括">総括</h2>
+<p>まず、前提となるのが、P720は「仕事用」である。 継続的に、効率的に仕事ができることが大切なのだ。</p>
+<p>だから業務継続性においてのみ重要視したWindows 7が動作しなかったのは、選択理由をそもそもゆるがすようなもので厳しい。 ワークステーションのほうが動作が安定している、といった点を重視したのだが、この点もいまひとつでこれらの「P720が期待したように動作しない」という点がなにより不満をもたらしている。 これでコンシュマークラスには到底実現できないような性能であればまだ納得するのだが、単純な性能面ではあまりアドバンテージがないため、「単純に高かった」という印象になってしまう。</p>
+<p>しかし、それを理由に公開したり残念に思えていないのは「特に不満はない」という点が大きい。</p>
+<p>Windows 7は結局思ったように使えなかったが、KOMPLETE 9 ULTIMATEがWindows10に対応したこと、Sonar X3 Producerが「だいたい動いた」こと、SONARが廃止になって、それに備えてAbility 2.5 Proを導入したことなどから「Windows 10でも一通り使える」状態になった。 音楽制作系以外の環境と混在させることには不安もあったが、とりあえず問題は生じていないのでこのまま使っていけそうである。</p>
+<p>現環境においてはいくつかの不具合(特にフロントパネルのUSB問題)があるが、Linuxで運用していて致命的なわけでもない。 Windows 10のほうでもASIOドライバをインストールするとフリーズするという問題があって血の気が引いたが、こちらはWindows Updateで解消した。</p>
+<p>通常の利用では当然ながら性能が不足するということはない。 シングルスレッド性能が非常に低いため(A10よりちょっといいくらい、コンシュマープロセッサではPentium Goldよりずっと低い)動作快適性は微妙だったりするのだが、Linuxであれば変につっかえることもないし(Windowsだと起動後しばらくや、突然はじまるWindows Updateで使い物にならないほど止まる)、私の場合は多くのプロセスを動作させるためひょんなことで一時フリーズしたりしていたのだが、それもなくなって快適になった。</p>
+<p>もちろんリソース総量的にコンシュマーCPUで足りる可能性もあるが。</p>
+<p>拡張性に関してもコンシュマーCPUよりは有利なのは確かで、価格差をさておけば特にコンシュマーCPUのほうが良かった、という感じはない。 価格差を含めるとCore i9-7920X+GTX1080のゲーミングPCという選択肢があったため、性能面では残念な部分もなくはない。だが、Core i9-7920Xマシンとはかなりの性能差があることはわかりきっていたので、コンシュマーCPU比では性能ではなく可用性に料金を払ったと考えて良い。</p>
+<p>Xeon 4114の性能はおおよそ「並列化すれば最終的には速い」というまんまのもので、使いこなしは難しい。 あるひとつのことを実行したときにかかる時間は「Celeronよりはマシ」という話でしかないため、これでは速さを感じることはできない。実際にはそこまで時間がかかる処理は並列化されていることが多いためまぁまぁ速く終わるのだが、なにもかもが一瞬という速さではない。 そのため、この性能を活かすにはなるべく同時に複数の処理をし続けて、「24時間あたりの処理量は多い」というような内容になる。 ざっくり「Celeron G3920マシンを5台用意すれば1台のCore i7マシンよりたくさんタスクを消化できる」というような話だと言えば難しさが伝わるだろうか。</p>
+<p>Celeron G3920マシンを5台用意するよりはずっと省電力なので、効率は良い。だが、その性能を生かせなければ効率などあったものではない。 普通の人には到底お勧めできるものではない。</p>
+<p>私は近年、“Orbit”と呼ぶデザインを採用している。 これは作業概念を小さなスクリプトにし、網羅的に処理するということをタスクスケジューラによって繰り返し行うものだ。 処理自体は軽いが並行で多数の処理が走り続ける。このデザイン自体はXeon 4114プロセッサと非常に相性がいい<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>。だが、軽い処理では4114プロセッサを使い切ることは到底できず、かといって重い処理(例えばffmpeg)はOrbitデザインに組み込めないほど時間がかかってしまう。 また、現状ではOrbitデザインで作られているスクリプトも最大で5スレッドしか生成しないため、性能を活かし切るにはより多くのスレッド(というよりも任意の数のスレッド)が生成できるデザインに変更する必要がある。 ただ、OrbitデザインはIOの比重が高いため、あまりシークに時間のかかるHDDには向いておらず、恐らくプロセッサ性能が向上しても効率はよくならない<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>。</p>
+<p>Xeon 4114の真価を発揮するのはこのスクリプト群を改良してからになるだろう<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>。</p>
+<p>最大の誤算は「Xeon Gold 6138の2台分に匹敵するトータルパワーと、Xeon Gold 6138と同等のコアパワーを備え、1ユニットで32ものコアを持ち<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>、我がP720と変わらない値段で搭載機が買える」Ryzen Threadripper 2990WXの登場である。 さすがにあれと比べると何もかもがどうしようもない。</p>
+<p>だが、2990WXが誰にでも勧められるかというとそうでもなくて、まず性能は著しく過剰だし、性能を必要とするゲームにはあまり向いていないので、ゲームではない部分で非常に高い処理性能を必要としている人のみが適する、となかなかハードルは高い。2950Xのほうなら、ゲーマーを含めた高性能PCを必要とする人に勧められるのだが。</p>
+<p>P720、というかXeon Scalable Processor Family搭載マシンについては何度か相談されているのだが、明確に用途が答えられない人にはとても勧められないし、「速い」ことを期待しているならそれも勧められない。 クリエイター系の人についても、コア性能が低くてレスポンスがあまりよくないので勧められない。実際このマシンでGimpやShotcutなんかを動かしていると決して快適ではないと感じる。 可用性とコアの数が重要になる場合だけ、お勧めできる。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Xeon 4114プロセッサは「コア数優先、コア性能はすごく低い」というプロセッサである。Orbitデザインは多くの場合処理は軽いため性能が高くても活かすことができないが、条件によってはかなりの数のプロセスが発生するためこのようなプロセッサはうってつけである<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>ちなみに、Orbitデザインは大量のプロセスを生成するがすぐ終わってしまうため、forkにかかるコストが大きくそもそも実行効率はよくない。だが、開発やメンテナンスは容易で柔軟性が高い。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>なお、PureBuilder Simplyも1.6のうちに並列化スクリプトが作られる予定になっている。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn4"><p>32コアというのは、Xeon 4114のデュアルよりも多いのである。<a href="#fnref4" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

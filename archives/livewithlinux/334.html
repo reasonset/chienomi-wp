@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-10-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-10-27T00:00:00+09:00" />
+    <title>mount namespace, VineSeed, nc chat&ZeroMQ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>mount namespace, VineSeed, nc chat&ZeroMQ</h1></header>
+        <article id="MainArticle">
+<h3>mount namespace</h3><p>試してみたのだが、うまくいかなかった。</p><p>通常は共有されるマウントツリーの空間だが、これをプロセス固有のものにすることができるのがmount namespaceだ。</p><p>mount namespace適用の方法は<samp class="format">unshare --mount <var>command</var></samp>となる。これで<var>command</var>が新たにマウントしたファイルシステムは、そのプロセスと子孫プロセスに固有のものになり、上流には反映されないという。</p><p>というわけで試してみた。</p><code style="display: block;white-space: pre-wrap">$ sudo unshare zsh
+$ sudo mount -o subvol=testvol /dev/sdd2 /mnt/3
+    }
+    
+    p {[
+      "しかし、異なるmount namespaceをもっているプロセスからもそれが見えてしまう。違うファイルシステムツリーをもっている環境を作りたかったのだが、それ以前の問題だ。",
+      "btrfs
+    ]}
+    
+  h3 "VineSeed"
+    p {[
+      "Vine Projectのお手伝いをすることにして、Seed環境を構築しようとしたのだが、マニュアルに従ってVirtualBox上で構築するも、うまくいかなかった。",
+      "ベースシステムで手順どおりにするとPlymouthのあとブラックアウト、フルインストールからではXDMが起動し、ログインしてもただちにXDMに戻る。",
+      "問題はVineSeed MLにレポート済み"
+    ]}
+    
+  h3 "ncでchat &amp; ZeroMQで拡張を目論見る"
+    p {[
+      "LAN内のコンピュータととりあえずメッセージをやりとりするのに良い手段…と考えたのだが、なかなか良い方法がなかった。",
+      "最も手間がないのは、ssh+ncを使う方法だろう。",
+      "2つのコンピュータは、まず片方でつぎのようにして、コネクションを対話的に待ち受ける。",
+    ]}
+    
+    sb(c:"shell") { "$ <kbd>nc -l 55555</kbd>" }
+    
+    p {[
+      "そしてもう片方のクライアントはSSHでログインし、ncで接続する。"
+    ]}
+    
+    sb(c:"shell) { &lt;&lt;-END
+$ <kbd>ssh -x <var>user</var>@<var>host</var></kbd>
+$ <kbd>nc localhost 55555</kbd>
+</code><p>ふたりなら十分に実用になるが、頻繁に書いていると画面がごちゃごちゃになり、また消すことができない（日本語の場合）のも難点。</p><p>こういうのを処理するのがlibChat ZMQ Framework（私の作品）なのだが、そのベースになるようなシンプルなサーバーを書いてみた。</p><p>のはいいのだが、MageiaでRuby ZeroMQバインディングがインストールできない。Pythonのほうは用意されているのだが、</p><samp style="display: block;white-space: pre-wrap">Building native extensions.  This could take a while...
+ERROR:  Error installing zmq:
+        ERROR: Failed to build gem native extension.
+
+    /usr/bin/ruby extconf.rb
+checking for zmq.h... yes
+checking for zmq_init() in -lzmq... yes
+Cool, I found your zmq install...
+creating Makefile
+
+make "DESTDIR="
+gcc -I. -I/usr/include/x86_64-linux -I/usr/include/ruby/backward -I/usr/include -I. -DHAVE_ZMQ_H    -fPIC -O2 -g -pipe -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -fPIC -fPIC  -o rbzmq.o -c rbzmq.c
+rbzmq.c: 関数 ‘internal_select’ 内:
+rbzmq.c:324:9: 警告: ‘rb_thread_blocking_region’ は廃止されました (宣言位置 /usr/include/ruby/intern.h:839) [-Wdeprecated-declarations]
+         rb_thread_blocking_region (zmq_poll_blocking, (void*)&amp;poll_args, NULL, NULL);
+         ^
+rbzmq.c: 関数 ‘socket_getsockopt’ 内:
+rbzmq.c:968:7: エラー: ‘ZMQ_RECOVERY_IVL_MSEC’ が宣言されていません (この関数内での最初の使用)
+  case ZMQ_RECOVERY_IVL_MSEC:
+       ^
+rbzmq.c:968:7: 備考: 未宣言の識別子は出現した各関数内で一回のみ報告されます
+rbzmq.c:990:10: エラー: ‘ZMQ_HWM’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_HWM:
+          ^
+rbzmq.c:991:10: エラー: ‘ZMQ_SWAP’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_SWAP:
+          ^
+rbzmq.c:995:10: エラー: ‘ZMQ_MCAST_LOOP’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_MCAST_LOOP:
+          ^
+rbzmq.c: 関数 ‘socket_setsockopt’ 内:
+rbzmq.c:1292:10: エラー: ‘ZMQ_HWM’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_HWM:
+          ^
+rbzmq.c:1293:10: エラー: ‘ZMQ_SWAP’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_SWAP:
+          ^
+rbzmq.c:1297:10: エラー: ‘ZMQ_MCAST_LOOP’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_MCAST_LOOP:
+          ^
+rbzmq.c:1315:10: エラー: ‘ZMQ_RECOVERY_IVL_MSEC’ が宣言されていません (この関数内での最初の使用)
+     case ZMQ_RECOVERY_IVL_MSEC:
+          ^
+rbzmq.c: 関数 ‘zmq_send_blocking’ 内:
+rbzmq.c:1443:5: エラー: 関数 ‘zmq_send’ へ渡す引数が少なすぎます
+     send_args-&gt;rc = zmq_send(send_args-&gt;socket, send_args-&gt;msg, send_args-&gt;flags);
+     ^
+In file included from rbzmq.c:28:0:
+/usr/include/zmq.h:349:16: 備考: ここで宣言されています
+ ZMQ_EXPORT int zmq_send (void *s, const void *buf, size_t len, int flags);
+                ^
+rbzmq.c: 関数 ‘socket_send’ 内:
+rbzmq.c:1512:9: 警告: ‘rb_thread_blocking_region’ は廃止されました (宣言位置 /usr/include/ruby/intern.h:839) [-Wdeprecated-declarations]
+         rb_thread_blocking_region (zmq_send_blocking, (void*) &amp;send_args, NULL, NULL);
+         ^
+rbzmq.c:1517:9: エラー: 関数 ‘zmq_send’ へ渡す引数が少なすぎます
+         rc = zmq_send (s, &amp;msg, flags);
+         ^
+In file included from rbzmq.c:28:0:
+/usr/include/zmq.h:349:16: 備考: ここで宣言されています
+ ZMQ_EXPORT int zmq_send (void *s, const void *buf, size_t len, int flags);
+                ^
+rbzmq.c: 関数 ‘zmq_recv_blocking’ 内:
+rbzmq.c:1541:5: エラー: 関数 ‘zmq_recv’ へ渡す引数が少なすぎます
+     recv_args-&gt;rc = zmq_recv(recv_args-&gt;socket, recv_args-&gt;msg, recv_args-&gt;flags);
+     ^
+In file included from rbzmq.c:28:0:
+/usr/include/zmq.h:350:16: 備考: ここで宣言されています
+ ZMQ_EXPORT int zmq_recv (void *s, void *buf, size_t len, int flags);
+                ^
+rbzmq.c: 関数 ‘socket_recv’ 内:
+rbzmq.c:1596:9: 警告: ‘rb_thread_blocking_region’ は廃止されました (宣言位置 /usr/include/ruby/intern.h:839) [-Wdeprecated-declarations]
+         rb_thread_blocking_region (zmq_recv_blocking, (void*) &amp;recv_args,
+         ^
+rbzmq.c:1602:9: エラー: 関数 ‘zmq_recv’ へ渡す引数が少なすぎます
+         rc = zmq_recv (s, &amp;msg, flags);
+         ^
+In file included from rbzmq.c:28:0:
+/usr/include/zmq.h:350:16: 備考: ここで宣言されています
+ ZMQ_EXPORT int zmq_recv (void *s, void *buf, size_t len, int flags);
+                ^
+In file included from /usr/include/ruby.h:33:0,
+                 from rbzmq.c:22:
+rbzmq.c: 関数 ‘Init_zmq’ 内:
+rbzmq.c:1675:50: エラー: ‘ZMQ_HWM’ が宣言されていません (この関数内での最初の使用)
+     rb_define_const (zmq_module, "HWM", INT2NUM (ZMQ_HWM));
+                                                  ^
+rbzmq.c:1676:51: エラー: ‘ZMQ_SWAP’ が宣言されていません (この関数内での最初の使用)
+     rb_define_const (zmq_module, "SWAP", INT2NUM (ZMQ_SWAP));
+                                                   ^
+rbzmq.c:1683:57: エラー: ‘ZMQ_MCAST_LOOP’ が宣言されていません (この関数内での最初の使用)
+     rb_define_const (zmq_module, "MCAST_LOOP", INT2NUM (ZMQ_MCAST_LOOP));
+                                                         ^
+rbzmq.c:1698:64: エラー: ‘ZMQ_RECOVERY_IVL_MSEC’ が宣言されていません (この関数内での最初の使用)
+     rb_define_const (zmq_module, "RECOVERY_IVL_MSEC", INT2NUM (ZMQ_RECOVERY_IVL_MSEC));
+                                                                ^
+Makefile:224: recipe for target 'rbzmq.o' failed
+make: *** [rbzmq.o] Error 1
+
+
+Gem files will remain installed in /home/aki/.gem/ruby/gems/zmq-2.1.4 for inspection.
+Results logged to /home/aki/.gem/ruby/gems/zmq-2.1.4/./gem_make.out
+</samp><p>libChat::ZMQにしてもZeroMQを使っているので試せない。サーバー用にVMを用意するなどすればいいのだが、なかなか厄介な事態だ。</p>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

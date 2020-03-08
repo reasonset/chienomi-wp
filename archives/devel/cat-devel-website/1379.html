@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-06-23T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-06-23T00:00:00+09:00" />
+    <title>monospace fontを指定した話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>monospace fontを指定した話</h1></header>
+        <article id="MainArticle">
+<p>Mimir YokohamaのCSSでmonospaceをより積極的に指定するようになった。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" data-line-number="1">pre,code { </a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    <span class="kw">font-size</span>: <span class="dv">100%</span>;</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    <span class="kw">font-family</span>: </a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">        <span class="co">/* Assuming user installed */</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">        <span class="st">&quot;Input Mono Compressed&quot;</span>, <span class="st">&quot;Input Mono Condenced&quot;</span>, <span class="st">&quot;Input Mono Narrow&quot;</span>, <span class="st">&quot;Input Mono&quot;</span>, <span class="st">&quot;Meslo LG S&quot;</span>, <span class="st">&quot;Anonymous Pro&quot;</span>, <span class="st">&quot;Hack&quot;</span>, <span class="st">&quot;Envy Code R&quot;</span>, <span class="st">&quot;Luculent&quot;</span>, <span class="st">&quot;mononoki&quot;</span>, <span class="st">&quot;Anka/Coder Condensed&quot;</span>, <span class="st">&quot;Anka/Coder Narrow&quot;</span>, <span class="st">&quot;Cousine&quot;</span>, <span class="st">&quot;Fantasque Sans Mono&quot;</span>, <span class="st">&quot;NK57 Monospace Sc Rg&quot;</span>, <span class="st">&quot;Go Mono&quot;</span>, <span class="st">&quot;FreeMono&quot;</span>, <span class="st">&quot;Terminus&quot;</span>, <span class="st">&quot;Iosevka Term&quot;</span>, <span class="st">&quot;OCRB&quot;</span>, <span class="st">&quot;PT Mono&quot;</span>, <span class="st">&quot;Space Mono&quot;</span>, <span class="st">&quot;Telegrama&quot;</span>, <span class="st">&quot;Cica&quot;</span>, <span class="st">&quot;Myricam&quot;</span>, <span class="st">&quot;Myrica&quot;</span>,</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">        <span class="co">/* Popular monospace fonts (User?) */</span> </a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">        <span class="st">&quot;Ubuntu Mono&quot;</span>, <span class="st">&quot;Ricty&quot;</span>, <span class="st">&quot;Source Code Pro&quot;</span>, <span class="st">&quot;Noto Mono&quot;</span>, <span class="st">&quot;Inconsolata&quot;</span>, <span class="st">&quot;Sudo&quot;</span>, <span class="st">&quot;Migu 1M&quot;</span>,</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">        <span class="co">/* Assuming system installed */</span> </a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">        <span class="st">&quot;Source Han Code JP&quot;</span>,  <span class="st">&quot;VL Gothic&quot;</span>, <span class="st">&quot;Liberation Mono&quot;</span>, <span class="st">&quot;Menlo&quot;</span>, <span class="st">&quot;Osaka-等幅&quot;, &quot;</span>Monaco<span class="st">&quot;, &quot;</span>Ubuntu Mono<span class="st">&quot;, &quot;</span>DejaVu Sans Mono<span class="st">&quot;, &quot;</span>Droid Sans Mono<span class="st">&quot;, &quot;</span>Consolas<span class="st">&quot;, &quot;</span>Courier New<span class="st">&quot;, &quot;</span>Courier<span class="st">&quot;, &quot;</span>Bitstream Vera Sans Mono<span class="st">&quot;, monospace;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="st">        /* Explicitly avoid</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="st">        &quot;</span>Fira Code<span class="st">&quot;, &quot;</span>NovaMono<span class="st">&quot;, &quot;</span>CPMono_v07<span class="st">&quot;, &quot;</span>Nimbus Mono L<span class="st">&quot;, &quot;</span>Iosevka<span class="st">&quot;, &quot;</span>Roman Fixed-width<span class="st">&quot;, &quot;</span>Tlwg Typist<span class="st">&quot;, &quot;</span>TlwgMono<span class="st">&quot;, &quot;</span>TlwgTypewriter<span class="st">&quot;, &quot;</span>agave<span class="st">&quot;, &quot;</span>monofur<span class="st">&quot;, &quot;</span>Lucida Mono<span class="st">&quot;, &quot;</span>Monoid<span class="st">&quot;;</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="st">        */</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="st">}</span></a></code></pre></div>
+<p>Mimir Yokohamaにはプログラミング関連の記事があるが、基本的には初心者向けである。</p>
+<p>そのため、ユーザーはプログラミング向けのフォントを持っていない可能性もある。 また、そうでなくてもブラウザのmonospaceフォントをプログラミング向けのフォントに設定している可能性は低い。</p>
+<p>日本語OSの場合、Windowsではデフォルトに“ＭＳ ゴシック”、Macでは“平成角ゴシック”が使用される。 これらはいずれもコードの表示には全く適さない。</p>
+<p>英語環境の場合はWindowsは“Courier”, Macは“Courier New”が使われるようだ。適しているとはいえないが、いくらかマシである。</p>
+<p>だが、現在の環境では<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>それぞれコーディング向けのフォント、Windowsなら “Consolas” が、Macなら “Menlo” が導入されている。 なので、次のようにすれば話は解決する。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb2-1" data-line-number="1">code {</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="kw">font-family</span>: <span class="st">&quot;Menlo&quot;</span>, <span class="st">&quot;Monaco&quot;</span>, <span class="st">&quot;Consolas&quot;</span>, <span class="dv">monospace</span>;</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">}</a></code></pre></div>
+<p>Linuxのことも考えなくてはいけない。 Linuxの場合はコーディングに適したフォントが豊富なので心配する必要はないのだが、日本語環境だとmonospaceが “IPA ゴシック” だったりするかもしれない。 と、なるとこうなる。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb3-1" data-line-number="1">code {</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="kw">font-family</span>: <span class="st">&quot;Source Han Code JP&quot;</span>, <span class="st">&quot;VL Gothic&quot;</span>, <span class="st">&quot;Noto Mono&quot;</span>, <span class="st">&quot;Ubuntu Mono&quot;</span>, <span class="st">&quot;Droid Sans Mono&quot;</span>, <span class="st">&quot;DejaVu Sans Mono&quot;</span>, <span class="st">&quot;Bitstream Vera Sans Mono&quot;</span>, <span class="st">&quot;TlwgTypewriter&quot;</span>, <span class="st">&quot;Lucida Mono&quot;</span>, <span class="st">&quot;Menlo&quot;</span>, <span class="st">&quot;Monaco&quot;</span>, <span class="st">&quot;Consolas&quot;</span>, <span class="st">&quot;Courier New&quot;</span>, <span class="st">&quot;Courier&quot;</span>, <span class="dv">monospace</span>;</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">}</a></code></pre></div>
+<p>だが、私は無意味なシステムデフォルトフォントの強制などしない。 ユーザーがわざわざ(おそらくは好みによって)インストールしているものは尊重されるべきだ。</p>
+<p>そこで、「わざわざインストールした可能性の高いものを優先する」というポリシーで追記した。</p>
+<p>ただし、グリフ変形のあるフォント、モノスペースではあるがコードとしての読みやすさに欠けるフォントは除外した。 これは、コードに慣れていない初心者に無用な混乱をもたらさないためだ。</p>
+<p>一方、初心者が学びに使用する上で望ましいフォントとしてInputを挙げている。 そのためにインストールガイドまで容易するほどだ。</p>
+<p>Inputを配布しないのはInputがライセンス上それを許していないためである。</p>
+<p>また、Webフォントとして利用することもInputは許可していないが、それを別としても(和文フォントのように重いわけではないが)表示に必須ではないにもかかわらずそれなりにサイズのあるフォントをダウンロードさせることは全く好ましくないため、Inputに限らずWebフォントを使うのではなく、できるだけコーディングに適したフォントで表示させる、という方法を取っている。</p>
+<p>また、Sans-serifやSerifと違って意図したように表示されない場合の問題が大きいため、かなり記述量が網羅的に多くなっている<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>。</p>
+<p>なお、monospaceフォントの記述を行ったのは、これからプログラミング関連の記事を更新するための布石でもある。</p>
+<p>実はChiemoniでも同様の問題を考慮して同様の記述を加えている。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Macがコーディング向けの“Monaco”を採用したのはとても昔の話なので案ずることはない。Windowsの場合、Windows Vista以降は“Consolas”が導入されている。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>Serifフォントは「明朝体ならなんでもいい」に近い感覚なので別に細かく記述する必要もないが、Sans-serifは「丸ゴシックで表示したい」ということであり、丸ゴシックは比較的少ないので網羅的に記述することもできなくはない。 だが、丸ゴシックでなければ困るわけでもないので網羅的な記述にはなっていない。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

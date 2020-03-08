@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-01-02T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-01-02T00:00:00+09:00" />
+    <title>ループ回数の多い処理でのログ出力 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ループ回数の多い処理でのログ出力</h1></header>
+        <article id="MainArticle">
+<h2 id="概要">概要</h2>
+<p>現状、1処理が0.0012秒程度で終わるシステムがある。1回の処理は非常に短いが、これが呼ばれる回数は1処理あたり数百万回にも及ぶ。 速度がそれなりに求められる案件だ。</p>
+<p>しかし、その中で何度かログファイルに書き出したいタイミングというのがある。それぞれのログファイルに書き出すタイミングは呼び出しの中では1度だけだ。 だが、「処理時間が短くて」「回数が多い」のに共有のログファイルに書くというのはなかなか鬼門だ。 ファイルに書いている時間に待ち合わせがあると、速度に対してものすごくロスが発生する。</p>
+<h2 id="まずは普通に">まずは普通に</h2>
+<p>普通に共有されているログファイルをロックする方針でやってみる。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb1-2" title="2"></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="dv">20</span>.times <span class="kw">do</span> |n|</a>
+<a class="sourceLine" id="cb1-4" title="4">  fork <span class="kw">do</span></a>
+<a class="sourceLine" id="cb1-5" title="5">    <span class="dv">100000</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb1-6" title="6">      <span class="dt">File</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest/log&quot;</span>, <span class="st">&quot;a&quot;</span>) <span class="kw">do</span> |f|</a>
+<a class="sourceLine" id="cb1-7" title="7">        f.flock(<span class="dt">File</span>::<span class="dt">LOCK_EX</span>)</a>
+<a class="sourceLine" id="cb1-8" title="8">        f.puts <span class="st">&quot;LOGGED \#</span><span class="ot">#{</span>i<span class="ot">}</span><span class="st"> with </span><span class="ot">#{</span>n<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb1-9" title="9">        f.flock(<span class="dt">File</span>::<span class="dt">LOCK_UN</span>)</a>
+<a class="sourceLine" id="cb1-10" title="10">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-11" title="11">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-12" title="12">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-13" title="13"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb1-14" title="14"></a>
+<a class="sourceLine" id="cb1-15" title="15"><span class="dt">Process</span>.waitall</a></code></pre></div>
+<p>ログファイルにアクセスできるのは1プロセスだけなので、同時にログに書こうとすると待たされることになる。 同時に書くとファイルが壊れてしまうので、すごく妥当な方法なのだが…</p>
+<pre><code>% time ruby test-logging1.rb
+ruby test-logging1.rb  20.24s user 676.50s system 1102% cpu 1:03.18 total</code></pre>
+<p>1分3秒ということでかなり長い。</p>
+<h2 id="ソケットで投げてみる">ソケットで投げてみる</h2>
+<p>UNIXドメインソケットにして投げつけてみる。 サーバー側が受け取った後の処理はクライアント側の処理時間には影響しないので、サーバーは投げ捨てる。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb3-2" title="2"></a>
+<a class="sourceLine" id="cb3-3" title="3">require <span class="st">&#39;socket&#39;</span></a>
+<a class="sourceLine" id="cb3-4" title="4"></a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="dt">UNIXServer</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest.sock&quot;</span>) <span class="kw">do</span> |sock|</a>
+<a class="sourceLine" id="cb3-6" title="6">  <span class="kw">while</span> s = sock.accept</a>
+<a class="sourceLine" id="cb3-7" title="7">    <span class="dt">Thread</span>.new(s) <span class="kw">do</span> |ts|</a>
+<a class="sourceLine" id="cb3-8" title="8">      ts.read</a>
+<a class="sourceLine" id="cb3-9" title="9">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-10" title="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb3-11" title="11"><span class="kw">end</span></a></code></pre></div>
+<p>クライアントは直接ファイルに書くのではなくUNIXドメインソケットを使う。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb4-2" title="2"></a>
+<a class="sourceLine" id="cb4-3" title="3">require <span class="st">&#39;socket&#39;</span></a>
+<a class="sourceLine" id="cb4-4" title="4"></a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="dv">20</span>.times <span class="kw">do</span> |n|</a>
+<a class="sourceLine" id="cb4-6" title="6">  fork <span class="kw">do</span></a>
+<a class="sourceLine" id="cb4-7" title="7">    <span class="dv">100000</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb4-8" title="8">      <span class="dt">UNIXSocket</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest.sock&quot;</span>) <span class="kw">do</span> |sock|</a>
+<a class="sourceLine" id="cb4-9" title="9">        sock.puts <span class="st">&quot;LOGGED \#</span><span class="ot">#{</span>i<span class="ot">}</span><span class="st"> with </span><span class="ot">#{</span>n<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb4-10" title="10">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-11" title="11">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-12" title="12">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-13" title="13"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-14" title="14"></a>
+<a class="sourceLine" id="cb4-15" title="15"><span class="dt">Process</span>.waitall</a></code></pre></div>
+<p>待ち合わせは全く発生しないわけではない(ソケットを受付てからスレッドに移るまでの間はブロックされる)が、速くなるはずだと思うのだが。</p>
+<pre><code>% time ruby test-logging2.rb
+ruby test-logging2.rb  25.51s user 33.05s system 62% cpu 1:33.02 total</code></pre>
+<p>1分33秒。却って遅くなってしまった。 やはりソケットに接続するコストが高いようだ。</p>
+<p>ただ、並列数としては今回の場合最大24で、繰り返しの間というのは別にソケットをつなぎ直す必要はない設計になっている。 そのため、ループの外側に接続を置くことができる。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb6-2" title="2"></a>
+<a class="sourceLine" id="cb6-3" title="3">require <span class="st">&#39;socket&#39;</span></a>
+<a class="sourceLine" id="cb6-4" title="4"></a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="dv">20</span>.times <span class="kw">do</span> |n|</a>
+<a class="sourceLine" id="cb6-6" title="6">  fork <span class="kw">do</span></a>
+<a class="sourceLine" id="cb6-7" title="7">    <span class="dt">UNIXSocket</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest.sock&quot;</span>) <span class="kw">do</span> |sock|</a>
+<a class="sourceLine" id="cb6-8" title="8">      <span class="dv">100000</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb6-9" title="9">        sock.puts <span class="st">&quot;LOGGED \#</span><span class="ot">#{</span>i<span class="ot">}</span><span class="st"> with </span><span class="ot">#{</span>n<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb6-10" title="10">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb6-11" title="11">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb6-12" title="12">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb6-13" title="13"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb6-14" title="14"></a>
+<a class="sourceLine" id="cb6-15" title="15"><span class="dt">Process</span>.waitall</a></code></pre></div>
+<p>1行入れ替えただけだが、効果てきめん。</p>
+<pre><code>% time ruby test-logging2.rb
+ruby test-logging2.rb  2.91s user 2.63s system 1488% cpu 0.373 total</code></pre>
+<p>今度は0.3秒で終わった。 Linuxの場合ソケットへの書き込みはカーネルがバッファするため、この程度の量であればメモリへの書き込みだけで終了する。そのため、かなり高速である。</p>
+<p>ちなみに、ファイルの場合共有されているファイルをみんなが開いていたらぐちゃぐちゃになってしまうのでこの方法は使えない。 また、親子関係にある別プロセスについてはファイルディスクリプタ自体は共有されているため、fd番号さえわかっていれば共有できるのだが、 その場合は同じ経路から出ていくことになり、ファイルを共有した場合と同じ問題に直面するため、バグになってしまう。</p>
+<h2 id="pidを使う">PIDを使う</h2>
+<p>私の新しいアイディアは、「ログファイルにPIDを含める」という方法だ。</p>
+<p>プロセス自体がマルチスレッドになっていなければ、その瞬間には同一PIDのプロセスはそのプロセスしかいないため、そもそもロックする必要がない。 ファイルのロックはあくまで「同時に」書かれるから必要になるのであって、どれだけ速くても順次であれば何も問題はないのだ。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb8-2" title="2"></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="dv">20</span>.times <span class="kw">do</span> |n|</a>
+<a class="sourceLine" id="cb8-4" title="4">  fork <span class="kw">do</span></a>
+<a class="sourceLine" id="cb8-5" title="5">    <span class="dv">100000</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb8-6" title="6">      <span class="dt">File</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest/log.</span><span class="ot">#{</span><span class="dt">$$</span><span class="ot">}</span><span class="st">&quot;</span>, <span class="st">&quot;a&quot;</span>) <span class="kw">do</span> |f|</a>
+<a class="sourceLine" id="cb8-7" title="7">        f.puts <span class="st">&quot;LOGGED \#</span><span class="ot">#{</span>i<span class="ot">}</span><span class="st"> with </span><span class="ot">#{</span>n<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb8-8" title="8">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-9" title="9">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-10" title="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-11" title="11"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-12" title="12"></a>
+<a class="sourceLine" id="cb8-13" title="13"><span class="dt">Process</span>.waitall</a></code></pre></div>
+<p>ファイル名にPIDを含めているため、同時に走っている別のプロセスが同じファイルにアクセスすることはない。 もちろん、これは並列化の方法にプロセスを選択している場合だけだが。</p>
+<pre><code>% time ruby test-logging3.rb
+ruby test-logging3.rb  12.26s user 22.37s system 1778% cpu 1.948 total</code></pre>
+<p>なかなか速い。だが、ソケットとはだいぶ差があるようだ。 しかし考えてみればこれもプロセスをオープンしてからであればなにもループのたびに開き直す必要はない。ソケットと同じ話だ。 そこで、ソケットと同じく順序を入れ替えてみる。</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb10-2" title="2"></a>
+<a class="sourceLine" id="cb10-3" title="3"><span class="dv">20</span>.times <span class="kw">do</span> |n|</a>
+<a class="sourceLine" id="cb10-4" title="4">  fork <span class="kw">do</span></a>
+<a class="sourceLine" id="cb10-5" title="5">    <span class="dt">File</span>.open(<span class="st">&quot;</span><span class="ot">#{</span><span class="dt">ENV</span>[<span class="st">&quot;HOME&quot;</span>]<span class="ot">}</span><span class="st">/logtest/log.</span><span class="ot">#{</span><span class="dt">$$</span><span class="ot">}</span><span class="st">&quot;</span>, <span class="st">&quot;a&quot;</span>) <span class="kw">do</span> |f|</a>
+<a class="sourceLine" id="cb10-6" title="6">      <span class="dv">100000</span>.times <span class="kw">do</span> |i|</a>
+<a class="sourceLine" id="cb10-7" title="7">        f.puts <span class="st">&quot;LOGGED \#</span><span class="ot">#{</span>i<span class="ot">}</span><span class="st"> with </span><span class="ot">#{</span>n<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb10-8" title="8">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-9" title="9">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-10" title="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-11" title="11"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-12" title="12"></a>
+<a class="sourceLine" id="cb10-13" title="13"><span class="dt">Process</span>.waitall</a></code></pre></div>
+<p>ループのたびにファイルを開くのではなく、予めファイルを開いてループで書いていくようにした。</p>
+<pre><code>% time ruby test-logging3.rb
+ruby test-logging3.rb  2.52s user 0.13s system 1356% cpu 0.196 total</code></pre>
+<p>ファイルとソケットのオープンコストの差か、ソケットよりも速くなった。 ちなみに、ソケットを一回だけ開く方法よりも速い。</p>
+<p>「forkでの並列処理に追記のログファイルはファイル名にPIDで」、このテクニック、私はどこかで見た記憶はないのだが、かなり有用だと思う。お勧めだ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

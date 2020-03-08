@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2014-10-08T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2014-10-08T00:00:00+09:00" />
+    <title>HTML * CSS 美しいフレームをもつカラムスタイルレイアウトの難しさ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>HTML * CSS 美しいフレームをもつカラムスタイルレイアウトの難しさ</h1></header>
+        <article id="MainArticle">
+<p>私のサイトをみるとわかるのだが、ボーダーが画像になっている。これをどうやって作るのか、というとごくごく単純で、背景画像を持つ</p><tt class="puredoc_idname">div</tt><p>要素に入れ子で白背景の</p><tt class="puredoc_idname">div</tt><p>要素をおいているだけだ。ちなみに、外側の</p><tt class="puredoc_idname">div</tt><p>要素に</p><tt class="puredoc_idname">padding</tt><p>を設定するのが正しいやり方だ。</p>
+<p>ところが、これで左右カラムを置き、しかもその中にブロック要素をおこうとするとかなり難しい。</p><tt class="puredoc_idname">float</tt><p>を使って配置すると、内側のブロック要素は親要素のブロックを突き抜けてくっついてしまうのだ。普通なら左右カラムはくっついて配置されて構わないものだから、このような挙動は気にしないのだが、今回の場合、左右カラムの間に空間を作ってボーダーを表示したいため、工夫がいる。</p>
+<p>とりあえず、まずは縦に並ぶブロックを分けろ、だ。左右カラムはブロックの中に入れて左右分割すべきだ。でないととても苦労する。</p>
+<p>さて、問題の比較的単純な解決策は</p><tt class="puredoc_idname">float</tt><p>を使い、左右それぞれにfloatし、かつ重ならないように</p><tt class="puredoc_idname">width</tt><p>を設定する方法だ。だが、私は</p><tt class="puredoc_idname">float</tt><p>を使う方法があまり好きでない。なんらかの理由で重なってしまうと後に書いたブロックは後ろにいってしまうという、表示への影響が大きいからだ。</p>
+<p>そのため、私がとった方法は
+</p><ol>
+	<li><tt class="puredoc_value">static</tt>配置では中のブロックに対して<tt class="puredoc_value">absolute</tt>が使えないので外のコンテナは<tt class="puredoc_value">relative</tt>で配置</li>
+	<li>右に配置されるサイドバーコンテナを先に書く</li>
+	<li>サイドバーコンテナは<tt class="puredoc_value">aboslute</tt>で配置。<tt class="puredoc_idname">width</tt>と<tt class="puredoc_idname">z-index</tt>を設定</li>
+	<li>メイン部分コンテナは<tt class="puredoc_value">relative</tt>で配置。同様に<tt class="puredoc_idname">width</tt>と<tt class="puredoc_idname">z-index</tt>を設定</li>
+	<li>サイドバーコンテナ、メイン部分コンテナ共に内側に入れ子のコンテナを配置（白背景）</li>
+	<li>外のコンテナの<tt class="puredoc_idname">width</tt>と<tt class="puredoc_idname">padding</tt>でボーダーを適切にする。つまりギリギリにしないほうが良い</li>
+	<li>サイドバーコンテナに<tt class="puredoc_idname">max-height</tt>、メイン部分コンテナに<tt class="puredoc_idname">min-height</tt>を設定。サイドバーコンテナは<code>overflow: auto</code></li>
+</ol><p>
+簡単な話なのに複雑、と感じただろうか。実はそう簡単ではない。確実に正確な位置に配置しようとすると、floatしないなら</p><tt class="puredoc_value">absolute</tt><p>で置くしかない。ところが、そうしようとすると</p><tt class="puredoc_value">static</tt><p>のまま親コンテナが配置されていてはいけない。</p>
+<p>サイドバーコンテナを先にするのも理由はあるが、別に好みだとは言える。</p><tt class="puredoc_idname">width</tt><p>の設定はもちろんかさならないように、またボーダーのサイズを調整するためで、</p><tt class="puredoc_idname">z-index</tt><p>は万一重なった時のためだ。</p>
+<p>入れ子にするのは白背景とボーダー調整のためだが、この方法ではなくてもできる。</p>
+<p>さて、なぜ両方</p><tt class="puredoc_value">absolute</tt><p>にしないかというと、そうするとこのブロックは高さ0であるとみなされ、下側のボーダーが出ない（下にフッターを配置した場合、それも出ない）。そのため無限に長くなるメインのほうを</p><tt class="puredoc_value">relative</tt><p>にしているのだが、そうすると本文よりもサイドバーが長くなるときに支障が出る。そこで、サイドバーの最大長を制限すると共に、本文の最低長を要求することで、サイドバーのほうが長くならないようにしている。</p>
+<p>別に「すごく難しい」という話ではないのだが、これはなかなか出てこない話だ。というのは、かなり技術的なことをしているが、それは構造的、意味的なものではなく、完全にデザインのための記述だ。デザインのための技法というのは技術者にはなかなか身につかない。そして、デザイナーがデザインを実現するための技術もそうそう思いつかない。ボーダーに画像を使いたいと言われた時、エンジニアがそのような機能はないのでできない、と言ってしまう可能性もある。今回やっていることはどちらかというとデザイナー主体のことで、デザイナーがそれを実現するための技術的知識があるか？というところが問われる。</p>
+<p>このようなデザインは非常に個人サイト的で、商業サイトではトレンドもあるためこのようなデザインを採用することはない。というよりも今は非常にDHTML流行りなので、そもそもアクセシビリティ自体がナンセンスのように言われることも少なくないし、こうした指向がないために見かけないのかもしれないが、アクセシビリティとデザインを両立し、独自性があり、かつ習慣に基づくなじみやすさを満たす、というこうした技法は、そうしたサイトをみないだけに抜け落ちるポイントになっているのではないか？と思う。</p>
+<p>今回は他の方法もあるにはあるのだが、これが最もアクセシビリティが高い方法だと思う。個人的には、最新のウェブブラウザでなければ見られないようなサイトは好きでない。</p>
+<p>なお、現状公開しているサイトはこの仕様になっていない。現在テンプレートを修正したところだからだ。恐らく、本体ウェブサイトではなく、商業ページのほうが先にこのレイアウトを採用するだろう。現在の本体ウェブサイトは類似のデザインを採用しているが、バグがある。</p><code><pre>
+
+/* Skin CSS for general essay.
+* This is used by essays independent from the site.
+*/
+
+/* Top definition */
+body {
+background: #fff url("//reasonset.net/img/wp/heartline.gif") repeat-y 15% 0% scroll;
+font-size: 10pt;
+color: #39f;
+
+}
+
+
+/* Main Container. Over all container. */
+#MainContainer {
+width : 950;
+margin : 0 auto;
+background: #e0f0ff url("//reasonset.net/img/wp/check_bp.png") repeat scroll;
+font-family: "Rounded-X M+ 2c","Migu 1C","M+IPA+2VM circle","Gen Jyuu Gothic Normal","VL P Gothic", "Hiragino Maru Gothic", "Meiryo",sans-serif; /* define Japanese Font */
+position: relative;
+padding: 45px;
+}
+
+/* For overwrite font-family for English document. */
+#MainContainer {
+
+font-family: serif;
+
+}
+
+/* Top banner */
+#TopBan {
+margin : 0px 0px 18px 0px;
+font-size: 300%;
+padding: 1.3em;
+position: relative;
+}
+
+#UnderContainer {
+position: relative;
+}
+
+/* Main content container */
+#LeftPage {
+position: relative;
+top: 0px;
+left: 0px;
+z-index: 1000;
+/*   margin: 30px; */
+padding: 0;
+background-color: transparent;
+/*   border: blue 1px solid; */
+width: 650px;
+}
+
+#SideBar {
+padding: 0;
+/*   border: blue 1px solid; */
+position: absolute;
+right: 0px;
+top: 0px;
+width: 250px;
+z-index: 200;
+}
+
+/* Any container. */
+.container {
+background-color: #fff;
+padding : 4em;
+/*   border: red 1px solid; */
+margin: 0;
+
+}
+
+/* paragraph */
+p:first-letter {
+text-indent: 1em;
+}
+
+p {
+line-height: 1.2;
+letter-spacing: 0.25em;
+}
+
+/* headline to left */
+h1,h2,h3,h4,h5,h6 { text-indent: -1.3em; }
+
+</pre></code><p>
+</p><code><pre>
+
+&lt;html&gt;
+&lt;head&gt;
+&lt;link rel="stylesheet" type="text/css" href="./puredoc.css" /&gt;
+&lt;link rel="stylesheet" type="text/css" href="./puredoc_skin.css" /&gt;
+&lt;link rel="stylesheet" type="text/css" href="./gen-essay-skin.css" /&gt;
+
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id="MainContainer"&gt;
+
+&lt;div id="TopBan" class="container"&gt;
+Site title.
+&lt;/div&gt;
+&lt;div id="UnderContainer"&gt;
+
+&lt;div id="SideBar"&gt;
+&lt;div class="container"&gt;Sometext&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id="LeftPage"&gt;
+&lt;div class="container"&gt;
+&lt;h1&gt;H1 title&lt;/h1&gt;
+&lt;h2&gt;h2 title&lt;/h2&gt;
+&lt;p&gt; p1&lt;/p&gt;
+&lt;p&gt;p2&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+
+&lt;/body&gt;
+&lt;/html&gt;
+
+</pre></code>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-11-06T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-11-06T00:00:00+09:00" />
+    <title>Linux的ビデオのハードウェアエンコーディング - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linux的ビデオのハードウェアエンコーディング</h1></header>
+        <article id="MainArticle">
+<ins datetime="2018-08-20"><p><a href="https://chienomi.reasonset.net/archives/livewithlinux/1625">更新されたまとめた記事があります</a></p></ins>
+<p>ネットで検索するとかなりいい加減な情報が溢れているので、 そこまで分かっているわけではないけれどまとめてみた。</p>
+<h2 id="エンコード">「エンコード」</h2>
+<p>まずencodeとdecodeがわからない記事がいくつか出てくるのでそこから。</p>
+<ul>
+<li>データを映像/音声にするのがデコード</li>
+<li>映像/音声をデータにするのがエンコード</li>
+</ul>
+<p>エンコードは動画編集をしているのでなければ、基本的に動画変換のお話。</p>
+<h2 id="ハードウェア">ハードウェア</h2>
+<p>ハードウェアでやる、というのはCPUに頼らず、ハードウェア側に搭載された専用のチップを使用してエンコーディングする話をしている。</p>
+<p>これにより</p>
+<ul>
+<li>CPUにかかる負荷が低減できる</li>
+<li>速度が向上する(かもしれない)</li>
+</ul>
+<p>というメリットがある。</p>
+<p>遅いGPUと速いCPUの組み合わせだと速度向上には必ずしもつながらないが。 だが、GPUは非常に速いので高速化する可能性は高い。</p>
+<h2 id="最近の盛り上がり">最近の盛り上がり</h2>
+<p>動画処理というか、変換というかではなくて、 「ゲームしながらゲームを録画するため」 だと思う。</p>
+<p>ゲームはリソースをいっぱい近く使うので、録画するのは難しい。 処理落ちなどの原因になる。 そんなことがあったら多分ガチなゲーマーは許さない。</p>
+<p>録画時はそのまま映像データを収録しているとあまりに巨大ファイルになる。 ゲームのプレイ時間は長い可能性が高いし、これはこれできつい。 というわけで、これをハードウェアにオフロードしてCPUや描画用グラフィックスに負担をかけることなく録画/変換して保存しようということだと思う。</p>
+<p>ただ、IntelのQSVは恐らく趣旨が違う。 というのは、こちらは「CPUやメモリにも負担をかける」からだ。 VP9エンコードにもKaby Lakeにも対応していたりするので、もしかしたら動画編集を意識しているのかもしれない。</p>
+<h2 id="va-apiとvdpau">VA-APIとVDPAU</h2>
+<p>VA-APIはIntelが、VDPAUはNvidiaが作ったLinux用のハードウェアビデオアクセラレーション用のAPIだ。</p>
+<p>それぞれサポートされているのだが、そのサポートに注意がいる。</p>
+<ul>
+<li><code>libva-vdpau-driver</code>はVA-APIをラップしてVDPAUに投げる</li>
+<li><code>libvdpau-va-gl</code>はVDPAUをラップしてVA-APIに投げる</li>
+</ul>
+<p>このため</p>
+<ul>
+<li>NVIDIAはVA-APIは使えるけれど実際はVDPAUを使用する</li>
+<li>IntelはVDPAUは使えるけれど実際はVA-APIを使用する</li>
+</ul>
+<p>ちなみに、AMDのオープンソースドライバ(ATIあるいはamdgpu)はVA-APIドライバとして<code>libva-mesa-driver</code>(とmesa)と、<code>libva-vdpau-driver</code>の2種類の方法がある。 前者であればVA-APIを直接取り扱う。後者であればVDPAUに流す。</p>
+<p>そして、重要な点</p>
+<ul>
+<li>VDPAUはハードウェアデコード用</li>
+<li>VA-APIはハードウェアエンコード/デコード用</li>
+</ul>
+<p>つまり</p>
+<ul>
+<li>NvidiaのカードはVA-APIをサポートしていないのでこの方法でのエンコードは無理</li>
+<li>AMDのカードは<code>libva-mesa-driver</code>を使わないとハードウェアエンコードできない</li>
+</ul>
+<h2 id="ハードウェア側機能">ハードウェア側機能</h2>
+<p>IntelにはQSV, NvidiaにはNVEnc, AMDにはVCEがある。</p>
+<h3 id="qsv-quick-sync-video">QSV (Quick Sync Video)</h3>
+<p>デコードだけじゃなかったんだぁ…と思ってしまったけれど、 実はIntelのビデオアクセラレーションは割とLinuxに手厚い。</p>
+<p>QSVの利用はIntel Media Server Studioを要求されるけれども、色々と条件が厳しいし、フリーではない(無料ではあるけれど)。</p>
+<p>性能的には劣るもののVA-APIから叩けるらしい。</p>
+<h3 id="vce-video-coding-engine">VCE (Video Coding Engine)</h3>
+<p>デコード用のUVD(Unified Video Decoder)とセットのAMDの機能。</p>
+<p>VA-API経由で叩ける。</p>
+<h3 id="nvenc">NVEnc</h3>
+<p>Nvidiaのエンコード用ビデオアクセラレーション。 Pascal世代になってとっても速くなったらしい。</p>
+<p>Maxwell Gen2でもHEVC 720p高画質で300fpsとか言っているのでGPUすごい。</p>
+<p>QSVのほうが速いとか言っている人がいるけれども、多分そんな環境まずない。</p>
+<p>画質が割と腐っているけれど、H265がH264とほぼ同じ速度で変換できるので、H265にすればだいぶよろしくなる。 H265エンコードはMaxwellからのサポート。</p>
+<h2 id="エンコーダと画質のお話">エンコーダと画質のお話</h2>
+<p>ハードウェアエンコードを行う場合、実際のデータ変換処理を行う「エンコーダ」としてハードウェアへのアダプタを指定する。</p>
+<p>つまり、NVEncを使う場合、libx264の代わりにnvenc_h264を使うことになる。 なのでエンコーダオプション(<code>-crf</code>とか)も変わる。</p>
+<p>結果的に変換のされ方が変わる。 同一のクオリティを要求しても同じデータにはならない。</p>
+<p>そして、ハードウェアエンコードを行った場合の画質、あまりよくない。 H.264で<code>q=30</code>くらいまで落とすとものすごくわかりやすいことになる。 <code>q=28</code>でも厳しい。</p>
+<p>画質が悪いのだからできれば「保存したい」よりも「消すのはちょっと…」くらいのモチベーションの動画で使いたいところなのだが、 そういう動画こそサイズを小さくしたい。 ところが、ハードウェアエンコーダでサイズを小さくすると画質が目立って悪い。 だいぶ悩ましい話だ。</p>
+<h2 id="ffmpegでエンコード">ffmpegでエンコード</h2>
+<p>Linuxの動画はffmpegで変換するものでしょう?</p>
+<p>というわけで、QSVとVCEはVA-APIに対応しているのでVA-APIで。</p>
+<pre><code>ffmpeg -vaapi_device /dev/dri/renderD128 -i input.mp4 -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi output.mp4</code></pre>
+<p>エンコードもハードウェアでやればより軽い。</p>
+<pre><code>ffmpeg -init_hw_device vaapi=foo:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device foo -i input.mp4 -filter_hw_device foo -vf &#39;format=nv12|vaapi,hwupload&#39; -c:v h264_vaapi output.mp4</code></pre>
+<p><code>-q</code>オプションは指定できるみたい。</p>
+<pre><code>ffmpeg -init_hw_device vaapi=foo:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device foo -i input.mp4 -filter_hw_device foo -vf &#39;format=nv12|vaapi,hwupload&#39; -c:v h264_vaapi -q 28 output.mp4</code></pre>
+<p>Nvidiaがひとり独自路線なのはちょっと気になるけれども、使いやすいのはnvencのほう。</p>
+<pre><code>ffmpeg -i input.mp4 -c:v nvenc_h264 -q 28 output.mp4</code></pre>
+<p>qの値など実際は探り探りやっていくしかない感じ。</p>
+<h2 id="あなたのビデオカード眠ってませんか">あなたのビデオカード、眠ってませんか</h2>
+<p>GPUは基本的に積極的に働かせないと動かない子なので、 結構なリソースを眠らせている可能性は結構ある。</p>
+<p>Linux環境だとCinnamonとKDE Plasmaがハードウェアアクセラレーションに対応しているため、 割と最近のIntel CPUやAMD APUを搭載しているコンピュータだとCPU的にはXFceやMATE、LXDEなんかよりよっぽど軽かったりもする。</p>
+<p>そういうのがあればある程度は働いてくれるのだが、これもビデオカードの機能のごく一部を使っているだけ。 ちなみに、OpenGL用のアクセラレータを使っている。</p>
+<p>この状態でもデコーダやエンコーダは遊んでいるので、せっかくのリソース活用してあげてください。</p>
+<p>ハードウェアエンコーダの画質はちょっと微妙だけども。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-02-08T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-02-08T00:00:00+09:00" />
+    <title>hp ProLiant MicroServerとCentOS 7とZFSonLinuxの話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>hp ProLiant MicroServerとCentOS 7とZFSonLinuxの話</h1></header>
+        <article id="MainArticle">
+
+	<h3>ProLiant MicroServerにHDD組み込み</h3>
+	<p>先週秋葉原で買ったHDDが、初期不良対象期間が土曜日までだったので、金曜日にProLiant MicroServerにHDDの組み込みを行った。</p>
+	<p>実際に開けたり調べた限りで分かるのは次のことだ。</p>
+	<ul>
+		<li>HDD搭載個数は4個。ホットプラグではない</li>
+		<li>eSATA端子を装備。</li>
+		<li>5インチベイ用はSATAでケーブルは付属せず。ただし、ここはIDEとして動作し、低速</li>
+	</ul>
+	<p>とりあえず開けてみる。これが非常によくできていて、扉は鍵で開ける。工具は不要、付属の鍵を使うのだ。ちなみに、上部の5インチベイ部分については、扉を開けた上で後方のボルトヘッドを手で回し（ダイアル状になっていて、工具は完全に不要）スライドする。ボルトは外れるようにはなっていない。</p>
+	<p>扉は開くが、横倒しにしていると外れることがある。外れると横倒しのままではなかなか正しくはまらないので注意。正しく置いた時に上下とも下側に突起があり、穴に突起がはまるようになっている。なかなか考えられた構造だ。簡易でコストが安く、扱いやすく、壊れにくい。</p>
+	<p>ハードディスクはホルダーを介して止まっている。リリースボタンを押してレバーを解除し、レバーを引く。レバーが押しこみ防止になっているもので、若干この動作が恐い感触があるが、精度はしっかりしていてブレる心配はない。封印された4台が備えられ、左に500GBのハードディスクが収まる。このハードディスクは裏面がカバーされたサーバー向けのタイプ。具体的にはWD5003ABYX。7200rpmのエンタープライズ、イエローだ。</p>
+	<p>今回は4TBx1,3TBx3に換装する。ホルダーについては特殊なネジで止められているが、扉の裏側にホルダー用のネジと工具がある。ちょっと探してしまったが、上手いものだと思う。紛失の心配もなく、コンパクトで、面倒もない。また、ホルダーのネジは予備もある。5インチベイ用のネジもここにある。こちらは六角。</p>
+	<p>順次固定していく。非常に簡単な作業だ。若干ネジまわしが疲れるくらいか。特にケース側はしっかり入っているのと、ネジを落とさないようにしなくてはいけないのが疲れる。数も多いし。</p>
+	<p>固定したらこれらを閉めて各種インターフェイスを接続、USB光学ドライブを接続しSystemRescueCDで起動。<code>for i in /dev/sd[a-d]; do smartctl --all "$i"; done | less</code>として問題がないことを確認した。</p>
+	<h3>ProLiant MicroServerについて</h3>
+	<p>15000円ほどの安価な、いわゆる安鯖、廉価サーバーだ。非常に安価でありながら現代的な性能を持つコンピュータであり、特にまともなコンピュータを持つもたない人にとってはとりあえず購入しておいてもいいというような代物といっていい。</p>
+	<p>ただし、普通のデスクトップコンピュータ、今の感覚で言うと普通ではないが、とは差異があることを理解しておかなくてはならない。つまり:</p>
+	<ul>
+		<li>サスペンドはできない。ハードウェア的にサポートされていない</li>
+		<li>グラフィックスは非力であり、出力はVGA(D-Sub15)である</li>
+		<li>基本的に枯れたハードウェアを採用。また、CPUは低速で消費電力が低いものを使用</li>
+		<li>OSなし</li>
+		<li>このモデルについては光学ドライブもない</li>
+		<li>ハードウェアがサーバー向けであるため、Windowsではサポートされない可能性がある</li>
+	</ul>
+	<p>だが、サーバーだからこそのメリットもある</p>
+	<ul>
+		<li>24時間稼働に対応</li>
+		<li>ECCメモリーを使用</li>
+		<li>低消費電力</li>
+		<li>高信頼性</li>
+	</ul>
+	<p>だが、このProLiant MicroServer Turion II NEO N5 F1F35A0-AAAEに関して言えば、PCI-E x16をロープロファイルながらサポートするため、普通にデスクトップとして使用できる。電源が200Wなのでハイパワータイプはとてもではないが使えないが、ローエンドモデルの接続は可能だ。ただし、ディスクを最大5台積める仕様なので、それだけでいっぱいいっぱいではあるだろう。</p>
+	<p>とはいえ、別に高性能を目指すようなものではないし、VGAで十分だと私は思う。CPUの性能も高くないし、デスクトップとしてバリバリ使うものではないだろう。だが、ちょっとした用途には十分事足りる。</p>
+	<p>サーバーとして見ると、この小さな筐体にHDDを4台搭載した上にeSATAディスクも搭載可能、というのは非常に大きい。ただし、eSATAの使いどころはかなり難しい。台数が多いケースは高いし、内蔵に使うにしても引き込めない。予備インターフェイスと考えたほうが良さそうだ。</p>
+	<p>しかし単純に考えて、筐体自体はHDD6台がCapableであるというのはすごい。しかも、小型の筐体だけに中に手を突っ込めるようにはなっていないが、上部パネルと同じく手回しボルトをゆるめることでMB全体を引き出すことができる、と非常に考えられた設計だ。</p>
+	<p>さらにECCメモリを搭載するということもあるが、それ以外を見ても非常に安定している。自作機とは比べるべくもないが、厳しく検証を重ねて安定したものと比べても非常に安定している。</p>
+	<p>さらにBIOS画面の待ち時間はやや長く、しかも入力のためのステップを複数用意する。もしブートデバイスがみつからなくても、そこでブータブルメディアを挿入すると自動的に認識して起動してくれる。つまり、とりあえず起動してからディスクを挿入することが可能。さらに、起動や終了のタイミングでのトレイオープンも可能。デスクトップだと起動時に起動される前にトレイオープンができないため、メディアの挿入/排除が結構大変だ。しかも、ProLiantならゆっくりメディアを入れても大丈夫。</p>
+	<p>いくつかの問題も発生しているが、ハード自体は極めて安定しており、信頼性も高い。</p>
+	<p>その上に扉、トレイ、固定方法など非常に心配りのされたつくり。hpが好きになった。</p>
+	<h3>CentOS7</h3>
+	<p>一方、なかなか手ごわいのがCentOS 7だ。</p>
+	<p>Linuxはサーバー向け、という人がいるが、実際にLinuxのサーバー向けディストリビューションというのは多くない。どちらかといえばEnterprise Server向けだ。</p>
+	<p>一般的な選択肢は、まず最大シェアのRHEL/CentOS/Scientific Linux/Oracle Linux/Whitebox Enterprise Linux。その対抗馬はSLES、あるいは無償のUbuntu Server、サーバーユースにも耐えるとされるDebian/GNU Linux、あとは枯れた仕様・原始的なシステムのSlackware Linuxくらいのものだ。</p>
+	<p>この中でフリーというと、RHELクローンか、Ubuntu Serverか…と選択肢は非常に少ない。別にサーバーユースにはできるが、サーバー向けにはなっていないため、長期の安定運用には不安が残るし、実績の問題もある。</p>
+	<p>CentOSがダメだとは全く思っていないのだが、やはりFirewalldとNetwork Managerという新しいシステムの導入が厳しい。その設定について覚えなくてはならないからだ。</p>
+	<p>それになんだか動作がおかしい。設定したLUKSロングパスフレーズが、有効に働かないのだ。調べてみると</p>
+	<dl>
+		<dt>ディスク選択時に「データを暗号化」+LVMでPVを暗号化</dt>
+		<dd>Dracut内で復号できない。他システムでならば復号可能</dd>
+
+		<dt>ディスク選択時に「データを暗号化」+パーティションを暗号化</dt>
+		<dd>正しいはずのLUKSパスフレーズを受け付けない</dd>
+
+		<dt>ディスク選択時に暗号化を選択せず、パーティションを暗号化</dt>
+		<dd>正常に動作する</dd>
+	</dl>
+	<p>openSUSEでもLUKSが突然パスフレーズを受け付けなくなることがあり、正直「LUKSっていまいち」と感じている。もしくはcryptsetupがいまいちなのかもしれない。今回もなんども再起動し、SystemRescueCDと入れ替え、インストールし直し、と繰り返すこととなった。</p>
+	<p>かなり疲れてしまった。また、インストーラがかなり扱いにくく、自由にパーティションが切れない。予めパーティションを切っておき、ディスクを選択してから、その他を選択して進めるのがよさそうだ。ちなみに、GPT用パーティションを切っていないと警告される。openSUSEのインストーラはそこが不完全だったので嬉しいところ。</p>
+	<p>まずはdm-cryptの直接暗号化を使ったスーパーディスクが使えるかを試してみる。</p>
+	<samp style="display: block;white-space: pre;max-width: 80%;margin: auto;overflow: scroll" ="shell">$ &lt;kbd&gt;dd if=/dev/urandom of=keyfile bs=512 count=1&lt;/kbd&gt;
+$ &lt;kbd&gt;sudo cryptsetup --hash=sha512 --cipher=twofish-xts-plain --offset=0 --key-file=/home/aki/keyfile --key-size=512 open --type=plain /dev/sdb enc&lt;/kbd&gt;
+$ &lt;kbd&gt;sudo mkfs.ext4 /dev/mapper/enc&lt;/kbd&gt;
+$ &lt;kbd&gt;sudo mount /dev/mapper/enc /mnt&lt;/kbd&gt;
+$ &lt;kbd&gt;su -c 'echo Hello, world &amp;gt; /mnt/hello'&lt;/kbd&gt;
+$ &lt;kbd&gt;less /mnt/hello&lt;/kbd&gt;
+	</samp>
+	<p>問題なし。次にZFS環境のセットアップに入る。</p>
+	<p>
+		<a href="zfsonlinux.org/epel.html" alt="zfsonlinux.org/epel.html">
+zfsonlinux.org/epel.html
+		</a>を参考にするが、既にバージョンが進み、ファイル名は2015-02-06時点で<tt class="puredoc_pathname">epel-release-7-5.noarch.rpm</tt>となっていた。</p>
+	<p>また、
+		<a href="qiita.com/sion_cojp/items/bef955bba3dbf9d603f8" alt="Qiita">
+Qiita
+		</a>ではインストールしただけではダメというようにあるが、実際はインストールしただけで大丈夫だった。</p>
+	<p>以下はZFSの作成作業。</p>
+	<samp style="display: block;white-space: pre;max-width: 80%;margin: auto;overflow: scroll" ="shell"># &lt;kbd&gt;zfsmount.zsh&lt;/kbd&gt; #各デバイスをループで暗号化。zfs_*という名前。オープンしていたものは事前にclose
+# &lt;kbd&gt;zpool create ReasonZpool /dev/mapper/zfs_*&lt;/kbd&gt; #Zpoolを作成
+# #ここでプールをテスト。問題なし
+# &lt;kbd&gt;zfs create ReasonZpool/world&lt;/kbd&gt; #worldファイルシステムを作成。マウントポイントは&lt;tt class=&quot;puredoc_pathname&quot;&gt;/ReasonZpool/world&lt;/tt&gt;
+# &lt;kbd&gt;zfs get all ReasonZpool/world&lt;/kbd&gt; #プロパティの確認
+# &lt;kbd&gt;zfs set compress=gzip-9 ReasonZpool/world&lt;/kbd&gt; #Gzip最高レベルでの圧縮。低速。
+# &lt;kbd&gt;zfs set primarycache=metadata ReasonZpool/world&lt;/kbd&gt; #キャッシュはメタデータのみ。メモリ消費量を削減。
+# &lt;kbd&gt;zfs set acltype=posixacl ReasonZpool/world&lt;/kbd&gt; #POSIX ACLを有効に
+# &lt;kbd&gt;zfs set relatime=on ReasonZpool/world&lt;/kbd&gt; #Relatime（atimeの記録を遅延させる）
+# &lt;kbd&gt;#zfs set dedup=on ReasonZpool/world&lt;/kbd&gt; #重複排除機能をON。メモリを大ぐらいするらしい。全域に使えるだけのメモリはない。1TBで32GBのメモリを必要とし、操作できないほどの状態になるとのことで今回は諦める。
+# &lt;kbd&gt;zfs set setuid=off ReasonZpool/world&lt;/kbd&gt; #nosuid+nodev
+	</samp>
+	<p>dedupの難しさについてはこんな記述がある。</p>
+	<blockquote ="chibiegg.gitbooks.io/how-to-zfs/content/zfs.html">
+		<p>しかし，この機能，ディスクは節約されるが，メモリをたくさん使うのだ．なぜかというと，メモリ上に DeDuplicationTable (DDT) と呼ばれるテーブルを準備することによって，重複を見つけているのである． 計算手順は省略するが，1TBを利用している場合に最大で約32GBのメモリを必要とし．メモリから溢れた分はディスク上のキャッシュに退避され，検索パフォーマンスが劇的に低下する．</p>
+		<p>著者が試したときにはあまりのメモリ不足のために，データセットの削除ができない程の状態となった．(1週間程度経っても完了せず，あきらめてプールごと破壊することにした)</p></blockquote>
+	<p>恐らくはおとなしくHDDを増やしていくほうが現状マシだ。</p>
+	<p>さらに、<tt class="puredoc_idname">users</tt>グループを規格に沿って<tt class="puredoc_value">500</tt>に変更し、ユーザーのグループを<tt class="puredoc_value">users</tt>に変更する。</p>
+	<p>あとはお約束。</p>
+	<ul>
+		<li>ストレージを使う前に<tt class="puredoc_pathname">zfsmount.zsh</tt>を実行する</li>
+		<li><tt class="puredoc_pathname">ReasonZpool/world</tt>を使う</li>
+	</ul>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

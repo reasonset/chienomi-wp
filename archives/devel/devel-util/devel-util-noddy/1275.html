@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-05-23T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-05-23T00:00:00+09:00" />
+    <title>VPN(リバースフォワーディング)をアイコン操作にしてみる - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>VPN(リバースフォワーディング)をアイコン操作にしてみる</h1></header>
+        <article id="MainArticle">
+<p>先日の多段SSHによる外出時のログインだが、外出時にリバースフォワーディングをオンにし、帰ってきたらオフにするのはちょっと面倒だし、忘れそうだ。 そこで私は「システムトレイにアイコン出してもらって、クリックしたら閉じてくれるようにしたらいいじゃない」と考えた。</p>
+<p>まず、「Linuxでシステムトレイにアイコン」と考えたらまずYadを考えて良い。 ZenityやKDialogはシステムトレイをサポートしていない。</p>
+<pre><code>yad --notification --image=&lt;icon&gt; --title=&lt;title on hover&gt;</code></pre>
+<p>の形式でシステムトレイにアイコンを表示できる。 <code>--command</code>オプションをつかってクリック時の動作を指定することもできるし、<code>--menu</code>オプションで右クリックに対応させることもできる。 <code>--command</code>オプションを指定した場合は終了するかわりにそのコマンドを実行する。</p>
+<p>今回の場合クリックしたら終了を含む動作をさせたいので、特にコマンドは指定しない。 そこでyadプロセスが終了したらクリックした後の動作をさせていけばよいわけだ。</p>
+<p>必ずしもこの操作をこのプログラムから行う、という制約はないこと、 そして「トンネルを解除しない」という選択がありえることから、ループとし、当該ユニットが動作中であればアイコンを表示する方式にした。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#!/usr/bin/zsh</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">unitname=</span><span class="st">&quot;sshproxy.service&quot;</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">systemctl start --user <span class="ot">$unitname</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">while</span> systemctl status --user <span class="ot">$unitname</span> <span class="kw">|</span> <span class="kw">grep</span> -F <span class="st">&quot;active (running)&quot;</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">  yad --notification --image=<span class="st">&quot;network-vpn&quot;</span> --title=<span class="st">&quot;Reverse Forwarding is Now Active&quot;</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">  <span class="kw">if</span> yad --title=<span class="st">&quot;Stop Reverse Forwarding&quot;</span> --image dialog-question --button=gtk-yes:0 --button=gtk-no:1 --text=<span class="st">&quot;Really stop reverse forwarding?&quot;</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">  <span class="kw">then</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">    systemctl stop --user <span class="ot">$unitname</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">  <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="kw">done</span></a></code></pre></div>
+<p>ひとつめのyadはシステムトレイにアイコンを表示し、クリックされるのを待つものだ。 これでクリックされるまではスクリプトはここでブロックされる。</p>
+<p>ふたつ目のyadだが、yadの場合zenityと違い、タイプを指定しないで起動するとシンプルなダイアログになる。 アイコンとボタンのタイプはそれぞれ指定できる仕組みだ。 このため、ZenityやKDialogにあるいくつかの動作オプションがまとめられている。 ここではYes/Noダイアログを表示している。</p>
+<p>なお、ボタンはボタンのあとに終了コードを書くようになっており、<code>gtk-cancel</code>も利用可能。それ以外は単にラベルとして使用される。</p>
+<p>さらにランチャーで使用するため、<code>.desktop</code>ファイルも作っておいた。 右クリックでの開始/停止もサポートしている。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">[Desktop Entry]</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="dt">Version</span><span class="ot">=</span><span class="fl">1.0</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="dt">Name</span><span class="ot">=</span><span class="st">Control Reverse Forwading</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="dt">GenericName</span><span class="ot">=</span><span class="st">Control Reverse Forwading</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="dt">GenericName</span><span class="kw">[ja]</span><span class="ot">=</span><span class="st">リバースフォワーディングのコントロール</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="dt">Comment</span><span class="ot">=</span><span class="st">Start reverse forwarding and display systray control icon.</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="dt">Comment</span><span class="kw">[ja]</span><span class="ot">=</span><span class="st">リバースフォワーディングのコントロール</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="dt">Exec</span><span class="ot">=</span><span class="st">/home/haruka/bin/control-reverse-forwarding.zsh</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="dt">Terminal</span><span class="ot">=</span><span class="kw">false</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="dt">Icon</span><span class="ot">=</span><span class="st">network-vpn</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="dt">Type</span><span class="ot">=</span><span class="st">Application</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="dt">Categories</span><span class="ot">=</span><span class="st">Network</span><span class="co">;</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"><span class="dt">Actions</span><span class="ot">=</span><span class="st">StartProxy</span><span class="co">;StopProxy;</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15"><span class="kw">[Desktop Action StartProxy]</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16"><span class="dt">Name</span><span class="ot">=</span><span class="st">Start Reverse Forwarding</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17"><span class="dt">Icon</span><span class="ot">=</span><span class="st">network-vpn</span></a>
+<a class="sourceLine" id="cb3-18" data-line-number="18"><span class="dt">Exec</span><span class="ot">=</span><span class="st">systemctl --user start sshforward.service</span></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20"><span class="kw">[Desktop Action StopProxy]</span></a>
+<a class="sourceLine" id="cb3-21" data-line-number="21"><span class="dt">Name</span><span class="ot">=</span><span class="st">Stop Reverse Forwarding</span></a>
+<a class="sourceLine" id="cb3-22" data-line-number="22"><span class="dt">Icon</span><span class="ot">=</span><span class="st">network-vpn</span></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23"><span class="dt">Exec</span><span class="ot">=</span><span class="st">systemctl --user stop sshforward.service</span></a></code></pre></div>
+<p>これでわかりやすく、操作しやすくなった。</p>
+<p>もちろん、SSHフォワーディングを行うスクリプトに含めるというのも手だが、そうすると他の手段が失われてしまう。 Systemdユニットにした上で追加機能は別のスクリプトにするというのは良いアイディアだと思う。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

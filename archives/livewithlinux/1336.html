@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-06-16T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-06-16T00:00:00+09:00" />
+    <title>テキストをスクロール表示させる - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>テキストをスクロール表示させる</h1></header>
+        <article id="MainArticle">
+<h2 id="プログラムについて">プログラムについて</h2>
+<p>諸兄も一度はYouTubveで見たことがあるのではないだろうか。</p>
+<p>文字がただ流れるだけの動画を。</p>
+<p>自分のペースで読めない上に内容に乏しく、非常にイライラするものだが、 作業ウィンドウ以外で流しておくことでウィンドウフォーカスを切り替えなくて済む、というメリットもある。</p>
+<p>特にmpvを使うと、右クリックで再生/停止ができるし、再生速度もコントロールできてまあまあ便利だ。</p>
+<p>ただ、検索性がないのでやっぱりストレスである。</p>
+<p>そこで、テキストリーダーに自動スクロール機能が欲しい、と思った。</p>
+<p>ありそうだが、見当たらなかった。</p>
+<p>もちろん、一行単位であれば<code>sleep</code>と<code>read</code>でも組み合わせればいいのだが、これはパッと動いてしまうため目の追従が難しく、読みづらい。 1ピクセルずつ動かしたいのだ。</p>
+<p>xdotoolを使う、という方法も考えたのだが、意図したようにはうまくいかなかった。</p>
+<p>JavaScriptを使えばすごく簡単なのに…というわけで、JavaScriptを使う方向でがんばることにした。</p>
+<p>すごーーーーく単純に一時ファイルでHTMLを作ってQtWebengineで表示すればいいと思って、Pythonで作ったのだが…</p>
+<p>…Surfでよかった。</p>
+<p>まぁ、配布するならSurfみたいなマイナーなものは入れたくないなんていう天邪鬼さん<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>や、Surfは入っていないなんていう弱小ディストリさんはいっぱいいると思うので良しとしよう。</p>
+<p><a href="https://github.com/reasonset/autoscrolling-text">そんなわけで作った。</a></p>
+<p>珍しく日本語READMEもある。 BGM機能があるのは、YouTubeでよく見るものをリスペクトしたものであり、背景画像がほしければCSS編集でOKだ。</p>
+<p>やっていることはごく単純で、Pandocで処理することを前提として一時ファイルを活用している。</p>
+<p>プレーンテキストの場合はsedを使ってラインブロック化している。 この場合改行されなくなってしまうので、<code>pre-wrap</code>するようにデフォルトのスタイルシートで変更している。</p>
+<p>スクロール制御はJavaScriptでものすごく入門的なコードだ。 右クリックでも再生・停止できるようにしているのは、コントロールをウィンドウフォーカスしてからでなくても行えるようにするためである。</p>
+<p>ちなみに、今回のJavaScriptは互換性をあまり気にしない贅沢なコードでもある。 これはかなり新しいGtkWebkit、あるいはQtWebengineを使うという前提が成り立っているためだ。</p>
+<h2 id="解説">解説</h2>
+<p>それでは恒例の初心者向けコード</p>
+<h3 id="javascript部分">JavaScript部分</h3>
+<p>せっかくなので、入門的なJavaScriptコードを解説しよう。</p>
+<h4 id="スクロール部分">スクロール部分</h4>
+<p>まずスクロール自体は<code>window.scroolBy</code>によって実現できる。</p>
+<p>自動スクロールをするためにはこれを繰り返すようにしなくてはいけない。 もちろん、単純なループでもできるのだが、JavaScriptはシングルスレッドなので操作不能になってしまう。</p>
+<p>このような反復はJavaScriptではタイマーイベントで行う。 タイマーにコールバック関数を登録することで、タイマー起動時にコールバック関数が実行される。 もし他の処理が実行中の場合は処理をキューに入れ、順番がきたら実行される。</p>
+<p>反復の場合<code>setInterval</code>のほうが簡単で、初心者向けの解説ではよくこちらが使われるが、 どちらかといえばタイマーイベントを都度登録する<code>setTimeout</code>のほうがコントロールしやすい。</p>
+<p>関数オブジェクト、クロージャという考え方になれていないとそもそもコールバック関数が使えないので、ここはしっかりと理解しておく必要がある。</p>
+<p>関数オブジェクトは実行可能なコード群をオブジェクト化したものである。 スイッチを押せば実行される物体になっているとでも思えばいい。 コールバック関数は、それを呼び出すタイミングでそのスイッチを押すように動作する。</p>
+<p><code>setTimeout</code> は指定した時間が経過したときにコールバックを行う。 コールバック関数の中で自身をコールバック関数とする <code>setTimeout</code> を呼ぶことでループさせることができる。</p>
+<p>「スクロールの開始」はその関数を呼べば良い。 <code>setTimeout</code> で呼ばなくても一度呼べば <code>setTimeout</code> によってループする。</p>
+<p>「スクロールの停止」は <code>setTimeout</code> をしなければ次回の実行がなされないため、停止する。 停止方法はタイマーをキャンセルするのではなく、次回のタイマーセットを行わないというものである。 このため、タイマー動作状態がonの場合のみ <code>setTimeout</code> を行う。</p>
+<p><code>setInterval</code> を使用した場合はタイマーをセット/キャンセルして制御する。</p>
+<h4 id="キーイベント部分">キーイベント部分</h4>
+<p>キーボードのキー入力は <code>document</code> あるいは <code>window</code> に対してイベントリスナーを設定する。</p>
+<p>DOM Level1 の<code>onKeydown</code> を設定する場合の情報は割とあるのだが、 DOM Level3 の <code>addEventListener</code> を設定する情報はやや少ない。</p>
+<p>コールバック関数の引数としては <code>KeyboardEvent</code> オブジェクトが渡される。 特定のキーをキャプチャするわけではなく、キーボード入力全てをキャプチャしてコールバック関数が呼び出される。 コールバック関数内でキーを判別する。</p>
+<p>なお、コールバック関数が時間がかかるとフリーズしていると感じることになるため注意が必要。</p>
+<p>キーの種別を取るための方法は色々あるのだが、 <code>code</code> が推奨される。 プリンタブルなキーに限定するのであれば <code>key</code> でも良い。 <code>char</code> や <code>charCode</code> はあまりうまく動作しないし、 <code>keyCode</code> や <code>which</code> は廃止されている上に、プラットフォームに依存する。</p>
+<p>それぞれどのような値になるのかは次のようなコードを書いて確認すれば良い。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="va">document</span>.<span class="at">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (event) <span class="op">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    <span class="at">alert</span>(<span class="st">&#39;char:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">char</span>)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    <span class="at">alert</span>(<span class="st">&#39;charCode:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">charCode</span>)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">    <span class="at">alert</span>(<span class="st">&#39;code:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">code</span>)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">    <span class="at">alert</span>(<span class="st">&#39;key:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">key</span>)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">    <span class="at">alert</span>(<span class="st">&#39;(obsolete) keycode:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">keyCode</span>)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">    <span class="at">alert</span>(<span class="st">&#39;(obsolete) which:&#39;</span> <span class="op">+</span> <span class="va">event</span>.<span class="at">which</span>)</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="op">},</span> <span class="kw">false</span>)</a></code></pre></div>
+<p>元のキーの動作を無効にする場合は、第三引数を <code>false</code> として先にキーを捕捉してから <code>Event.preventDefault</code> によってバブリングを停止する。</p>
+<p>右クリック禁止<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>、でお馴染み右クリックは <code>contextmenu</code> イベントになる<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>。</p>
+<h4 id="スクロールスピード">スクロールスピード</h4>
+<p>スクロールは</p>
+<ul>
+<li>スクロールする時間間隔が短くなると速くなる</li>
+<li>一度にスクロールする量が増えると速くなる</li>
+</ul>
+<p>量が増えるとスムーズさが書けるため、時間を短くするほうが優先。 間隔が1(1ミリ秒)になった場合、加速はスクロール量によって行う。</p>
+<p>逆に遅くするときはスクロール量が増えているならそちらを先に減らす。スクロール量が1であれば時間間隔を増やす。</p>
+<p>1ミリ秒刻みでは使いにくかろうと思ったので、5ミリ秒刻み、ただし値が小さいほうが変化量は大きいため、5ミリ秒からは1ミリ秒で調整されるようにしている。 (50ミリ秒から+5された場合は10%遅くなるが、10ミリ秒から-5された場合は100%速くなる)</p>
+<p>割合で増減させてもいいのだが、どちらかといえばキーリピートが効くため一定間隔にしたほうが良いUIであると考えられる。</p>
+<p>今回は50ミリ秒をデフォルトとしたため、10%の5ミリ秒を増減単位とした。 なお、この速度感は画面のピクセル数によって異なり、特にピクセル数が多く高精細なディスプレイの場合は遅く、ディスプレイサイズが大きくピクセル数が少ない場合は速く感じることになる。</p>
+<h3 id="設計">設計</h3>
+<p>基本的には「得意なことは得意な方法で」だ。</p>
+<p>このようにスクロールやキーイベントなどはウェブブラウザとJavaScriptが簡単に書ける。 だから無理せずウェブブラウザとJavaScriptで書こうと考えたわけだ。</p>
+<p>ただし余計な機能や情報があると使いにくい。 最低限のウェブブラウザが欲しいのだが、既にそのようなものはSurfがあるのでこれを使う。</p>
+<p>もっとも、レンダリング部分はQtwebengineやGtkWebkitがあるのだから書くのは非常に簡単である。</p>
+<p>もちろん、そのためにはテキストをHTMLにする必要がある。</p>
+<p>テキストを正確にHTMLで表現するのはちょっと大変だが、CSSで <code>white-space: pre-wrap</code> にしてしまえばタグ要素と <code>&amp;</code> をエスケープしてしまえば元のテキストを表現できる。 このようなことはSedでもできる。 ただし、 <code>&amp;</code> を先にエスケープしなくてはならない。エスケープがエスケープされることを防ぐためだ。</p>
+<p>テキスト処理するためのツールはLinux上に豊富にある。このようなことはシェルが得意とする部分だ。 文字列を埋め込むだけならば特別なツール(例えばeRuby)を使わなくても、ヒアドキュメントで十分だろう。 プログラムはシェルスクリプトで構築する、という方針は簡単に決められる。</p>
+<p>中間的なファイルや生成に必要なファイルは、もちろん予め用意してリンクさせることもできるが、ディレクトリ設計に関する障害を増やすことになる。 今回はローカルディレクトリにインストールする、という前提を与えてはいるが、それでもできれば避けたいところだ。 それにバージョンアップの手間も考えれば、一時ファイルを作る方針にした。 これも簡単なものなのでヒアドキュメントで処理する。</p>
+<p>ブラウザを作るにあたっては、私の得意なRubyではなく、割と苦手なPythonにした。 Rubyにもqml Rubyバインディングは存在するし、動作もするが、メンテナンスされておらず(3年間放置されている)、情報も非常に少ない。 また、ruby-qmlよりもpyqtのほうがqml自体もシンプルに書けるので、Pythonを採用した。</p>
+<p>表示はウェブブラウザ(作ったもの的にはPython+qml+Webengine)で、スクロールはJavaScriptで、変換と橋渡しはシェルスクリプトで。 コンポーネントを分けて、それぞれが得意なことをシンプルに行う。 問題を簡単にし、ミスを減らすポイントでもある。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>もっとも、Unsurfを動かすためにはPyQt5とpython-openglが必要なので、ハードルの高さはどちらが上やら<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>だいぶ懐かしい響きだが、今でもしているところはある。あまり意味はない。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>より正確にいえば、これはコンテキストメニューを表示させたときに発生するイベントで、右クリックと一対一ではない。キーボードのメニューキーを押した場合や、右クリック以外をコンテキストメニューキーにしている場合も同様にも発生するし、右クリックがコンテキストメニューでないのならば発生しない。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

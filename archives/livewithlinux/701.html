@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-08-16T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-08-16T00:00:00+09:00" />
+    <title>Vine Linux (Seed)とWindows 7のデュアルブート構築と削除 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Vine Linux (Seed)とWindows 7のデュアルブート構築と削除</h1></header>
+        <article id="MainArticle">
+<p>ThinkPad e440がどんどん環境崩壊してしまい、使い物にならないため、再セットアップ。 考えられる原因が</p>
+<ul>
+<li>TrueCrypt</li>
+<li>Avast!</li>
+</ul>
+<p>のどちらかなので、とりあえず暗号化なしでやってみる。</p>
+<p>Windowsの再インストールについては何度か言及しているが、ディスクイメージを保存してあるので、いつもどおりSystemRescueCDでブートし、</p>
+<pre><code>ssh foo@192.168.64.128 cat e440.backup/e440.offset.xz | xz -dcv &gt; /dev/sda
+ssh foo@192.168.64.128 cat e440.backup/e440.1.xz | xz -dcv &gt; /dev/sda1
+ssh foo@192.168.64.128 cat e440.backup/e440.2.{0..8}.xz | xz -dcv &gt; /dev/sda2</code></pre>
+<p>パーティションを調整する必要があったので、リサイズ。余計なsda3があったので、それを除去した上で実行する。</p>
+<p>Windowsの再構築は結局一日ほどかかったが、環境として導入したのは、</p>
+<pre><code>* Immunet Antivirus
+* ZoneAlarm Free Firewall
+* Bonjour for Windows
+* RLogin
+* Opera Developer
+* SRWare Iron
+* Cyberfox Intel
+* VLC Media Player
+* AIMP
+* Audacity
+* XnViewMP
+* Geany
+* サクラエディタ
+* Google日本語入力
+* Launchy
+* Geek Uninstaller
+* Sylpheed
+* Start Orb Changer
+* MacType
+* Skype
+* Skype Call Video Recorder
+* Free Studio
+* DR-C125関連</code></pre>
+<p>今回は軽さを保つため、ウィンドウショッピングはごく軽く。しかしながら、実際はかなり重い。重くなった原因はむしろセキュリティ関連か？</p>
+<h3 id="vine-linuxとのデュアルブート">Vine Linuxとのデュアルブート</h3>
+<p>Vine Linuxは<em>7においてもUEFIには対応しない</em>ため、あくまでレガシーブートを使っていることが前提となる。</p>
+<p>Vine Linuxでのデュアルブートのポイントは、</p>
+<ul>
+<li>Disk Druidを用いて手動でパーティショニングを行う</li>
+<li>/bootを別に切る（ほうが良い）</li>
+<li>Grubは、sda(/bootのあるディスク)に対してインストール、高度なオプションを選択し、sda3に対してインストールする</li>
+<li>ベースシステムのインストールでパッケージ基本構成を選択</li>
+</ul>
+<p>MBR*レガシーブートの場合、Windows7は2つのパーティションを切っているはずだ。 sda1がブート関連、sda2がCドライブになる。</p>
+<p>そこで、sda3をプライマリパーティションとして/bootに充て、sda4が拡張パーティション、sda5を/にする。 これ以上切る必要がなければsda5に全てを割り当ててもいいし、sda5をLVMにして、LVMタブで構成してもいい。</p>
+<p>そして、/boot(sda3)に対してGrubをインストールする。 この方法が表面的に見えないが、「Grubの高度なオプション」として、次のステップで選択できるようになっている。</p>
+<p>この状態でインストールを完了してもまだ起動できないため、SystemRescueCDで起動。</p>
+<pre><code>mount /dev/sda2 /mnt
+dd if=/dev/sda3 of=/mnt/mbr.img bs=512 count=1	</code></pre>
+<p>そして再起動してWindows起動。</p>
+<pre><code>bcdedit /create /d &quot;VineLinux&quot; /application bootsector
+bcdedit /set {&lt;entry&gt;} device partition=C:
+bcdedit /set {&lt;entry&gt;} path \mbr.img
+bcdedit /displayorder {&lt;entry&gt;} /addlast</code></pre>
+<p>&lt;entry&gt;は1つ目のコマンド実行時に表示される。</p>
+<p>デフォルトで30秒あるから、という記事もみかけるが、これだと一瞬で決定されてしまい、操作できなかったので、</p>
+<pre><code>bcdedit /timeout 30</code></pre>
+<p>で30秒にする。</p>
+<p>これでVineLinuxが起動できるようになる。で、Seed化とGUI化</p>
+<p>おおよそ<a href="http://vinelinux.org/docs/vine6/developers-guide/install-VineSeed.html">手順</a>通りに、</p>
+<pre><code>export LANG=C
+/etc/init.d/network start
+apt-get update &amp;&amp; apt-get upgrade
+sed -i &#39;s/6/VineSeed/g&#39; /etc/apt/source.list.d/*
+apt-get install apt-libxml2</code></pre>
+<p>Xのインストールよりも先に更新しておかないとコケる。</p>
+<pre><code>apt-get update &amp;&amp; apt-get dist-upgrade
+apt-get install task-xorg-x11 task-mate lightdm</code></pre>
+<p>これでまぁいけるのだが、いくつか追加</p>
+<pre><code>apt-get install fcitx-mozc task-kde</code></pre>
+<p>inittabの修正</p>
+<pre><code>cp -p /etc/inittab /etc/inittab.orig
+cp -p /etc/inittab.sysv /etc/inittab
+vim !!$</code></pre>
+<p>コピーしただけではランレベルは修正されていなかった。 なお、ベースシステムでインストールすると、ログイン時はキーボードがUSなのは仕様。</p>
+<p>で、ここまでやったのだけれど、<em>SeedのカーネルでもThinkPad e440のワイヤレスネットワークアダプタをサポートしていない</em>ので、結局断念…</p>
+<pre><code>bcdedit</code></pre>
+<p>これで目的のVine Linuxエントリを確認</p>
+<pre><code>bcdedit /delete {&lt;entry&gt;}</code></pre>
+<p>で削除できる。</p>
+<p>コンピュータのプロパティからでもいけるよ、という話もあるようだ。</p>
+<h3 id="ところが">ところが</h3>
+<p>やっぱりDR-C125は認識されたりされなかったり。 というかほとんど認識されない。 ログオンしてもまっくらなままでログオンできないことが多い。 非常に不安定だ。フリーズや、Explorerの停止もよく出る。</p>
+<p>Explorer停止に伴って再起動したところ、</p>
+<blockquote>
+<p>Windowsの機能を構成する準備中</p>
+</blockquote>
+<p>でパーセンテージ表示。 再起動すると</p>
+<blockquote>
+<p>23799個のうちn個目の更新を適用中</p>
+</blockquote>
+<p>という。</p>
+<p>なんだこれは。</p>
+<p>しかし、まるで普通に更新したかのように普通に立ち上がり、それ以降振る舞いは改善されたように見える。 これでWindowsが崩壊するようだと、なかなか困る。</p>
+<p>悪いのはMicrosoftか。Lenovoか。</p>
+<p>アメリカか。中国か。</p>
+<h3 id="manjaro-0.8.13-lxqtを入れてみた">Manjaro 0.8.13 LXQTを入れてみた</h3>
+<p>という理由でうまくいかなかったので、デスクトップと同じくArch派閥のManjaro Linux 0.8.13を入れてみた。</p>
+<p>LXQTは古いコンピュータも活用できる軽量版で、軽量デスクトップ環境として人気のLXDEのQt portsだ。LXDEと同様の思想のQTデスクトップ環境を開発していたRazor-qtと合流し、LXDEはGtk+2バージョンをしばらくメンテナンスした後に、LXQtに統合されることになっている。</p>
+<p>つまり、現在はGtk+2のLXDEと、Qt5のLXQtの2つがあるが、LXQtはLXDE Nextでもあり、徐々にLXDEは削除され、LXQtになるということだ。 LXQtがLXDEの後継である、ということでもある。</p>
+<p>LXQtのコンポーネントは、多くがLXDEのPortsだが、LXTerminalをやめてQTerminalを採用している。</p>
+<p>ちなみに、洪任諭氏がLXDEを離れてLXQtに移ったのに対して、LXDE開発チームは、むしろ活発にLXDEを開発し、洪任諭氏とは袂を分かち、LXDEを存続させる動きもみえる。 そのため、LXDEの存続が発表通りになるかはわからないし、LXDEユーザーがLXQtにうつるかもわからない。</p>
+<p>LXQtは現在のところ、LXDEよりも、そしてXFceよりも重い。 XFceが意外とリソースを使うため、MATEよりも、そして場合によってはCinnamonよりも重いということになる。 もっとも、これは起動時に限ったことであり、必ずしも使っていて同様の体感が得られるわけではない。実際、XFceは結構軽い。</p>
+<p>Manjaro 0.8.13 LXQtの導入については、手動ディスクパーティショニングを行うのだが、うまくいかなかった部分がある。</p>
+<ul>
+<li>Thusインストーラは手動ディスクパーティショニングでLVMが使えない。</li>
+<li>Swapパーティションを暗号化すると起動時にディスクを見つけられずエラーになる</li>
+<li>既存パーティションをフォーマットしようとすると失敗して書き込めなかったりおかしくなったりする。基本的にパーティションを消して作りなおす</li>
+</ul>
+<p>既存パーティションに書けないというのは、前方に配置してしまうとインストールできないということになる。なかなか厄介。また、Swapパーティションが暗号化できないのもセキュリティ面では結構痛かったりする。 Windowsも暗号化されていない現状のため、看過するほかない。今までのところ完全なソリューションを提供したのはPCLinuxOSで、openSUSEも恐らくは問題ない。 openSUSEは安定した、完全なソリューションであることが多い。 ただし、openSUSE 13.2は不完全さが目立つと言われている。また、openSUSEはかなりパッケージは多いものの、割とstrictなOSSポリシーのため外部リポジトリに依存する部分が大きい。Factoryを使うのはかなり限定的な使用になり、望ましい環境さえ作れればArchほどの快適性はない。</p>
+<p>どのようにするか、ということが決めかねるので現状このままとし、Windows10にするのであれば（EFSが使えるようになるので）Windows7は旧来の方式に戻して、Windows10にアップグレード、LinuxはopenSUSEを選択。 もしそこでUEFIへの変更が叶うのであれば、Manjaroでも問題ない。</p>
+<p>とりあえず、バックアップの上でManjaro GrubをPBRへインストールすることを試みてみようと思う。</p>
+<p>update-grubが何を対象にするかが心配なところ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

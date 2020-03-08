@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-03-14T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-03-14T00:00:00+09:00" />
+    <title>ffmpegでスクリーンキャスト&ウェブカメラ撮影 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ffmpegでスクリーンキャスト&ウェブカメラ撮影</h1></header>
+        <article id="MainArticle">
+<ins datetime="2018-08-20"><p><a href="https://chienomi.reasonset.net/archives/livewithlinux/1625">更新されたまとめた記事があります</a></p></ins>
+<p>ほぼArch wikiの通りではあるけれども</p>
+
+<h3 id="section">スクリーンキャスト</h3>
+
+<p>スクリーンキャストはPCの画面を録画する。</p>
+
+<p>recordMyDesktopやIstanbulを使うことが多いかもしれないが、処理が遅くて録画した後が大変だし、音声に自由度がない。</p>
+
+<p>とりあえずFullHDでキャストしてみた。</p>
+
+<pre><code>$ ffmpeg -f x11grab -video_size 1920x1080 -i $DISPLAY -f alsa -i pulse -acodec aac -vcodec libx264 -preset ultrafast -qp 0 tmp/test.mp4
+</code></pre>
+
+<p>これで左上から1920x1080の領域が録画される。音声はpulse経由であり、マイク保存することもできるし、モニターを保存することもできるし、特定のアプリケーション出力を保存することもできる。</p>
+
+<p>特に音声を記録しないなら</p>
+
+<pre><code>$ ffmpeg -f x11grab -video_size 1920x1080 -i $DISPLAY -acodec aac -vcodec libx264 -preset ultrafast -qp 0 tmp/test.mp4
+</code></pre>
+
+<p>ALSAでやりたいなら</p>
+
+<pre><code>$ ffmpeg -f x11grab -video_size 1920x1080 -i $DISPLAY -f alsa -i default -acodec aac -vcodec libx264 -preset ultrafast -qp 0 tmp/test.mp4
+</code></pre>
+
+<p>特定のウィンドウを記録するにはxwininfoを使えばいける。</p>
+
+<p><a href="https://gist.github.com/reasonset/d5ccb5766be5ba318d31">Gist</a></p>
+
+<script src="https://gist.github.com/reasonset/d5ccb5766be5ba318d31.js"></script>
+
+<p>使い方としては、-w(ウィンドウモード)、-m(マイク有効)オプションを受け付ける。</p>
+
+<h3 id="section-1">ウェブカム録画</h3>
+
+<pre><code>$ ffmpeg -f alsa -i pulse -f v4l2 -s 1280x720 -i /dev/video0 -acodec flac -vcodec libx264 -preset ultrafast tmp/test.mkv
+</code></pre>
+
+<p>意外ときつい。解像度を落とせばいける。</p>
+
+<p>ただし、guvcviewなどで録画するよりはずっと快適。</p>
+
+<h3 id="pulseaudio">PulseAudio応用</h3>
+
+<h4 id="section-2">マイクから録る</h4>
+
+<p>単純にpavucontrolから録音しているアプリケーションのマイクデバイスを選択すれば良い</p>
+
+<h4 id="section-3">モニターを録る</h4>
+
+<p>入力装置をAll Expect Mintorsではなく、All Input Devicesにすればモニターも見える。
+あとは録音しているアプリケーションでモニターを選択すれば良い</p>
+
+<h4 id="section-4">特定のアプリケーションだけ録る</h4>
+
+<pre><code>$ pacmd load-module module-null-sink sink_name=MySink
+$ pacmd update-sink-proplist MySink device.description=MySink
+</code></pre>
+
+<p>といった感じでSinkを作成、これがスピーカーとして入るのでアプリケーションの出力先にする。
+これだけでは追加されるのはモニターだけでマイクロフォンはないが、Monitor of Null 出力を選択すればそのアプリケーションだけ取れる。</p>
+
+<p>もちろん複数のアプリケーションをまとめて録音することも可能。</p>
+
+<h3 id="section-5">エンコード</h3>
+
+<p>ultrafastで録画したデータは非常に大きいので、圧縮する。</p>
+
+<p>圧縮がしやすいように用意した~/.zshrc.d/40-zaliasesは以下の通り</p>
+
+<pre><code>## Video Conversion ##
+
+videocomps() {
+  #WebM? H.264? H.265?
+  case $1 in
+  264)
+    case $2 in
+    best)
+      ffmpeg -i "$3" -vcodec libx264 -preset veryslow -crf 18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    goodslow)
+      ffmpeg -i "$3" -vcodec libx264 -preset slow -crf 18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    good)
+      ffmpeg -i "$3" -vcodec libx264 -crf 18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    normal)
+      ffmpeg -i "$3" -vcodec libx264 -crf 23 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    light)
+      ffmpeg -i "$3" -vcodec libx264 -crf 28 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    mobile)
+      ffmpeg -i "$3" -vcodec libx264 -crf 36 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    esac
+    ;;
+  265)
+    case $2 in
+    best)
+      ffmpeg -i "$3" -vcodec libx265 -preset veryslow -x265-params crf=18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    verygoodslow)
+      ffmpeg -i "$3" -vcodec libx265 -preset slow -x265-params crf=18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    verygood)
+      ffmpeg -i "$3" -vcodec libx265 -x265-params crf=18 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    good)
+      ffmpeg -i "$3" -vcodec libx265 -x265-params crf=23 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    normal)
+      ffmpeg -i "$3" -vcodec libx265 -x265-params crf=28 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    light)
+      ffmpeg -i "$3" -vcodec libx265 -x265-params crf=32 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    mobile)
+      ffmpeg -i "$3" -vcodec libx265 -x265-params crf=38 -strict -2 _comped_"${3:r}".mp4
+      ;;
+    esac
+    ;;
+  webm)
+    case $2 in
+    best)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 10 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    verygood)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 18 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    good)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 23 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    normal)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 28 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    light)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 33 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    mobile)
+      ffmpeg -i "$3" -c:v libvpx-vp9 -b:v 0 -threads 8 -crf 48 -c:a libopus -f webm _comped_"${3:r}".webm
+      ;;
+    esac
+    ;;
+  esac
+}
+</code></pre>
+
+<p>CRF値はH.264以外はちゃんとデータを出していない。
+参考までにVP9 CRF33でエンコードするとこんな感じだった。</p>
+
+<pre><code>$ ls -lh
+合計 50M
+-rw------- 1 aki users 3.1M  3月 14 16:50 _comped_purebuilder.webm
+-rw------- 1 aki users  47M  3月 14 16:46 purebuilder.mp4
+</code></pre>
+
+<p>シンプルなスクリーンキャストとはいえ、mobileはさすがにきつい。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

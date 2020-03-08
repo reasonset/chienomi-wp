@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-04T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-04T00:00:00+09:00" />
+    <title>Mimir Yokohamaに「いいね機能」「コメント機能」を追加 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Mimir Yokohamaに「いいね機能」「コメント機能」を追加</h1></header>
+        <article id="MainArticle">
+<h2 id="概要">概要</h2>
+<p>Weekly 10000PVを達成して機能強化に力の入っている<a href="https://www.mimir.yokohama/">Mimir Yokohama</a>のウェブサイト。</p>
+<p>連続の機能強化でついに「いいね機能」と「コメント機能」が追加された。</p>
+<p>実は先日の「お問い合わせフォームの実装」は単にその機能を実装する最小限ではなく、簡単なアプリケーションを実装できるプラットフォームになっており、 アプリケーションを追加する条件が整っていたのだ。 また、そのためのテストもしてあった。</p>
+<p>そのため、実は今回コード追加はわずかで、両方合わせても23行ほどにとどまる。 ごく簡単だが、確証が持てないためにテストと本番環境のための修正を行ったりして結構な時間がかかった。</p>
+<p>これに関してはみるべきところはあまりない。 受け取ったパラメータをファイルに書き込めば良いだけだからだ。</p>
+<p>ちなみに、連打しやすいアプリケーションを入れるために連打の対策もサーバーにしてあった。 実は先のパフォーマンスチューニングはこの対策によってパフォーマンスが低下してしまったため、これをカバーするついでに行ったものだった。</p>
+<h2 id="いいね機能の設計">いいね機能の設計</h2>
+<p>いいね機能はごくシンプルだ。</p>
+<p>Pandocテンプレートを使ってページタイトルを埋め込むことができるので、これだけ使うのであれば単にテンプレートの中にフォームを書けばいいだけ、ということになる。</p>
+<p>実際はリファラ(<code>Rack::Request#referer</code>)及びユーザーエージェント(<code>Rack::Request#user_agent</code>), IPアドレス(<code>Rack::Request#ip</code>)も特定に使用している。</p>
+<p>ポイントは「一度送信したら表示を変更、送信を無効化する」ということだ。</p>
+<p><code>input</code>タグの<code>disabled</code>属性を使うことで送信ボタンを無効化している。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">&lt;form</span><span class="ot"> action=</span><span class="st">&quot;/apps/plusone&quot;</span><span class="ot"> onsubmit=</span><span class="st">&quot;this[&#39;sbmbtn&#39;].value = &#39;Thank You +1! &#39;; this[&#39;sbmbtn&#39;].disabled = true&quot;</span><span class="ot"> id=</span><span class="st">&quot;GoodPlusOne&quot;</span><span class="kw">&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;hidden&quot;</span><span class="ot"> name=</span><span class="st">&quot;page&quot;</span><span class="ot"> value=</span><span class="st">&quot;$pagetitle$&quot;</span> <span class="kw">/&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;sbmbtn&quot;</span><span class="ot"> value=</span><span class="st">&quot;&#x1f44d; +1&quot;</span> <span class="kw">/&gt;&lt;/form&gt;</span></a></code></pre></div>
+<p>そう、この機能はHTML上でインラインで書かれているのだ。 このような書き方はW3C的には推奨されないのだが、Googleは推奨している。 実際、これだけのためにJavaScriptファイルをロードさせることをしたくなかったので、インラインにした。</p>
+<p>ポイントは</p>
+<ul>
+<li>Legacy DOMにおいてフォーム部品は連想配列のようにアクセスできるようになっている</li>
+<li>submitボタンのラベルは<code>value</code>である</li>
+<li><code>disabled</code>によってフォーム部品を無効化できる</li>
+</ul>
+<p>である。</p>
+<p>これらの処理は送信の「前に」行われる。 これは正しいことではないが、問題はない。 なぜならば</p>
+<ul>
+<li>送信できなかったからといってユーザーが修正するなどの手を入れる余地はない</li>
+<li>特に返信を必要とするものでもないので、送信失敗はクリティカルな問題でもない</li>
+<li>サーバーエラーなどは表示されるようになっている</li>
+</ul>
+<p>からだ。</p>
+<p>また、画面変遷せずに送るだけ…というと、Ajaxで非同期に送るしかないように考えるかもしれないが、 実際は現代のブラウザは基本的に2XXステータスで空コンテンツを返すとページ変遷しないようになっている。</p>
+<p>このような用途のために204(No Content)が用意されているため、204を返す仕様だ。 できるだけブラウザの標準機能に頼るようにしている。</p>
+<p>このボタン、めっちゃgooglebotが押してくる…</p>
+<h2 id="コメント機能の設計">コメント機能の設計</h2>
+<p>公開されるものではなく、sanitizeしなくても問題が発生しない設計になっている(単に文字列として扱う以上の取り扱いがなされる条件で使用しない)ため、非常に楽だ。</p>
+<p>難しく考えるよりも、シンプルで挙動をちゃんと把握できていて、余計なことをしない方法をとるのが最も楽に、確実に、バグなく設計できる。</p>
+<p>ただ、この機能に関しては「コメントフォームの表示」などが必要になり、JavaScriptが必要になった。 また、コメントするというあまりとらない行為のための部品であり、常にロードすることは非常に好ましくない。</p>
+<p>そこでとった方法は「JavaScriptの遅延ロード」であり、「クリック時にelementを追加してJavaScriptを読み込む」という方法だ。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">&lt;button</span><span class="ot"> onclick=</span><span class="st">&quot;(function(){var script=document.createElement(&#39;script&#39;);script.src=&#39;/js/leave-comment.js&#39;;document.body.appendChild(script);})()&quot;</span><span class="ot"> id=</span><span class="st">&quot;LevCmtBtn&quot;</span><span class="ot"> type=</span><span class="st">&quot;button&quot;</span><span class="kw">&gt;</span>コメントを残す<span class="kw">&lt;/button&gt;</span></a></code></pre></div>
+<p>これで<code>script</code>要素を追加している。</p>
+<p>では呼び出されたあとどうしているのか…というと、こんな感じだ。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb3-1" data-line-number="1">(<span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="kw">var</span> btn <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;LevCmtBtn&quot;</span>)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">    <span class="kw">var</span> cForm <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;CmtForm&quot;</span>)</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">    <span class="cf">if</span> (<span class="op">!</span><span class="va">btn</span>.<span class="at">lvCommentLoaded</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">        <span class="va">btn</span>.<span class="at">lvCommentLoaded</span> <span class="op">=</span> <span class="kw">true</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">        <span class="va">cForm</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;block&quot;</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        <span class="va">cForm</span>.<span class="at">innerHTML</span> <span class="op">=</span> <span class="st">&#39;&lt;input type=&quot;hidden&quot; value=&quot;&#39;</span> <span class="op">+</span> <span class="va">document</span>.<span class="at">title</span> <span class="op">+</span> <span class="st">&#39;&quot; name=&quot;page&quot; /&gt;&lt;ul&gt;&lt;li&gt;名前: &lt;input type=&quot;text&quot; name=&quot;name&quot; /&gt;&lt;/li&gt;&lt;li&gt;&lt;select name=&quot;msgclass&quot;&gt;&lt;option value=&quot;nil&quot; selected=&quot;selected&quot;&gt;コメントの種類を選べます&lt;/option&gt;&lt;option&gt;更新希望&lt;/option&gt;&lt;option&gt;要望&lt;/option&gt;&lt;option&gt;指摘&lt;/option&gt;&lt;option&gt;意見&lt;/option&gt;&lt;option&gt;賛辞&lt;/option&gt;&lt;option&gt;その他&lt;/option&gt;&lt;/select&gt;&lt;/li&gt;&lt;li&gt;&lt;textarea rows=&quot;6&quot; name=&quot;comment&quot; required=&quot;required&quot; minlength=&quot;5&quot;&gt;&lt;/textarea&gt;&lt;/li&gt;&lt;li&gt;&lt;input type=&quot;submit&quot; value=&quot;コメントを送信&quot; /&gt;&lt;/li&gt;&lt;/ul&gt;&#39;</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">        <span class="va">cForm</span>.<span class="at">addEventListener</span>(<span class="st">&quot;submit&quot;</span><span class="op">,</span> <span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">            <span class="va">cForm</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;none&quot;</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">            <span class="va">btn</span>.<span class="va">firstChild</span>.<span class="at">data</span> <span class="op">=</span> <span class="st">&quot;コメントありがとうございました!&quot;</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">            <span class="va">btn</span>.<span class="at">onclick</span> <span class="op">=</span> <span class="kw">null</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">        <span class="op">},</span> <span class="st">&quot;false&quot;</span>)</a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">        <span class="va">btn</span>.<span class="va">firstChild</span>.<span class="at">data</span> <span class="op">=</span> <span class="st">&quot;コメントフォームを閉じる&quot;</span></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">        <span class="va">btn</span>.<span class="at">onclick</span> <span class="op">=</span> <span class="kw">function</span>() <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">            <span class="cf">if</span> (<span class="va">cForm</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">==</span> <span class="st">&quot;block&quot;</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">                <span class="va">cForm</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;none&quot;</span></a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">                <span class="va">btn</span>.<span class="va">firstChild</span>.<span class="at">data</span> <span class="op">=</span> <span class="st">&quot;コメントを残す&quot;</span></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">                <span class="va">cForm</span>.<span class="va">style</span>.<span class="at">display</span> <span class="op">=</span> <span class="st">&quot;block&quot;</span></a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">                <span class="va">btn</span>.<span class="va">firstChild</span>.<span class="at">data</span> <span class="op">=</span> <span class="st">&quot;コメントフォームを閉じる&quot;</span></a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">            <span class="op">}</span></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25"><span class="op">}</span>)()</a></code></pre></div>
+<p>そう、コメントフォームは標準でHTMLに含まれていない。</p>
+<p>パフォーマンス的にみても親切機能のためにもう重くなりつつあるドキュメントをこれ以上重くしたくないので、 「フォーム部分はJavaScriptがロードされたときに<code>innerHTML</code>で書く、という方法をとっている。</p>
+<p>「クリックされたときにはじめて必要とされるのでドキュメントノードを追加してロードする」という手法は稀に使われるが、さすがにそれでHTMLドキュメントそのものを生成するというのはまず見ない手法になっている。</p>
+<p>連打されたときのことを考えて、<code>click</code>イベントを発生する値に特殊なプロパティを埋め込み、何度も実行されないようにしている。 なお、これは本当に連打したときだけ機能するもので、JavaScriptシングルスレッドなので一回このスクリプトに入っていまえばこのスクリプト中に割り込まれることはない。 だが、連打されるとイベントがキューに入ってしまうので何度も実行されてしまうことから、そうしたことがないようにしている。 シングルスレッドなので、このスクリプトが実行されているのにプロパティが設定されないうちにまた実行されるということはない。</p>
+<p>元になるフォーム自体は存在していて、<code>submit</code>ボタンを配置すればフォームの送信は可能だ。 そのため、<code>submit</code>イベントに対するイベントリスナーを設定するものはHTML上に静的に存在している。</p>
+<p>その上で「フォームはやっぱり閉じられたほうがいいな」ということでボタンクリックに対するイベントの変更、及びボタンラベルの変更を行っている。</p>
+<p>送信を行った場合はもうコメントフォームは使わないので、コメントフォームは非表示にして(削除はしていない)ラベルを変更している。</p>
+<p>ラベル変更だが、<code>input</code>部品とは違って<code>button</code>要素は子要素テキストノードがラベルになっているので、<code>data</code>プロパティの書き換えによって変更している。</p>
+<p>もともとHTML上でLevel0 DOMイベントを使っているので、スクリプト上でもLevel0 DOMによってイベントを変更している。 いつも<code>addEventListener</code>を使っていたので、珍しい。 イベントの削除はイベントに<code>null</code>を代入するだけだ。</p>
+<p>なお、HTMLで全て含めてしまえばJavaScriptは排除できるのだが、これ以上余計な要素を組み込むことはできれば避けたいためこのような仕様になっている。既にDOMコンパイルは割と重い。</p>
+<p>また、デザインポリシーからいって、多くの場合余計なコメントフォームを常に表示させておくというのは美しくないとも思っている。 JavaScriptを使わずCSSでオンオフするようにもできるが、そうすると今度はボタンのテキストを変更するのが難しいし、連打や再送信を防ぐのも難しい。</p>
+<p>このことから、なにがなんでもJavaScriptを使わないのが正義、ということでなければ、 このような付加コンテンツはユーザービリティの点からも素直に使うべきだと思う。</p>
+<p>こちらもいいね機能同様、送信する前に状態を変更してしまい、成功すれば204を返す仕様。</p>
+<h2 id="legacy-dom-と-dom-level0-eventに関して">Legacy DOM と DOM Level0 Eventに関して</h2>
+<p>Legacy DOMやDOM Level0 Eventについて意見をもとめられることがたまにあるのだが、私としてはあまり勧められないと考えている。</p>
+<p>非常に簡単なので学習にはいいが、Legacy DOMはHTMLの構造に依存する。例えば</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">&lt;form&gt;</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;text&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<p>として、</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="va">document</span>.<span class="at">forms</span>[<span class="dv">0</span>].<span class="at">onclick</span> <span class="op">=</span> <span class="st">&quot;document.forms[0][1].disabled = true&quot;</span></a></code></pre></div>
+<p>とかやってしまうと、ドキュメントの構造が変わるたびに修正だ。</p>
+<p>だが、「フォームにのみnameで使い」「フォームはW3C DOMで特定する」のであれば悪くない。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">&lt;form</span><span class="ot"> id=</span><span class="st">&quot;TheForm&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;text&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;submit_button&quot;</span><span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">var</span> form <span class="op">=</span> <span class="at">getElementById</span>(<span class="st">&quot;TheForm&quot;</span>).<span class="at">onclick</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="va">form</span>.<span class="at">onclick</span> <span class="op">=</span> <span class="st">&#39;form[&quot;submit_button&quot;].disabled = true&#39;</span></a></code></pre></div>
+<p>DOM Level0 Eventはイベントリスナーが1つしか登録できないためモジュール設計になっている場合や、なんらかのライブラリを使っている場合は使ってはいけない。 イベントを「追加」する場合はLevel2で、イベントを「設定」する場合はLevel0という使い分けも考えられる。 HTMLに直接書く場合はLevel0しか書けないので、その部品の基本的な動作と定義されているならLevel0でもいい。</p>
+<p>ただし、その場合でもできればLevel2 Eventを「後から追加する」のが適切なので、DOM Level0 Eventの使いどころは今回のようなものが唯一だと思う。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

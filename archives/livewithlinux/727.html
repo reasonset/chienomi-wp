@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-09-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-09-17T00:00:00+09:00" />
+    <title>Manjaro Linux 0.8.13 セットアップ (5) Z400編 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Manjaro Linux 0.8.13 セットアップ (5) Z400編</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">はじめに</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">パッケージインストレーション</a></li>
+  <li><a href="#gtk-sylpheed-leafpad" id="markdown-toc-gtk-sylpheed-leafpad">Gtkテーマ, Sylpheed, Leafpad</a></li>
+  <li><a href="#section-2" id="markdown-toc-section-2">文字入力設定</a></li>
+  <li><a href="#gnome-screenshot" id="markdown-toc-gnome-screenshot">Gnome Screenshot</a></li>
+  <li><a href="#maxthon" id="markdown-toc-maxthon">Maxthon</a></li>
+  <li><a href="#caps-lock" id="markdown-toc-caps-lock">英数キーでCaps Lockになる</a></li>
+  <li><a href="#pandoc" id="markdown-toc-pandoc">Pandoc</a></li>
+  <li><a href="#openssh" id="markdown-toc-openssh">openSSH</a></li>
+  <li><a href="#section-3" id="markdown-toc-section-3">ホスト設定</a>    <ul>
+      <li><a href="#mdns-zeroconf" id="markdown-toc-mdns-zeroconf">MDNS (Zeroconf)</a></li>
+      <li><a href="#fcitx-mozc-ut" id="markdown-toc-fcitx-mozc-ut">fcitx-mozc-utのために</a></li>
+    </ul>
+  </li>
+  <li><a href="#section-4" id="markdown-toc-section-4">ビデオの設定</a></li>
+  <li><a href="#section-5" id="markdown-toc-section-5">追記</a></li>
+</ul>
+
+<h3 id="section">はじめに</h3>
+
+<p>システム更新</p>
+
+<pre><code>$ sudo pacman -Syuu
+</code></pre>
+
+<p>Grub設定。nomodesetを入れる</p>
+
+<pre><code>$ sudo nano /etc/default/grub
+</code></pre>
+
+<p>最新カーネル</p>
+
+<pre><code>$ sudo mhwd-kernel -i linux42
+</code></pre>
+
+<p>ビデオカード</p>
+
+<pre><code>$ sudo mhwd-gpu --setgl nvidia
+</code></pre>
+
+<p>再起動。</p>
+
+<h3 id="section-1">パッケージインストレーション</h3>
+
+<ul>
+  <li>nss-mdns</li>
+  <li>bind-tools</li>
+  <li>encfs</li>
+  <li>ctags</li>
+  <li>leafpad</li>
+  <li>zsh</li>
+</ul>
+
+<p>ホスト設定を行う。</p>
+
+<p>必要なら<code>chsh</code>。</p>
+
+<ul>
+  <li>medit</li>
+  <li>geany</li>
+  <li>geany-plugins</li>
+  <li>smplayer</li>
+  <li>smplayer-themes</li>
+  <li>smplayer-skins</li>
+  <li>opera-developer</li>
+  <li>cinnamon</li>
+  <li>plasma</li>
+  <li>kde-applications</li>
+  <li>fcitx-kkc</li>
+</ul>
+
+<p>X関係に問題が出るので、Zshでホームディレクトリ上で(多分、extended_globを伴って)</p>
+
+<pre><code>$ rm .[xX](^(profile))
+</code></pre>
+
+<p>入力関係の設定をしておく。</p>
+
+<ul>
+  <li>emacs</li>
+  <li>xsane</li>
+  <li>fetchmail</li>
+  <li>spamassassin</li>
+  <li>razor</li>
+  <li>tasque</li>
+  <li>skype</li>
+  <li>skype-call-recorder</li>
+  <li>openssh</li>
+  <li>sshfs</li>
+</ul>
+
+<p>sshの設定</p>
+
+<ul>
+  <li>lv</li>
+  <li>w3m</li>
+  <li>amarok</li>
+  <li>audacious</li>
+  <li>audacious-plugins</li>
+  <li>libcue</li>
+  <li>audacity</li>
+  <li>sox</li>
+  <li>zsh</li>
+  <li>gtkhotkey</li>
+  <li>libgcrypt15</li>
+  <li>inkscape-gtk3-bzr</li>
+  <li>sylpheed</li>
+  <li>ttf-tahoma</li>
+  <li>fcitx-anthy</li>
+  <li>ttf-ricty</li>
+  <li>ttf-migmix</li>
+  <li>ttf-rounded-mplus</li>
+  <li>ttf-migu</li>
+  <li>ttf-sawarabi-gothic</li>
+  <li>ttf-hanazono</li>
+  <li>ttf-mikachan</li>
+  <li>ttf-sawarabi-mincho</li>
+  <li>ttf-mona</li>
+  <li>ttf-sazanami</li>
+  <li>ttf-monapo</li>
+  <li>ttf-kibitaki</li>
+  <li>ttf-mplus</li>
+  <li>ttf-ume</li>
+  <li>ttf-kochi-substitute</li>
+  <li>ttf-ohruri</li>
+  <li>ttf-vlgothic</li>
+  <li>ttf-koruri</li>
+  <li>ttf-vlkoruri</li>
+</ul>
+
+<p>Infinality, Java, Mozc-UTは猛烈に時間がかかる。</p>
+
+<ul>
+  <li>cairo-infinality</li>
+  <li>fontconfig-infinality</li>
+  <li>freetype-infinality</li>
+  <li>jre8-openjdk-infinality</li>
+  <li>fcitx-mozc-ut</li>
+</ul>
+
+<p>続き</p>
+
+<ul>
+  <li>kde-gtk-config</li>
+  <li>ttf-tahoma</li>
+  <li>bundler</li>
+  <li>
+    <p>fcitx-anthy</p>
+
+    <p>nVidia向けのビデオ関連。</p>
+  </li>
+  <li>libva-vdpau-driver</li>
+  <li>gst-vaapi</li>
+</ul>
+
+<p>続き</p>
+
+<ul>
+  <li>gtk-theme-preference</li>
+  <li>font-manager</li>
+  <li>gtk-chtheme</li>
+  <li>alsaplay</li>
+  <li>gedit</li>
+  <li>gedit-code-assistance</li>
+  <li>gedit-plugins</li>
+  <li>evince</li>
+  <li>gnome-terminal</li>
+  <li>tomboy</li>
+  <li>mcomix</li>
+  <li>gnome-screenshot</li>
+</ul>
+
+<p>Gnome Screenshotは設定が必要</p>
+
+<ul>
+  <li>xlhtml</li>
+  <li>vivaldi</li>
+</ul>
+
+<p>Vivldiは必要か？？
+Wine関連</p>
+
+<ul>
+  <li>wine</li>
+  <li>winetricks</li>
+  <li>twine</li>
+  <li>wine-mono</li>
+  <li>q4wineyaourt</li>
+  <li>wine_gecko</li>
+</ul>
+
+<p>Haskell (for pandoc)</p>
+
+<ul>
+  <li>ghc</li>
+  <li>cabal-install</li>
+  <li>alex</li>
+  <li>happy</li>
+  <li>texlive-core</li>
+  <li>texlive-langcjk</li>
+</ul>
+
+<p>続き</p>
+
+<ul>
+  <li>chromium-pepper-flash</li>
+  <li>dialog</li>
+  <li>perl-tk</li>
+  <li>psutils</li>
+  <li>ruby-kramdown</li>
+  <li>livestreamer</li>
+</ul>
+
+<p>ウェブブラウザ。</p>
+
+<ul>
+  <li>midori</li>
+  <li>qupzilla</li>
+  <li>rekonq</li>
+</ul>
+
+<p>続き</p>
+
+<ul>
+  <li>xnviewmp</li>
+  <li>nkf</li>
+</ul>
+
+<p>Gtk+2テーマ関連</p>
+
+<ul>
+  <li>oxygen-gtk2</li>
+  <li>lib32-qtcurve-gtk2-1.8.18-1</li>
+  <li>lib32-qtcurve-qt4-1.8.18-1</li>
+  <li>lib32-qtcurve-utils-1.8.18-1</li>
+  <li>qtcurve-gtk2-1.8.18-3</li>
+  <li>qtcurve-qt4-1.8.18-3</li>
+  <li>qtcurve-qt5-1.8.18-3</li>
+  <li>qtcurve-utils-1.8.18-3</li>
+</ul>
+
+<h3 id="gtk-sylpheed-leafpad">Gtkテーマ, Sylpheed, Leafpad</h3>
+
+<p>Gtk+2アプリケーションの中に、Gtkテーマを原因にSegmentation faultを起こす奴がいる。</p>
+
+<p>SylpheedはGtk+2専用テーマでなければいけない。場合によってはフォールバックできるが、できない場合もある。フォールバックできる場合も起動時間が全く異なってくる。</p>
+
+<p>そこで、Gtk+ 2専用のOxygen-Gtkにしたのだが、なんとLeafpadはOxygen-Gtkで動かない(!)</p>
+
+<p>QtCurveが最も簡単に解決してくれるが、それも嫌なので、Leafpadだけは代替プログラムを書いた。</p>
+
+<pre><code>#!/bin/sh
+
+export GTK2_RC_FILES=$HOME/lib/alt-gtkrc-2.0
+
+exec leafpad
+</code></pre>
+
+<p>で、alt-gtkrc-2.0でQtCurveを指定している。</p>
+
+<p>Gtk+2フルなテーマは</p>
+
+<ul>
+  <li>Clearlooks</li>
+  <li>Industrial</li>
+  <li>Mist</li>
+  <li>Redmond</li>
+  <li>ThinIce</li>
+  <li>Xfce-redmondxp</li>
+  <li>Xfce-kolors</li>
+  <li>Xfce-dawn</li>
+  <li>Xfce-dusk</li>
+  <li>Xfce-cadmium</li>
+  <li>Silver</li>
+</ul>
+
+<p>もしかすると<code>oxygen-gtk3-git</code>を入れるとダメかもしれない。</p>
+
+<p>なお、Gtk3はCinnamonで、Gtk2はgtk-chthemeで設定。</p>
+
+<h3 id="section-2">文字入力設定</h3>
+
+<p>入力関係のため、<code>~/.xprofile</code>	に</p>
+
+<pre><code>export GTK_IM_MODULE=fcitx
+export GTK2_IM_MODULE=fcitx
+export GTK3_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS="@im=fcitx"
+export DefaultIMModule=fcitx
+export PATH=/home/aki/bin:$PATH
+</code></pre>
+
+<p>ログアウトしてログインしなおしたほうが良い。
+<code>gtk-query-immodules-*</code>は必要なかった。</p>
+
+<h3 id="gnome-screenshot">Gnome Screenshot</h3>
+
+<p>デフォルトの保存場所を変更する。</p>
+
+<p>gsettings set org.gnome.gnome-screenshot auto-save-directory /path/to/directory</p>
+
+<h3 id="maxthon">Maxthon</h3>
+
+<p>リポジトリ落ちしているので</p>
+
+<pre><code>$ git clone --depth=1 git://pkgbuild.com/aur-mirror.git
+$ cd aur-mirror/maxthon-browser
+$ makepkg
+$ sudo pacman -U maxthon-browser-1.0.5.3-4-x86_64.pkg.tar.gz
+</code></pre>
+
+<h3 id="caps-lock">英数キーでCaps Lockになる</h3>
+
+<p>Archのevdevがいうこときかなくなっているので、.xprofileあたりに</p>
+
+<pre><code>setxkbmap -model jp106 -layout jp
+</code></pre>
+
+<h3 id="pandoc">Pandoc</h3>
+
+<pre><code>$ export PATH=$HOME/.cabal/bin
+$ cabal update
+$ cabal install pandoc
+</code></pre>
+
+<h3 id="openssh">openSSH</h3>
+
+<pre><code>$ sudo systemctl start sshd
+$ sudo systemctl enable sshd
+</code></pre>
+
+<h3 id="section-3">ホスト設定</h3>
+
+<h4 id="mdns-zeroconf">MDNS (Zeroconf)</h4>
+
+<p><code>/etc/nsswitch</code>の<code>host</code>項目に<code>mdns_minimal</code>を追加。<code>files</code>よりも後に。</p>
+
+<h4 id="fcitx-mozc-ut">fcitx-mozc-utのために</h4>
+
+<p><code>/etc/hosts</code>に<code>dig japanese-usage-dictionary.googlecode.com</code>した結果に基づき、このホストをIPv4で決め打ち。</p>
+
+<h3 id="section-4">ビデオの設定</h3>
+
+<p>Quadro2000でのVDPAUについては、単純にnon-freeでインストールしていれば、有効になっている。
+<code>nvidia-utils</code>でOKだからだ。</p>
+
+<p>VA-APIについては、<code>libva-vdpau-driver</code>をインストールし、環境変数<code>$LIBVA_DRIVER_NAME</code>の値に<code>vdpau</code>をセットするようにすれば良い。
+私は<code>~/.xprofile</code>に記載した。</p>
+
+<p>Smplayerは「ビデオ」タブで<code>出力ドライバー</code>を<code>vdpau</code>に、
+<code>パフォーマンス</code>タブの<code>ハードウェアデコード</code>を<code>vdpau</code>にする。</p>
+
+<p>VLCについては、<code>ハードウェアアクセラレーションによるデコード</code>を<code>X11のVA-APIビデオデコーダー</code>に設定する。</p>
+
+<p>Flashは<code>/etc/adobe/mms.cfg</code>のコメントアウトされている<code>EnableLinuxHWVideoDecode</code>を有効にする。</p>
+
+<hr />
+
+<h3 id="section-5">追記</h3>
+
+<p>Conkyを触ってみたのだが、AMD APUで発生していた</p>
+
+<ul>
+  <li><code>execi</code>していると2回目から表示が消える</li>
+  <li>RSSが取れないことが多い</li>
+</ul>
+
+<p>RSSがとれないというのは、RSSのエントリが表示されない状態になる。Conkyの組み込みrssの話だ。取れたかとれなかったかの状態は永続するが、取れないことが圧倒的に多く、5つのRSSをまとめている部分に関しては、何十回も起動・停止しなければ十分に表示できなかった。</p>
+
+<p>また、Conkyの負担もかなり大きかったので、結局使用をやめていたけれど、Z400になってなんの問題もなくなった。</p>
+
+<p>やはりLinuxにはQuadroだ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

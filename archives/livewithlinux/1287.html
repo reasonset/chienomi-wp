@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-05-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-05-27T00:00:00+09:00" />
+    <title>SSHのリバースポートフォワーディングの強化 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>SSHのリバースポートフォワーディングの強化</h1></header>
+        <article id="MainArticle">
+<p>以前かなり入念に設定して外出中もSSHでログインできるようにしたはずだったのだが、実際に試してみるとうまくいかないケースがあった。</p>
+<p>もちろん、前回の設定で、SSHが死ねば再度コネクションを貼り直すようにしたし、サーバーから一定時間応答がなければ死んだとみなすようになっていた。 これで万全のはずだった。</p>
+<p>ところが、サーバーからPONGは届いているにもかかわらず、ポートフォワーディングは死んでいる…という事態に遭遇したのだ。</p>
+<p>これでは困る。 なぜそんなことになるというのか。</p>
+<p>しかし発生するものは仕方ない。 実際にログインできない場合には無理やり貼り直すことにしよう。</p>
+<p>方法としては割と単純で、自分自身に対するものではあるが、一旦サーバーにSSHで接続し、そこからSSHで手元のコンピュータに対してログインしコマンドを実行する。 これに失敗すればコネクションが切れているとみなす。</p>
+<p><code>ProxyCommand</code>を使う必要はなく、単純にsshのコマンドとしてsshを含めればいい。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">ssh</span> serverhost ssh mycomputer true</a></code></pre></div>
+<p>新しく鍵を作ってサーバーに登録する。</p>
+<p>サーバーで実行するコマンドはsshである。</p>
+<p>また、逆にサーバーでも新しい鍵を作って手元コンピュータに登録する。つまり、互いにコマンド実行用の鍵を登録することになる。</p>
+<p>サーバー側で結びつけるコマンドはsshである。 このSSHで<code>~/.ssh/config</code>によってターゲットコンピュータに対してログインするホストを指定する。</p>
+<pre><code>Host target-pc-connection-check
+    User jrh
+    Port 2222
+    Hostname localhost
+    IdentityFile ~/.ssh/target-pc-connection-check_rsa</code></pre>
+<p>サーバー側で鍵に結びつけるコマンドは<code>ssh target-pc-connection-check</code>である。</p>
+<p>ターゲット側では次のように登録する。</p>
+<pre><code>Host target-pc-connection-check-via-server
+    User jrh
+    Port 22
+    Hostname serverhost.example.com
+    IdentityFile ~/.ssh/target-pc-connection-check-via-server_rsa</code></pre>
+<p>これでターゲットコンピュータがこの鍵でサーバーにログインすると自動的にサーバーはSSHを実行しターゲットコンピュータにSSHポートフォワーディングを介して接続しようとする。 自動化のためそれぞれの鍵にはパスワードはかけない。</p>
+<p>ターゲット側で鍵に結びつけるコマンドは<code>true</code>でも良いと思うが、<code>echo OK</code>あたりでも良いだろう。</p>
+<p>これでターゲット側から</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">ssh</span> target-pc-connection-check-via-server <span class="kw">|</span> <span class="fu">grep</span> -qF OK</a></code></pre></div>
+<p>とすれば、コネクションが到達するかどうかをチェックできる。</p>
+<p>Systemdユニットに組み込むと面倒なことになるので、システムトレイアプリに組み込む。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#!/usr/bin/zsh</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="ot">unitname=</span><span class="st">&quot;sshreverse.service&quot;</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">systemctl start --user <span class="ot">$unitname</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="kw">while</span> systemctl status --user <span class="ot">$unitname</span> <span class="kw">|</span> <span class="kw">grep</span> -F <span class="st">&quot;active (running)&quot;</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="kw">do</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="kw">(</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">    <span class="kw">while</span> <span class="kw">sleep</span> 300</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">    <span class="kw">do</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">      <span class="kw">if</span> <span class="kw">ssh</span> target-pc-connection-check-via-server <span class="kw">|</span> <span class="kw">grep</span> -qF OK</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">      <span class="kw">then</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">        <span class="kw">:</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15">      <span class="kw">else</span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16">        systemctl restart --user <span class="ot">$unitname</span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17">      <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18">    <span class="kw">done</span></a>
+<a class="sourceLine" id="cb5-19" data-line-number="19">  <span class="kw">)</span> <span class="kw">&gt;</span> /dev/null <span class="kw">&amp;</span></a>
+<a class="sourceLine" id="cb5-20" data-line-number="20">  <span class="kw">typeset</span> -i <span class="ot">checkpid=$!</span></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21">  yad --notification --image=<span class="st">&quot;network-vpn&quot;</span> --title=<span class="st">&quot;Reverse Forwarding is Now Active&quot;</span></a>
+<a class="sourceLine" id="cb5-22" data-line-number="22">  <span class="kw">if</span> yad --title=<span class="st">&quot;Stop Reverse Forwarding&quot;</span> --image dialog-question --button=gtk-yes:0 --button=gtk-no:1 --text=<span class="st">&quot;Really stop reverse for</span></a>
+<a class="sourceLine" id="cb5-23" data-line-number="23"><span class="st">warding?&quot;</span></a>
+<a class="sourceLine" id="cb5-24" data-line-number="24">  <span class="kw">then</span></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25">    <span class="kw">kill</span> <span class="ot">$checkpid</span></a>
+<a class="sourceLine" id="cb5-26" data-line-number="26">    systemctl stop --user <span class="ot">$unitname</span></a>
+<a class="sourceLine" id="cb5-27" data-line-number="27">  <span class="kw">fi</span></a>
+<a class="sourceLine" id="cb5-28" data-line-number="28"><span class="kw">done</span></a></code></pre></div>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

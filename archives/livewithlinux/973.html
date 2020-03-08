@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-07-19T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-07-19T00:00:00+09:00" />
+    <title>Quadro2000 + GeForce GTX750Ti with Linuxで5面ディスプレイ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Quadro2000 + GeForce GTX750Ti with Linuxで5面ディスプレイ</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#まえがき" id="markdown-toc-まえがき">まえがき</a></li>
+  <li><a href="#前知識" id="markdown-toc-前知識">前知識</a></li>
+  <li><a href="#うまくいかない" id="markdown-toc-うまくいかない">うまくいかない</a></li>
+  <li><a href="#暫定的な方法" id="markdown-toc-暫定的な方法">暫定的な方法</a></li>
+  <li><a href="#問題の根幹" id="markdown-toc-問題の根幹">問題の根幹</a></li>
+  <li><a href="#結論" id="markdown-toc-結論">結論</a></li>
+</ul>
+
+<h3 id="まえがき">まえがき</h3>
+
+<p>Quadro2000は出力ポートを3つ持っているものの、出力は2系統で2面しか出ない。
+これが不便すぎたので、GeForce GTX750Tiを導入した。</p>
+
+<p>750Tiは2世代前の性能の低いビデオカードだが、消費電力、発熱量が少なく、補助電源も必要ない。
+あまり余裕のない既存システムの拡張は比較的行いやすいカードだ。
+2スロットカードだが、GT720にすれば1スロットで接続できる。</p>
+
+<p>750Tiの基本的な出力は、4k1面を含む3ディスプレイ、CRTのものとDFPのものがあるようだ。
+また、4k3面を含む4面ディスプレイのモデルも存在する。</p>
+
+<p>性能的にはQuadro2000がFermiチップで実に4世代前なので、2世代前とはいえかなり隔たりがある。
+そのため、OpenGL性能の高いQuadroとはいえ、当時の中堅モデルでしかなかったGTX750TiのほうがOpenGLにおいても性能はだいぶ高い。
+ビデオエンコーディング作業の時間短縮も狙った。
+単にディスプレイの追加だけであれば、最悪2枚同時動作が叶わず交換となったとしても、720で3面出力は可能だが、
+750Tiを選択することでその場合でも性能向上が可能となるようにした。</p>
+
+<h3 id="前知識">前知識</h3>
+
+<p>NVIDIAのマルチグラフィックスといえばSLIだが、これは単なるマルチグラフィックスを意味するものではないらしい。</p>
+
+<p>SLIは、複数のビデオカードをケーブル接続することによって、画面描画を分担するものである。
+そのため、画面出力を行うビデオカードは1枚、であるそうだ。</p>
+
+<p>SLIは「複数ビデオカードを同時利用する技術」ではなく、「複数ビデオカードで並列演算する技術」であるという理解でおそらく正しい。
+しかし、SLI接続されていない複数のビデオカードで演算する方法としてMulti-GPUも用意されているようだ。</p>
+
+<p>以前はLinuxにおいて複数(場合によっては多数)のビデオカードを使って多数のディスプレイを出す方法としてXineramaがあった。
+だが、最新のnvidiaドライバではこれが無効である、との説明がある。
+設定方法などもかなり変更があったようで、2014年頃のドキュメントは役に立たない。</p>
+
+<p>それ以外の方法として、TwinViewもあるが、これはあくまでひとつのビデオカードで2面を使う方法であり、それはわざわざ使うほどのものではない。</p>
+
+<p>Base Mosaic及びSLI Mosaicは複数のNVIDIAビデオカードに接続されたディスプレイをひとつのスクリーンにまとめる。
+NVIDIAの説明を見る限りはこれはディスプレイの実際の間隔を反映して表示する(ベゼルの幅などで画面と画面の間にある幅や、ディスプレイの角度を理解して3Dグラフィックスを表示する)技術に読めるのだが、少なくともLinuxではマルチディスプレイテクノロジーであるらしい。</p>
+
+<h3 id="うまくいかない">うまくいかない</h3>
+
+<p>Windowsでは何の苦労もない。ドライバーインストールだけでできた。</p>
+
+<p>ところが、Linuxではうまくいかなかった。Base Mosaicであれ、MultiGPUであれ、この調子だ。</p>
+
+<pre><code>[    19.599] (EE) NVIDIA(GPU-0): Failed to find a valid Base Mosaic configuration.
+[    19.599] (EE) NVIDIA(GPU-0): Invalid Base Mosaic configuration 1 of 1:
+[    19.599] (EE) NVIDIA(GPU-0): GPUs:
+[    19.599] (EE) NVIDIA(GPU-0):     1) NVIDIA GPU at PCI:15:0:0
+[    19.599] (EE) NVIDIA(GPU-0):     2) NVIDIA GPU at PCI:40:0:0
+[    19.599] (EE) NVIDIA(GPU-0): Errors:
+[    19.599] (EE) NVIDIA(GPU-0):     - GPU PCI IDs do not match
+[    19.599] (WW) NVIDIA(GPU-0): Failed to find a valid Base Mosaic configuration for the
+[    19.599] (WW) NVIDIA(GPU-0):     NVIDIA graphics device PCI:15:0:0. Please see Chapter 28:
+[    19.599] (WW) NVIDIA(GPU-0):     Configuring SLI and Multi-GPU FrameRendering in the README
+[    19.599] (WW) NVIDIA(GPU-0):     for troubleshooting suggestions.
+</code></pre>
+
+<p>だいたい</p>
+
+<p>[    19.599] (EE) NVIDIA(GPU-0): GPUs:
+[    19.599] (EE) NVIDIA(GPU-0):     1) NVIDIA GPU at PCI:15:0:0
+[    19.599] (EE) NVIDIA(GPU-0):     2) NVIDIA GPU at PCI:40:0:0</p>
+
+<p>の意味がわからない。なぜならば</p>
+
+<pre><code>lspci | grep VGA
+0f:00.0 VGA compatible controller: NVIDIA Corporation GF106GL [Quadro 2000] (rev a1)
+28:00.0 VGA compatible controller: NVIDIA Corporation GM107 [GeForce GTX 750 Ti] (rev a2)
+</code></pre>
+
+<p>と食い違うし、かといって<code>0f:00:0</code>や<code>28:00:0</code>を指定するとXが起動しない。
+結局ずっとこのあたりでつまずくことになり、解決できなかった。</p>
+
+<p><a href="https://forum.manjaro.org/t/multi-monitors-on-two-nvidias/5732">Manjaroのフォーラム</a>でその苦労が見られたりする。</p>
+
+<p><ins datetime="2016-07-20T20:00:00+09:00"></ins></p>
+
+<p>結局どうもQuadroクラスのカード以外はそもそもNVIDIA Mosaic Technologyに対応しない、ということのようなのだが、MultiGPU</p>
+
+<p>&lt;/ins&gt;</p>
+
+<h3 id="暫定的な方法">暫定的な方法</h3>
+
+<p>Xineramaは使えない、という記述があるのだが、実際はそんなことはなかった。
+ただし、単にXineramaを使ってしまうと、同じスクリーンにあるディスプレイは1枚とみなされてしまう(つまり、2枚接続されているQuadro2000の部分は3840x1080の1枚のディスプレイということにされてしまう)。
+見づらい上に使いにくい。</p>
+
+<p>それぞれのディスプレイを違うスクリーンに割り当てれば大丈夫だが、</p>
+
+<ul>
+  <li>ものすごく遅い</li>
+  <li>とっても不安定</li>
+  <li>Conkyのウィジットが更新時に点滅する</li>
+  <li>randrによる設定ができない</li>
+</ul>
+
+<p>MultiGPUも使えないことだし、1枚でまかなえる3画面までの話であれば普通にGTX750Ti単独にしたほうがはるかに良いように思える。</p>
+
+<p><ins datetime="2016-07-20T20:00:00+09:00"></ins></p>
+
+<p>また、不安定の内容としてはChromium/Google Chromeなどが特にひどく、</p>
+
+<ul>
+  <li>ウィンドウ移動時にウィンドウハンドルと1画面以上ずれる</li>
+  <li>ウィンドウラベルをダブルクリックすると右に1画面程度ジャンプする</li>
+  <li>左側のディスプレイ(GTX750Ti上)に出すとブラックアウトしたりする</li>
+  <li>YouTube再生がしょっちゅう止まる</li>
+</ul>
+
+<p>といった問題が発生する。そのほかにもCinnamonが時々クラッシュしたりもする。
+Gtkのウィジットの描画が欠損したりもする。</p>
+
+<p>Chromiumのワークアラウンドとしては、「システムタイトルバーと枠線の使用」を音にすれば改善する。
+これはVivaldiでも同様である。</p>
+
+<p>&lt;/ins&gt;</p>
+
+<p><ins datetime="2016-07-22T18:00:00+09:00"></ins></p>
+
+<h3 id="問題の根幹">問題の根幹</h3>
+
+<p>Base Mosaicは対応するidentical(全く同一の) cardでなければならない、ということらしい。</p>
+
+<p>異なるカード間でBase Mosaicを構成することはできず、まだ、</p>
+
+<pre><code>PCI IDs do not match.
+</code></pre>
+
+<p>でいうIDとは、BusIDのことではなく、Product IDのことであるとのこと。</p>
+
+<p>また、MultiGPUも同様の制限がある(これは調べてもSLIに関することばかりで出てこない)とのこと。</p>
+
+<h3 id="結論">結論</h3>
+
+<ul>
+  <li>hp Z400でGeForce GTX750Tiは動作する</li>
+  <li>Quadro2000とGeForce GTX750Tiは同時に動作する</li>
+  <li>Windowsでは特になにもしなくても(ドライバーアップデートは必要だった)それぞれにつないだディスプレイが出る</li>
+  <li>Linuxの場合、解決方法はXinerama/Base Mosaic/SLI Mosaic</li>
+  <li>Base MosaicあるいはSLI Mosaicはidentical card(完全に同一のカード)でなければならない</li>
+  <li>Xineramaはnvidiaドライバーでサポート外とあるが、不安定ではあるものの動作する</li>
+  <li>現在最新のnvidia-settingsだと、Base Mosaicが組めない環境ではBase Mosaicの選択肢は出ない</li>
+  <li>画面数を増やしたいだけであればカードを増やすのは有効。処理性能は増えない</li>
+  <li>SLIする場合はSLIケーブル/ブリッジでカードを接続する必要がある</li>
+  <li>SLIであれMultiGPUであれ、複数カードによるアクセラレーションはidentical cardsである必要がある</li>
+  <li>ffmpegはプライマリであれセカンダリであれ、設定なしに性能の高いGTX750Tiをエンコードに使用した</li>
+  <li>OpenGLやエンコーディング性能でも、Quadro2000よりもGeForce GTX750Tiのほうがはるかに速い</li>
+</ul>
+
+<p>&lt;/ins&gt;</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

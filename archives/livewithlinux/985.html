@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-09-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-09-03T00:00:00+09:00" />
+    <title>ディスク故障でbtrfsの機能を使い倒す - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ディスク故障でbtrfsの機能を使い倒す</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#対応方法" id="markdown-toc-対応方法">対応方法</a></li>
+  <li><a href="#ディスク追加手順" id="markdown-toc-ディスク追加手順">ディスク追加手順</a></li>
+  <li><a href="#故障ディスクの除去と交換" id="markdown-toc-故障ディスクの除去と交換">故障ディスクの除去と交換</a></li>
+  <li><a href="#ファイルシステム新規作成" id="markdown-toc-ファイルシステム新規作成">ファイルシステム新規作成</a></li>
+  <li><a href="#バックアップのbtrfsファイルシステムからのリストア" id="markdown-toc-バックアップのbtrfsファイルシステムからのリストア">バックアップのbtrfsファイルシステムからのリストア</a></li>
+  <li><a href="#追加のクリティカルヒット" id="markdown-toc-追加のクリティカルヒット">追加のクリティカルヒット</a></li>
+</ul>
+
+<h3 id="対応方法">対応方法</h3>
+
+<p>ディスク容量が逼迫しているので何らかの対処が必要である。
+とりあえず考えられる方法としては</p>
+
+<ul>
+  <li>ディスクを大容量のものに交換する</li>
+  <li>USBあるいはeSATA接続のディスクを追加する</li>
+  <li>NASを追加してディスクを追加する</li>
+  <li>AoEを使って他ホストのディスクを追加する</li>
+  <li>内蔵ディスクを追加する</li>
+</ul>
+
+<p>のいずれかだ。そもそも取り扱うデータ量が多いため、削減ということは考えられない。
+もちろん、削減自体は行っているが、その精査にあてる時間のほうが重要で、無効な対策であると考えられる。それほど引き延ばすこともできない。</p>
+
+<p>大容量への交換は効果的だが、現在3TBを使用しており、4TBの場合は33%の容量増となり、不足である。
+6TB以上は高額すぎるため却下された。</p>
+
+<p>USB/eSATAを最も有力な候補としていたが、台数搭載するためには金額的にも高く、またいずれの製品も信頼性に劣るようだ。</p>
+
+<p>多数搭載のケースを使用するのであればReadyNASも有力な候補だった。ReadyNASはiSCSIに対応するが、「ReadyNASに搭載されているディスクを指定する」ことはできない。何台搭載しても、btrfs的に見れば1台にしかならないのだ。</p>
+
+<p>そのため、btrfsで管理するためにはReadyNASを複数台追加する必要がある。ReadyNAS全体でbtrfsから見て1台のディスクであり、ReadyNASの台数=ディスク台数になる。
+btrfsは不均等なRAID1をサポートするため、例えばReadyNASに12TBを搭載すれば12TB RAID1を構成することが可能だが、あまりうれしくはない状態になる。</p>
+
+<p>AoEを使うのは追加費用のかからない方法だ(ディスクとホストはあるため)。
+だが、問題はAoEを使う方法は常に</p>
+
+<ul>
+  <li>マウント前にターゲットホストを起動していなければならない</li>
+  <li>アンマウント前にターゲットホストを終了してはいけない</li>
+  <li>ネットワークを切断してはいけない</li>
+</ul>
+
+<p>と結構厳しい条件になる。
+ターゲットホストが消費電力が大きく、また冗長系システムであり、日常稼働しているものであることを考えるとこれは厳しい。</p>
+
+<p>そこで内蔵ディスク追加を選択した。</p>
+
+<p>Z400の3.5inchシャドウベイの数は2、SATAポート数は6である。
+現在、iStarUSAの5.25inchベイ*2を3.5inch HDD*3に変換するリムーバブルラックを使用してシステムSSDを含む計5台を搭載している。
+そのため、2台追加となると、マウント的にもSATAポート的にも足りない。</p>
+
+<p>採用した方法はエアリアのSATA*2 PCI-e 1xカードによりポートを2増設し、DVDドライブを除去してiStarUSAの5.25inch*3をHDD*5に変換するリムーバブルラックを搭載するというもの。</p>
+
+<p>かなり無茶だが、さらに無茶なのが、そもそもビデオカードがGeForce GTX750Tiに変更されているために、隣のPCI-e 4xが埋まってしまっており、逆側のPCI-e 4xは使用済みなので、PCI-e 16xに接続した、ということか。</p>
+
+<h3 id="ディスク追加手順">ディスク追加手順</h3>
+
+<p>ディスクの追加は、ディスクを装着した状態で</p>
+
+<pre><code># btrfs device add /dev/sdx /path/to/volume
+# btrfs device add /dev/sdy /path/to/volume
+# btrfs balance /path/to/volume
+</code></pre>
+
+<p>のようになる。
+balanceの所要時間は果てしなく、うちのケースでは40時間ほどかかった。</p>
+
+<p>そして、balanceがまもなく終わろうという頃に、もともとあったほうのディスクが壊れた。</p>
+
+<h3 id="故障ディスクの除去と交換">故障ディスクの除去と交換</h3>
+
+<p>故障ディスクが正常にアクセスできない状態にあるとき、btrfsファイルシステムへのアクセスはシステム全体を止めてしまう。
+この状態では<code>btrfs device delete</code>もできない。</p>
+
+<p>もしこれが可能な状態であればdeleteよりも新規ディスクも装着した状態でのreplaceのほうが早い。</p>
+
+<p>故障ディスクはオフラインの状態でまず除去してしまい、その上で新規ディスクに交換する。
+そして、新規ディスクに対して</p>
+
+<pre><code># btrfs device add /dev/sdx /path/to/volume
+</code></pre>
+
+<p>したあと、</p>
+
+<pre><code># btrfs device delete missing /path/to/volume
+</code></pre>
+
+<p>するとreplaceに近い挙動になる。</p>
+
+<p>しかし、実際にやるとシステムが死んでしまった。ログにがっつりRIPが残っていた。</p>
+
+<h3 id="ファイルシステム新規作成">ファイルシステム新規作成</h3>
+
+<p>もはや修復は不可能なので、ファイルシステムを再作成してバックアップから書き戻す。</p>
+
+<p>dm_crypt上に作成するのであれば、dmデバイスを用意したうえで</p>
+
+<pre><code>$ sudo mkfs.btrfs -L labelname -d raid1 -m raid1 /dev/mapper/crypt_dev_*
+</code></pre>
+
+<p>こうしてみると気づくのだが、btrfsのミラーリングはミラーレッグの指定ができない。
+ジャーナリングの強化版というコンセプトなので当然なのかもしれないが、結構不安。本物のRAID1がほしい人はLVMを使うほうが良さそう。LVM+Btrfsであれば、2台ずつ容量を揃える必要があるが、容量の異なるディスクを混在できる。</p>
+
+<h3 id="バックアップのbtrfsファイルシステムからのリストア">バックアップのbtrfsファイルシステムからのリストア</h3>
+
+<p>btrfsにはsend/receive機能があり、簡単にバックアップができる。</p>
+
+<p><code>btrfs send</code>は差分も可能でストリームで送られる。つまりファイルとして保存することもできる。
+この場合復元はcatによって行うことになるだろう。差分だとどうなるのかはわからない。</p>
+
+<p>recieveはsendによって出力されるストリームを元にファイルへと書き出す。</p>
+
+<p>ネットワーク越しのバックアップ手段として行う場合は、権限的な難しさがある。send/receiveはroot権限が必要なためだ。
+rsyncであればユーザー権限でのバックアップが可能だが、send/receiveを使う場合はそうはいかない。
+受け渡しをssh経由で行おうとすると、rootでのsshアクセスを許していなかったりして結構なネックになる。
+別に鍵を作れば良い話ではあるが。</p>
+
+<p>sudoを用いたコマンドラインで行うのであれば、socatを使用する方法がある。receive側は</p>
+
+<pre><code>$ socat tcp-listen:30000 | sudo btrfs receive /path/to/volume
+</code></pre>
+
+<p>send側は</p>
+
+<pre><code>$ sudo btrfs subvolume snapshot -r /path/to/volume /path/to/snapshot
+$ sudo btrfs send /path/to/snapshot | socat stdin tcp-connect:receiverhost:30000
+</code></pre>
+
+<p>経路安全性を問題にするのであれば、openssl-listenを使うか、ssh -Lを使うなどの方法がある。
+インターフェイスを限定できないのが問題なら、rubyワンライナーを使う方法や、もうひとつプログラムを増やし、ソケットで読んで書き込む仕様として、ssh経由でソケットに出力するプログラムを起動するという方法もある。</p>
+
+<p>例えば次のようなスクリプトである。</p>
+
+<pre><code>#!/usr/bin/zsh
+zmodload zsh/net/socket
+
+zsocket -l /tmp/btrfs-syncer
+sock=$REPLY
+while zsocket -a $sock
+do
+  (
+    btrfs receive /path/to/volume &lt;&amp;$REPLY
+  ) &amp;
+done
+</code></pre>
+
+<p>こちらはrootで実行する。対してsshで実行すべきは</p>
+
+<pre><code>#!/usr/bin/zsh
+zmodload zsh/net/socket
+zsocket /tmp/btrfs-syncer
+cat &gt;&amp;$REPLY
+exec {REPLY}&gt;&amp;-
+</code></pre>
+
+<p>あとは</p>
+
+<pre><code>$ sudo btrfs subvolume snapshot -r /path/to/volume /path/to/snapshot
+$ sudo btrfs send /path/to/snapshot | ssh receivinghost.locadomain btrfs-syncer-client
+</code></pre>
+
+<p>注意点として、例えば<code>subvol</code>というサブボリュームに書き戻したい場合、subvolというサブボリューム上にreceiveすると結構困ってしまう。
+その場合はそのペアレントボリュームにreceiveした上で(snapshotの名前になってしまうので)mvするのが正しい。</p>
+
+<p>なお、mvしてもreadonlyのままになるため、ロールバックするためには属性変更が必要。</p>
+
+<pre><code>$ sudo btrfs property set -ts subvol ro false
+</code></pre>
+
+<p><code>ro true</code>でreadonly。
+IDによるマウントを使っているのであれば、<code>set-default</code>。</p>
+
+<h3 id="追加のクリティカルヒット">追加のクリティカルヒット</h3>
+
+<p>しかし、またも<code>/dev/sdg</code>の大量エラーという結果になった。一見すると正常だが、ログを見ると1.77TiBの書き込みの間に71456もの<code>blk_update_request</code>が発行されている。</p>
+
+<p>2度続けてsdgだったため、ケーブル、ラック、ボードのいずれかが問題である可能性も考えられたため、ディスクを入れ替えて(<code>/dev/sdf</code>の位置にあるディスクと入れ替えた)試したところエラーはなく、ディスクの不良と断定。初期不良を申請し、翌日回答、翌々日到着となった(NTT-Xの対応は早い)。</p>
+
+<p>ちなみに、NTT-Xにディスクの初期不良対応を申請したところ、</p>
+
+<ul>
+  <li>メーカーに確認→メーカー回答を得て応答(交換or返金)→交換の回答を得て発送→到着時に集荷として引き渡し</li>
+</ul>
+
+<p>という手順だった。</p>
+
+<p>交換ディスクは</p>
+
+<pre><code># dd if=/dev/zero of=/dev/sdf bs=512M
+</code></pre>
+
+<p>として全域書き込みを行い、</p>
+
+<pre><code># journalctl --no-pager | grep -F blk_ | tail
+</code></pre>
+
+<p>として<code>blk_update_request</code>が発生していないことを確認した。</p>
+
+<p>そして前述の通り、新規ファイルシステム作成、マスターボリュームのマウント、socatと連動したsend/receive、リネーム、プロパティ変更と行い、エラーがないことを確認した。
+なぜか全域でデータ量が5.30TiBまで減少していた。</p>
+
+<p>しかしtopで、<code>kworker/3:2</code>及び<code>ksoftirqd/3</code>が張り付いたままになっている。
+kworkerはおそらくbtrfs絡みだろうし、ksoftirqdが固まっているということはディスク処理だろうから、しばらく待つことにする。特にkworkerはずっとS欄がR(Running)であり、明らかに忙しくしているので安全を考えて待つ。</p>
+
+<p>結局kworderがしずまらなかったので、syncしてunmountし、それが問題なくunmountされたことを確認してからreboot。</p>
+
+<p>エラーが何もないことを確認して、おそらくこれで完了。
+とてもとてもとても大変だった。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

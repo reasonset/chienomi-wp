@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-12-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-12-27T00:00:00+09:00" />
+    <title>Aukey CB-H15のテストとRealtek RTL8152/8153 Bawsed USB Ethernet Adaptorsバグ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Aukey CB-H15のテストとRealtek RTL8152/8153 Bawsed USB Ethernet Adaptorsバグ</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">この手のアイテムといえば</a></li>
+  <li><a href="#linuxrealtek-rtl81528153-bawsed-usb-ethernet-adaptors" id="markdown-toc-linuxrealtek-rtl81528153-bawsed-usb-ethernet-adaptors">Linux上でのRealtek RTL8152/8153 Bawsed USB Ethernet Adaptorsのバグ</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">品質テスト</a>    <ul>
+      <li><a href="#section-2" id="markdown-toc-section-2">筐体</a></li>
+      <li><a href="#section-3" id="markdown-toc-section-3">速度</a></li>
+    </ul>
+  </li>
+  <li><a href="#section-4" id="markdown-toc-section-4">製品評価</a></li>
+</ul>
+
+<h3 id="section">この手のアイテムといえば</h3>
+
+<p>Aukeyからご提供いただいたUSB3.0ハブ兼GbEアダプタのCB-H15のテストと、Live with Linuxのネタのセットになる。</p>
+
+<p>この手のデバイスは、あまり有名ではない。だが、重要性はましており、アイテムとしては増えている。
+最近のラップトップはEthernetポートがついていないものが増えている。消費電力が大きく、高さもあるポートを嫌うのはわからないではないが、wLANが好きでない人は結構いるのではないか。</p>
+
+<p>減ってしまったUSBポートを補い、Ethernetポートを復活させる、欠かせないアイテムが、このUSBハブ兼Ethernetアダプタだ。</p>
+
+<p>また、PCルーターを使用する人にとっても欠かせないアイテムでもある。
+消費電力が少なく騒音の小さいラップトップを使用する場合はUSBタイプでなければ難しいし、小型のサーバーを使う場合でもPCIeでの接続は結構難しい場合がある。
+安定して確実に使えるのが、USBイーサネットアダプタである。USBハブを兼用している必要はないのだが、兼用しているものならば汎用性が高い。</p>
+
+<p>実際に、USB2.0接続の100baseなアダプタを既に2つ持っている。
+インターネットの速度的に、ルーティング先がインターネットにつながるのであれば100baseでも問題ないのだが、LANのルーターとしては不十分である。
+USB3.0でGbEが使えるようになったのだから、それが利用可能であれば使いたいものだ。
+ちなみに、その100baseなアダプタを2つも持っているのは、セルフパワーでも動作するという点を買ってのこと。</p>
+
+<p>まだUSB3.0を使えるのが、バックアップ系になっているFM2+Killerしかないため、今のところはUSB3.0 GbEアダプタを導入してはいないが、この先導入する予定だったし、結構Amazonで探したりもしていた。</p>
+
+<p>日本だとメジャーどころが多いが、中国だと結構あるらしい。
+コストと品質を考えれば、やはり中国や台湾の当たりデバイスをひきたい…と考えるのは、まぁ好き者の性なのか。
+TODOに入っている状態で見た限りでは、そんな感じだ。</p>
+
+<p>そこにご提供いただけたため、渡りに船状態。
+しっかりとテストしていく。</p>
+
+<h3 id="linuxrealtek-rtl81528153-bawsed-usb-ethernet-adaptors">Linux上でのRealtek RTL8152/8153 Bawsed USB Ethernet Adaptorsのバグ</h3>
+
+<p>当然ながらLinux環境でのテストになる。
+Manjaro Linux(4.1.15-1-MANJARO)で使用すると、一発認識される…のだが、「ケーブルが接続されていません」となる。</p>
+
+<p>試していくと、リンクが100Mbpsならばケーブル接続を認めるのだが、1000MbpsだとNot Readyになってしまう。</p>
+
+<p>上手くいかなくて調べたところ、バグらしい。</p>
+
+<ul>
+  <li><a href="https://bbs.archlinux.org/viewtopic.php?id=193238">Arch Linuxで報告されている</a>。Manjaroユーザーからの声が多い</li>
+  <li><a href="https://bugzilla.redhat.com/show_bug.cgi?id=1236679">FedoraのBugzillaに記載あり</a>。USB BLACKLISTに入れろということらしい。</li>
+</ul>
+
+<p>こういう問題なら、多分Ubuntuでも同様だと思う。
+ここでUbuntu forumでなくArch forumが出てくるところに両者の差が…</p>
+
+<p>ともかく、TLPのUSB BLACKLISTとして<code>0bda:8152</code>を登録する。
+手順としては<code>/etc/default/tlp</code>に</p>
+
+<pre><code>USB_BLACKLIST="0bda:8152"
+</code></pre>
+
+<p>のように記述する。</p>
+
+<h3 id="section-1">品質テスト</h3>
+
+<h4 id="section-2">筐体</h4>
+
+<p>サイズは大きいが、軽い。
+10.1や12.1のラップトップと組み合わせて放り込むには大きい。15.1のラップトップならバッグに入る。</p>
+
+<p>プラスチックで安っぽいボディではあるが、それほど気にならない。</p>
+
+<p>注目すべき点として、USBポートは横向きのタイプで、かつオフセットされている。
+そして、オフセットされたポート側は角が角、反対側は丸められている。
+恐らくは、壁につけて設置することを想定しているのだろう。このために、USBデバイスを挿してもひっぱられてハブが倒れてしまいにくい。</p>
+
+<p>個別にLEDランプがあるのも嬉しい。携行よりは常設向きか。15.1くらいのラップトップを家で常用している人にベストか。</p>
+
+<h4 id="section-3">速度</h4>
+
+<p>iperf3で計測。</p>
+
+<pre><code>$ iperf3 -c mint.local
+Connecting to host mint.local, port 5201
+[  4] local 2001:c90:8481:3759:f21e:34ff:fe1f:a542 port 55861 connected to 2001:c90:8481:3759:3ed9:2bff:fe50:efed port 5201
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+[  4]   0.00-1.00   sec  97.1 MBytes   815 Mbits/sec    0    273 KBytes       
+[  4]   1.00-2.00   sec  95.7 MBytes   803 Mbits/sec    0    287 KBytes       
+[  4]   2.00-3.00   sec  96.3 MBytes   808 Mbits/sec    0    305 KBytes       
+[  4]   3.00-4.00   sec  96.5 MBytes   810 Mbits/sec    0    326 KBytes       
+[  4]   4.00-5.00   sec  96.4 MBytes   808 Mbits/sec    0    343 KBytes       
+[  4]   5.00-6.00   sec  96.5 MBytes   809 Mbits/sec    0    382 KBytes       
+[  4]   6.00-7.00   sec  95.9 MBytes   805 Mbits/sec    0    404 KBytes       
+[  4]   7.00-8.00   sec  95.9 MBytes   804 Mbits/sec    0    425 KBytes       
+[  4]   8.00-9.00   sec  96.1 MBytes   806 Mbits/sec    0    448 KBytes       
+[  4]   9.00-10.00  sec  97.5 MBytes   818 Mbits/sec    0    558 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec   964 MBytes   809 Mbits/sec    0             sender
+[  4]   0.00-10.00  sec   961 MBytes   806 Mbits/sec                  receiver
+
+iperf Done.
+</code></pre>
+
+<p>809Mbps/806Mbps。
+800Mbpsを越えているので及第点だろう。</p>
+
+<p>うちならば、</p>
+
+<ul>
+  <li>WAN/インターネット-&gt;OK</li>
+  <li>サイト間インターネット-&gt;OK</li>
+  <li>サイト内ネットワーク(AoE)-&gt;NG</li>
+</ul>
+
+<p>といったところで、AoEや業務ルーターなど高いスループットや信頼性がが要求されるシーンでは使えないが、インターネットでボトルネックになることはまず考えられないし、AoEやdistccなどの高スループットが要求される用途で使われない異サイト間を接続するルーターへの接続なら（家庭用途では）問題ないだろう。</p>
+
+<p>USBアダプターであることを考えれば（まして、USBハブと兼用）不満のない性能だ。</p>
+
+<p>ちなみに、オンボードのQualcomm Atheros Killer E20x Gigabit Ethernet Controller</p>
+
+<pre><code>$ iperf3 -c mint.local
+Connecting to host mint.local, port 5201
+[  4] local 2001:c90:8481:3759:be5f:f4ff:fefb:bb5 port 52309 connected to 2001:c90:8481:3759:3ed9:2bff:fe50:efed port 5201
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+[  4]   0.00-1.00   sec   110 MBytes   919 Mbits/sec    0   97.6 KBytes       
+[  4]   1.00-2.00   sec   110 MBytes   920 Mbits/sec    4    180 KBytes       
+[  4]   2.00-3.00   sec   110 MBytes   919 Mbits/sec    0    190 KBytes       
+[  4]   3.00-4.00   sec   110 MBytes   919 Mbits/sec    0    206 KBytes       
+[  4]   4.00-5.00   sec   110 MBytes   919 Mbits/sec    0    208 KBytes       
+[  4]   5.00-6.00   sec   110 MBytes   920 Mbits/sec    0    212 KBytes       
+[  4]   6.00-7.00   sec   110 MBytes   919 Mbits/sec    0    212 KBytes       
+[  4]   7.00-8.00   sec   110 MBytes   919 Mbits/sec    0    212 KBytes       
+[  4]   8.00-9.00   sec   110 MBytes   920 Mbits/sec    0    220 KBytes       
+[  4]   9.00-10.00  sec   110 MBytes   920 Mbits/sec    0    240 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  1.07 GBytes   919 Mbits/sec    4             sender
+[  4]   0.00-10.00  sec  1.07 GBytes   919 Mbits/sec                  receiver
+
+iperf Done.
+</code></pre>
+
+<p>さすがに速い。Killerイーサネットは遅いと言われているが、かなり速い。
+PCIeのほうが安定して速い、ということなんだろう。</p>
+
+<p>このような信頼性や速度を求めるのであれば、そもそもUSBでやらないだろう。</p>
+
+<h3 id="section-4">製品評価</h3>
+
+<p>最初に述べたように、この手のアイテムはラップトップユーザーなら必携だ。</p>
+
+<p>持ち歩きにはそれほど向いていない。大きいためだ。だが、大きな（余裕のある）バッグを常用する人であれば、軽量であるため携行は苦にならないだろう。
+要は軽量であるためでなく小さいためにモバイルラップトップを使う人なら携行には向かず、そうでなければ携行用にもなる。
+少なくとも、スーツケースを使うような出張においては携行するのに苦もないだろう。</p>
+
+<p>USB3.0の3口ハブとの組み合わせで、ラップトップなど端子が限られている中では現状ベストなアイテムだと思う。
+USB3.0ハブとして使用する場合はそちらに帯域が取られることになり、LANはフルスピードが出ない。その意味で、純粋なEthernetアダプターというよりは、インターフェイス拡張という考え方が適当だろう。
+その意味で、USB3.0 1ポートとUSB3.0の3口ハブとGbEという拡張は「マスト」なのだ。</p>
+
+<p>私はThinkpad e440をEthernetポートありきで選んでいるし、Pavilion x2-10を自宅で使うことは滅多にないので、基本的にラップトップでこのようなインターフェイス拡張を行うことがない（泊まりがけの作業などにおいてはe440を持ち出す）のだが、もしそうではない、Ethernetポートのないラップトップを使っていたとしたら、ましてデスクトップなしにメイン機として使っていたとしたなら、なくてはならなかっただろう。
+言ってみれば、ThinkPadのドックステーションのようなものだと言っていい。もちろん、携行はずっと容易だ。</p>
+
+<p>アイテムとしての価値はそうとして、ものはどうか。</p>
+
+<p>まず、LANチップは評価は色々あれど、信頼性の高い、一般的なチップであることはLinuxerとしては非常に嬉しい。
+私が使っている100baseのハブは、ドライバがちょっとbuggyで、CentOS6だと使えないなどの問題があった。
+結局、ドライバに関係するバグ(udevに関するバグだが）によってこれはこれでワークアラウンドが必要になったが、情報が多く解決は比較的簡単だった。
+これは結構重要なのだ。</p>
+
+<p>もちろん、USB3.0ハブとしての機能は申し分ない。
+USB3.0を増やさなければならないケースはあまり多くはないと思うが、ラップトップの端子数が2以下であるならば、キーボードやマウスを接続すると同時にフラッシュドライブを使用するようなケースは珍しくはないだろう。</p>
+
+<p>片面の角が角、もう片面は丸となっていることについては、なかなか心憎い発想だとは思うが、実際に活用する場面は限られそうだ。だが、実際に壁につけて使用する場合は収まりもよいはずだ。</p>
+
+<p>そして、USBポートがオフセットされているのは、実際にそのためにハブがこけないようになっている。これは、大きな魅力であり、選択時に比べるポイントの少ないこのようなアイテムにおいて選択する理由に十分なりうるだろう。</p>
+
+<p>デザインも良い。</p>
+
+<p>総合的に見れば、特にコンパクトさを重視しないのであればとても良い製品だ。
+linuxer目線でいえば、あまりこうしたアイテムで使われているチップが判別していて、動作報告があるものというのがないため、この情報だけでも十分使う価値はある。
+正直、800Mbpsは厳しいだろうと思っていたのでかなり嬉しかった。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

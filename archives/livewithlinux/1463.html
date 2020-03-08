@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-16T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-16T00:00:00+09:00" />
+    <title>imagine YOKOHAMAフォントを実用しよう - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>imagine YOKOHAMAフォントを実用しよう</h1></header>
+        <article id="MainArticle">
+<p>imagine YOKOHAMAフォントは横浜市が制作したヨコハマをイメージしたフォントだ。</p>
+<p><a href="http://www.city.yokohama.lg.jp/bunka/outline/brand/output02.html">ダウンロードは簡単だし</a>、使うのも特に問題はない。</p>
+<p>このフォントの特色は<em>「漢字は横浜市と18区の分しかない」</em>ということである。横浜市神奈川区は書けるが神奈川県横浜市は書けない闇フォントとも言われている。</p>
+<p>なかなか強烈だ。そして困る。 もちろん、イラストレーターなどで好きに組み合わせられる状態であればどうとでもなるので気にならないが、テキストフォントとして選択してしまうとimagine YOKOHAMAが持っている漢字と持っていない漢字の落差が激しい。</p>
+<p>よりにもよってごく少数漢字を持っている上に、その漢字がまたちょっと変わったデザインだったりするので組み合わせもなかなか厳しい。 漢字を持たないフォントよりもずっと厳しい。</p>
+<p>LinuxならばFontConfigがあるから任意のフォントを組み合わせることができる。 できるはできるのだが、それで解決しないのがこのフォントだ。「明朝体と組み合わせればいいんでしょ」と思うかもしれないが、だいたいどの明朝体と組み合わせても違和感激しい。</p>
+<p>Linuxで使えるフリーの明朝体はだいたい</p>
+<ul>
+<li>さざなみ明朝</li>
+<li>IPA明朝 / Takao明朝</li>
+<li>梅明朝 / 花園明朝</li>
+<li>Source Han Serif JP</li>
+<li>さわらび明朝</li>
+</ul>
+<p>あたり。あとは、こころ明朝体とかはんなり明朝体とかもあるけれど。</p>
+<p>こころ明朝体やはんなり明朝体を指定することはあまり進められない。 確かにある程度の漢字は持っているが、これらのフォントは持っていない字を空グリフにしてしまっているため、これらのフォントに含まれない字は空白として表示されてしまう。</p>
+<p>梅明朝に関してはかなりウェイトが細い。組み合わせたときの違和感は強い。</p>
+<p>IPA明朝は字形が近いため、違和感が少ない。 ただし、ウェイトが違うため漢字とそれ以外で馴染みが悪いことになる。</p>
+<p>Source Han Serif JPはそれなりに違和感がない。</p>
+<p>さわらび明朝はややウェイトが太く、その点では違和感があるが、字形は近い。</p>
+<p>というわけで私のお勧めは</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb1-1" data-line-number="1"> <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">   <span class="kw">&lt;string&gt;</span>imagine YOKOHAMA<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">  <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">  <span class="kw">&lt;edit</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">   <span class="kw">&lt;string&gt;</span>imagine YOKOHAMA<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">   <span class="kw">&lt;string&gt;</span>Source Han Serif JP<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">   <span class="kw">&lt;string&gt;</span>Sawarabi Mincho<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">   <span class="kw">&lt;string&gt;</span>IPAPMincho<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">  <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">  <span class="kw">&lt;edit</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="ot"> name=</span><span class="st">&quot;spacing&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">   <span class="kw">&lt;int&gt;</span>0<span class="kw">&lt;/int&gt;</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">  <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"> <span class="kw">&lt;/match&gt;</span></a></code></pre></div>
+<p>である。</p>
+<figure><a href="/wp-content/uploads/2018/07/imagine-yokohama-font-composite.png"><img src="/wp-content/uploads/2018/07/imagine-yokohama-font-composite.png" alt="" width="1046" height="1096" class="size-full wp-image-1465" /></a><figcaption> imagine YOKOHAMA フォントに源ノ角明朝を組み合わせた</figcaption></figure>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

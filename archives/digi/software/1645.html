@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-21T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-21T00:00:00+09:00" />
+    <title>H.264 vs H.265 vs VP8 vs VP9 vs AV1 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>H.264 vs H.265 vs VP8 vs VP9 vs AV1</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>実は先のビデオ関連の記事はMimir Yokohamaのほうにupしようかと思っていた。</p>
+<p>こっちにしてよかった…Mimir Yokohamaのフォーマットで書いてたら絶対地獄を見た…</p>
+<p>さて、先の記事の途中でAV1を試したが、実際AV1がどの程度使い物になるのか(いや、実際は強烈に遅いので全く使い物にならないのだが)試してみたくてちょっと検証してみた。</p>
+<p>ソースビデオはコントラスト差、動きともに激しく、部分的にはほとんど更新されないドラムマニアのプレイ動画を使用した。 10MbpsほどのH.264ビデオである。</p>
+<pre><code>  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf58.12.100
+  Duration: 00:00:04.79, start: 0.308970, bitrate: 9998 kb/s
+    Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, smpte170m/unknown/smpte170m), 1080x1920 [SAR 1:1 DAR 9:16], 9995 kb/s, 29.88 fps, 29.88 tbr, 15296 tbn, 59.75 tbc (default)
+    Metadata:
+      handler_name    : VideoHandler</code></pre>
+<p>libvpxはビットレートコントロールがうまくいかなかったことから、aomav1はそもそも変換できなかったことからこれらはrawvideoに変換し、それぞれ<code>vpxenc</code>, <code>aomenc</code>を使用して2パスで変換した。</p>
+<p>メインビットレートはH.264で荒れる512kを選択。 VP8はあまりに小さいビットレートコントロールが困難だったため、512kについては200kを指定したCBRとした。</p>
+<h2 id="比較">比較</h2>
+<h3 id="ソース動画">ソース動画</h3>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-base.png"><img src="/wp-content/uploads/2018/08/encodertest-base.png" alt="" width="600" height="400" class="size-full wp-image-1632" /></a><figcaption> Base H.264 @10Mbps</figcaption></figure>
+<p>ソースは10Mbpsということもあり、暗い中非常にキレイに撮れている。 なお、撮影機材はZenfone Selfie(ZD511KL)である。</p>
+<h3 id="h.264">H.264</h3>
+<pre><code>$ ffmepg -i base.mp4 -c:v libx264 -b:v 512k h264.mp4</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h264-512.png"><img src="/wp-content/uploads/2018/08/encodertest-h264-512.png" alt="" width="600" height="400" class="size-full wp-image-1633" /></a><figcaption> H.264 @502kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h264-768.png"><img src="/wp-content/uploads/2018/08/encodertest-h264-768.png" alt="" width="600" height="400" class="size-full wp-image-1634" /></a><figcaption> H.264 @733kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h264-1024.png"><img src="/wp-content/uploads/2018/08/encodertest-h264-1024.png" alt="" width="600" height="400" class="size-full wp-image-1635" /></a><figcaption> H.264 @971kbps</figcaption></figure>
+<p>そもそもH.264で荒れさせるのが基準だったため、512kでは動きのある部分は完全にブロックだし、パッド部分も相当粗い。</p>
+<p>ビットレートが上がると順当にスムーズになっていき、素直な特性のようだ。</p>
+<h3 id="h.265">H.265</h3>
+<pre><code>$ ffmepg -i base.mp4 -c:v libx265 -b:v 512k h265.mp4</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h265-512.png"><img src="/wp-content/uploads/2018/08/encodertest-h265-512.png" alt="" width="600" height="400" class="size-full wp-image-1636" /></a><figcaption> H.265 @474kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h265-768.png"><img src="/wp-content/uploads/2018/08/encodertest-h265-768.png" alt="" width="600" height="400" class="size-full wp-image-1637" /></a><figcaption> H.265 @716kbs</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h265-1024.png"><img src="/wp-content/uploads/2018/08/encodertest-h265-1024.png" alt="" width="600" height="400" class="size-full wp-image-1638" /></a><figcaption> H.265 @962kbps</figcaption></figure>
+<p>現状最も有力なH.265。 さすがというか、静止画にすると打点のスティックが消えてしまっていて、VP9のほうが良さそうなのだが、 全体でみれば安定していてキレイ。動画では画質がよく感じられる。</p>
+<p>全体的なざらつきがないので綺麗に見えるがこの静止画からわかるとおり動きの激しい部分でディティールがVP9よりも消えやすい。 ディティールにこだわる場合はビットレートに余裕を取るべきだと思うけれども、静止画に切り出す場合などはVP9のほうがうまくいく。</p>
+<p>ビットレートが上がったときにも順当によくなっている。 H.264よりひとまわりいいといった感じで、ビットレートが上がると差は縮まり、ビットレートが非常に低いときはがんばっている感じだ。</p>
+<h3 id="h.265-nvenc">H.265 (NVENC)</h3>
+<pre><code>$ ffmpeg -i base.mp4 -c:v hevc_nvenc -b:v 512k h265-nvenc.mp4</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-h265-nvenc.png"><img src="/wp-content/uploads/2018/08/encodertest-h265-nvenc.png" alt="" width="600" height="400" class="size-full wp-image-1644" /></a><figcaption> H.265 (NVENC) @552kbps</figcaption></figure>
+<p>NVENCは画質がよくないと言われているので、比較してみた。</p>
+<p>テクスチャが雑で、なんか「下塗りです」といった感じ。 成る程、VP9 QSVのようにあからさまに目立つわけではないのだが、ディティールを見てしまうとなかなか厳しい。 利用できる状況は限られそうだ。</p>
+<h3 id="vp8">VP8</h3>
+<pre><code>$ vpxenc --end-usage=cbr --bias-pct=0 --codec=vp8 --target-bitrate=200 --passes=2 -h 1920 -w 1080 -o vp8-cbr.webm raw.y4m</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-vp8-cbr.png"><img src="/wp-content/uploads/2018/08/encodertest-vp8-cbr.png" alt="" width="600" height="400" class="size-full wp-image-1639" /></a><figcaption> VP8 @586kbps</figcaption></figure>
+<p>普及しなかったし残念なことになったVP8。768kならがんばってくれるが、512kはどうがんばっても到達せず、このセッティングでもちょっと大きめの586k。</p>
+<p>画質は全体的にザラザラ。大きなブロックがないので静止画だとキレイっぽいけれど、常時こんな感じ(H.264なんかは部分的に、そしてちょいちょいブロック化してしまう感じである)なのでちょっとお話にならない。</p>
+<p>何より目立つのは「色がおかしい」ことだが。</p>
+<h3 id="vp9">VP9</h3>
+<pre><code>$ vpxenc --codec=vp9 --target-bitrate=512 --passes=2 -h 1920 -w 1080 -o vp9.webm raw.y4m </code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-vp9-512.png"><img src="/wp-content/uploads/2018/08/encodertest-vp9-512.png" alt="" width="600" height="400" class="size-full wp-image-1640" /></a><figcaption> VP9 @522kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-vp9-768.png"><img src="/wp-content/uploads/2018/08/encodertest-vp9-768.png" alt="" width="600" height="400" class="size-full wp-image-1641" /></a><figcaption> VP9 @771kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-vp9-1024.png"><img src="/wp-content/uploads/2018/08/encodertest-vp9-1024.png" alt="" width="600" height="400" class="size-full wp-image-1642" /></a><figcaption> VP9 @1020kbps</figcaption></figure>
+<p>VP9は結構優秀で、H.264よりは良いし、H.265とどちらが良いかというと好みの問題と言えるくらいには仕上がっている。 ディティールを見ると損なわれ感があるのでやや厳しいが、ビットレートにある程度余裕を持たせればH.264よりも良い。</p>
+<p>フリーコーデックに魅力を見ると感じるなら画質面ではアリだ。</p>
+<p>だが、いかんせん遅い。x265の1/10くらいの速度である。 速度優先にしないと10fpsも夢のまた夢。</p>
+<p>VP9もまともにマルチスレッドしないので、マルチスレッド化するだけでだいぶ実用になる気がするのだけど… (少なくともlibx265に負けない程度には)</p>
+<p>ビットレートが上がるとH.265より良いように見える。 1Mbpsは完全に及第点だろう。</p>
+<h3 id="vp9-qsv">VP9 (QSV)</h3>
+<pre><code>ffmpeg -init_hw_device vaapi=foo:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device foo -i invideo.mp4 -filter_hw_device foo -vf &#39;format=nv12|vaapi,hwupload&#39; -c:v h264_vaapi -b:v 512k -c:a copy outvideo.mp4</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-vp9-vaapi.png"><img src="/wp-content/uploads/2018/08/encodertest-vp9-vaapi.png" alt="" width="600" height="400" class="size-full wp-image-1643" /></a><figcaption> VP9 (QSV) @555kbps</figcaption></figure>
+<p>VP9を唯一実用する方法であるQSV。しかし、QSVのVP9は相当画質が悪い。 ビデオでの印象としてはVP8に近い。ちょっとこの品質ではよほど高ビットレートでない限り実用にならないという感じだ。 エンコードは100fpsほど出るのだが…</p>
+<h3 id="av1">AV1</h3>
+<p>AV1はデフォルト設定では到底終わらないほどの時間がかかったため、次のようにした。</p>
+<pre><code>% aomenc --codec=av1 -t 40 --cpu-used=8 --target-bitrate=512 --passes=2 -h 1920 -w 1080 -o av1.mkv raw.y4m
+Pass 1/2 frame  142/143    27456B    1546b/f   46186b/s   19657 ms (7.22 fps)
+Pass 2/2 frame  142/142   298568B   16820b/f  502497b/s 2741931 ms (0.05 fps)</code></pre>
+<p>なお、どちらもスレッド数を指定しているが、AV1は完全にシングルスレッドで動作していた。</p>
+<figure><a href="/wp-content/uploads/2018/08/encodertest-av1.png"><img src="/wp-content/uploads/2018/08/encodertest-av1.png" alt="" width="600" height="400" class="size-full wp-image-1629" /></a><figcaption> AV1 508kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-av1-768.png"><img src="/wp-content/uploads/2018/08/encodertest-av1-768.png" alt="" width="600" height="400" class="size-full wp-image-1630" /></a><figcaption> AV1 @774kbps</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/encodertest-av1-1024.png"><img src="/wp-content/uploads/2018/08/encodertest-av1-1024.png" alt="" width="600" height="400" class="size-full wp-image-1631" /></a><figcaption> AV1 @1032kbps</figcaption></figure>
+<p>H.265よりもディティールが消え、のっぺりしている。 VP9とはほとんど見分けがつかないが、よく見ればなんとVP9のほうが良い。 VP9(512k)に対してAV1(512k)は</p>
+<ul>
+<li>シャツの前のほうのシワが消滅</li>
+<li>打点部分のスティックが巨大なブロックによって消滅</li>
+<li>シャツはのっぺりしてしまっている</li>
+</ul>
+<p>と残念な結果に。</p>
+<p>ビットレートがあがってもあまり改善していない。 速度優先の<code>--cpu-used</code>のせいかもしれないがVP9の10倍は時間をかけた意味はどこへ…</p>
+<ins datetime="2018-08-22">
+<div id="AddingPart1">
+<h2 id="追記-vp9av1-のマルチスレッド処理">追記: VP9/AV1 のマルチスレッド処理</h2>
+<h3 id="テスト">テスト</h3>
+<p>コメントにてyusukeさんから</p>
+<blockquote>
+<p>AV1がシングルスレッドでしか動かないのは–tile-columnsと–tile-rowsを指定していないからではないでしょうか</p>
+</blockquote>
+<p>と情報頂いたので試してみた。</p>
+<pre><code>% aomenc --codec=av1 --cpu-used=8 --target-bitrate=512 --threads=16 --tile-columns=2 --tile-rows=2 --passes=2 -h 1920 -w 1080 -o av1-512-pararell.mkv raw.y4m</code></pre>
+<p>この場合、シングルスレッドで動作した。</p>
+<pre><code>% aomenc --codec=av1 --cpu-used=8 --target-bitrate=512 --threads=16 --tile-columns=6 --frame-parallel=1 --passes=2 -h 1920 -w 1080 -o av1-512-pararell.mkv raw.y4m</code></pre>
+<p><code>--tile-rows</code>をやめて、デコード用オプションである<code>--frame-parallel</code>を有効にしたところ、 マルチスレッドで動作した。 ただし、大部分はシングルスレッドで、ときどき6から10スレッド程度で動作するような挙動。</p>
+<p>結果は</p>
+<pre><code>Pass 1/2 frame  142/143    27456B    1546b/f   46186b/s   19934 ms (7.12 fps)
+Pass 2/2 frame  142/142   303279B   17086b/f  510444b/s 1562704 ms (0.09 fps)
+aomenc --codec=av1 --cpu-used=8 --target-bitrate=512 --threads=16   --passes=  3502.70s user 67.02s system 224% cpu 26:29.29 total</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/cpuusage-multithread-av1-8.png"><img src="/wp-content/uploads/2018/08/cpuusage-multithread-av1-8.png" alt="" width="1920" height="1024" class="size-full wp-image-1662" /></a><figcaption> マルチスレッドAV1 CPU利用率 (cpu-used=8)</figcaption></figure>
+<p>CPUは200%越えてるけれど、速度的には2倍にはなっていない程度。</p>
+<p>そして次の場合</p>
+<pre><code>% aomenc -w 1080 -h 1920 --tile-columns=6 --limit=48 -t 24 -b 8 --input-bit-depth=8 --end-usage=vbr --target-bitrate=512 -p 1 --webm --num-tile-groups=32 -o av1-512-parallel2.webm raw.y4m
+Pass 1/1 frame  142/142   290129B   16345b/f  488306b/s 7850851 ms (0.02 fps)
+aomenc -w 1080 -h 1920 --tile-columns=6 -t 24 -b 8 --input-bit-depth=8   -p 1  38460.66s user 114.83s system 491% cpu 2:10:55.73 total</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/cpuusage-multithread-av1-1.png"><img src="/wp-content/uploads/2018/08/cpuusage-multithread-av1-1.png" alt="" width="1920" height="1024" class="size-full wp-image-1665" /></a><figcaption> マルチスレッドAV1 CPU利用率 (cpu-used=1)</figcaption></figure>
+<p>ずっと激しく使われているのでなかなか効率はよさそう。 この違いは<code>--cpu-used</code>にあるようだった。</p>
+<p><code>--cpu-used=4</code>の場合:</p>
+<pre><code>Pass 1/1 frame  142/142   295824B   16666b/f  497896b/s 1581372 ms (0.09 fps)
+aomenc -w 1080 -h 1920 --cpu-used=$i --tile-columns=6 -t 24 -b 8    -p 1   -o  4379.28s user 54.32s system 279% cpu 26:26.07 total</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/cpuusage-multithread-av1-4.png"><img src="/wp-content/uploads/2018/08/cpuusage-multithread-av1-4.png" alt="" width="1920" height="1024" class="size-full wp-image-1664" /></a><figcaption> マルチスレッドAV1 CPU利用率 (cpu-used=4)</figcaption></figure>
+<p><code>--cpu-used=8</code>より少し多めに動いている。</p>
+<p><code>--cpu-used=2</code>:</p>
+<pre><code>Pass 1/1 frame  142/142   297030B   16734b/f  499928b/s 3251395 ms (0.04 fps)
+aomenc -w 1080 -h 1920 --cpu-used=$i --tile-columns=6 -t 24 -b 8    -p 1   -o  10423.02s user 70.17s system 322% cpu 54:16.15 total</code></pre>
+<figure><a href="/wp-content/uploads/2018/08/cpuusage-multithread-av1-2.png"><img src="/wp-content/uploads/2018/08/cpuusage-multithread-av1-2.png" alt="" width="1920" height="1024" class="size-full wp-image-1663" /></a><figcaption> マルチスレッドAV1 CPU利用率 (cpu-used=2)</figcaption></figure>
+<p>結構動くようになった。</p>
+<p>では待望の画質はというと</p>
+<figure><a href="/wp-content/uploads/2018/08/av1-512-parallel-used1.png"><img src="/wp-content/uploads/2018/08/av1-512-parallel-used1.png" alt="" width="600" height="400" class="size-full wp-image-1657" /></a><figcaption> AV1 並列 cpu-used=1</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/av1-512-parallel-used2.png"><img src="/wp-content/uploads/2018/08/av1-512-parallel-used2.png" alt="" width="600" height="400" class="size-full wp-image-1658" /></a><figcaption> AV1 並列 cpu-used=2</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/av1-512-parallel-used4.png"><img src="/wp-content/uploads/2018/08/av1-512-parallel-used4.png" alt="" width="600" height="400" class="size-full wp-image-1659" /></a><figcaption> AV1 並列 cpu-used=4</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/08/av1-512-parallel-used8.png"><img src="/wp-content/uploads/2018/08/av1-512-parallel-used8.png" alt="" width="600" height="400" class="size-full wp-image-1660" /></a><figcaption> AV1 並列 cpu-used=8</figcaption></figure>
+<p>結構差は大きい。 cpu-used=8のAV1よりはcpu-used=1のVP9のほうが綺麗だけども、4だとディティールは潰れているけれどざらつきが減るため好みで済ませられるように思える。cpu-used=4より上であればH.265に対するアドバンテージは認められる。 のっぺりしているのはAV1のキャラクターのようだが、ノイズが消えるため感覚的には綺麗に見える。再変換したときに情報の欠落が気になりそうだが。</p>
+<p>おまけ。同じセッティングでVP9を作ってみる(<code>vpxenc</code>と<code>aomenc</code>はだいたいコマンド互換性がある)。 <code>--num-tile-groups</code>は使えないので外し、<code>--codec=vp9</code>を追加する。</p>
+<pre><code>% vpxenc --codec=vp9 -w 1080 -h 1920 --cpu-used=8 --tile-columns=6 -t 24 -b 8 --input-bit-depth=8 --end-usage=vbr --target-bitrate=512 -p 1 --webm -o vp9-parallel.webm raw.y4m
+Pass 1/1 frame  142/118   242873B 5835948 us 24.33 fps [ETA  0:00:01]    1125F   1298F  11937F    943F    792F    849F   1104F   1271F   1022F   1030F  24348F   1382F   1316F   1264F   2220F   1162F   1152F   1072F   1084F   1386F  13097FPass 1/1 frame  142/142   316309B   17820b/f  532379b/s 6950835 us (20.43 fps)
+vpxenc --codec=vp9 -w 1080 -h 1920 --cpu-used=8 --tile-columns=6 -t 24 -b 8    16.91s user 0.73s system 235% cpu 7.478 total</code></pre>
+<p>おぉぉ、速いぞ!!! 実用になるぞ!!!よくみたらちょこっとだけ粗いけれど、全然いけるいける。</p>
+<figure><a href="/wp-content/uploads/2018/08/vp9-parallel.png"><img src="/wp-content/uploads/2018/08/vp9-parallel.png" alt="" width="600" height="400" class="size-full wp-image-1661" /></a><figcaption> VP9 並列 cpu-used=8</figcaption></figure>
+<p>ただ、<code>--cpu-used</code>しないとさすがに厳しい。</p>
+<pre><code>% vpxenc --codec=vp9 -w 1080 -h 1920 --tile-columns=6 -t 24 -b 8 --input-bit-depth=8 --end-usage=vbr --target-bitrate=512 -p 1 --webm -o vp9-parallel-used1.webm raw.y4m     :(
+Pass 1/1 frame  142/118   242579B   50719 ms 2.80 fps [ETA  0:00:10]    1121F   1252F  11933F    982F    752F    916F   1059F   1293F    973F   1027F  21951F   1641F   1210F   1324F   2162F   1095F   1044F   1052F   1099F   1382F  13774F Pass 1/1 frame  142/142   314260B   17704b/f  528930b/s   60777 ms (2.34 fps)
+vpxenc --codec=vp9 -w 1080 -h 1920 --tile-columns=6 -t 24 -b 8    -p 1 --webm  143.78s user 1.13s system 236% cpu 1:01.31 total</code></pre>
+<h3 id="所感">所感</h3>
+<p>これをテストした上での感想としては</p>
+<ul>
+<li><code>--cpu-used=1</code> はとても遅い。VP9でもかなり厳しい</li>
+<li><code>--cpu-used=8</code> はあまり効果がなく、 <code>--cpu-used=4</code> が軽量設定としてはよさそう</li>
+<li>確かに画質は良いが<code>--cpu-used=8</code>だと悪い。<code>--cpu-used=1</code>でx265並の速度が出れば革命的だけども…</li>
+<li>マルチスレッドはVP9よりはAV1で改善されている</li>
+<li>しかしAV1であっても対してCPUを活用できておらず、いまいちと言われているx265のほうがよっぽど計算リソースを有効活用する</li>
+<li>だいたい活用できているのは8スレッドあたり。クロスしている部分を考慮しても12スレッド</li>
+<li>AV1はいくらスレッド数を多く指定しても現実的な速度にならない。4114が遅いとしてもCOre i7であってもコアあたり8倍は速くないので、10FPSには到達しない感じ</li>
+<li>スレッド数を増やしてもせいぜい2倍程度しか速くならないため、スレッド数よりも<code>--cpu-used</code>のほうが影響が大きい</li>
+<li>VP9の<code>--cpu-used=4</code>は速度的にも(うちでは30FPS出ないが)使えるが、H.265(libx265)との差は開いてしまい、よほど強い動機がないと厳しい (<code>--cpu-used=2</code>でも結構粗い)</li>
+<li>AV1がハードウェア支援されたら使えるかというと、現状QSVのVP9がひどいという言葉では片付けられないくらいひどいので、全く期待できない</li>
+</ul>
+<p>基本的には「向上するソース画質に対して可能な限り損なわないようにする」には「ソースサイズが大きくなったとき(あるいは画質が向上したときに)に同等ビットレートでソースの改善を反映できるように」動画コーデックは進化しているのであり、つまり情報の少ないソースであれば結果的により小さなサイズに圧縮できる、ということを反映意味する。</p>
+<p>そのことを踏まえれば、「画質とサイズを妥協すれば新しいコーデックでも実用できる」というのは完全に本末転倒であり、全く価値がない。これは速度的にVP9の最高画質とAV1の最低画質が同ビットレートで逆転し、かつVP9のほうが速い、というのはまさにそれだ。</p>
+<p>確かにAV1の画質は魅力的だが、それはあまりにも現実的ではないリソースをつぎ込めばという話である。 それをいくらか緩和しようとした時点でAV1の画質というメリットは損なわれてしまい、VP9のほうがまだマシという結果になる。</p>
+<p>もちろん、一般で使われることは最初から投げ捨てて、配信者向けに作っているのでありユーザーには関係ない、というのであればわからなくはないが、現状のAV1はそれこそGoogleクラスでなければ実用できないようなものであり、ユーザーはデコードすらままならない。 そうすると単に「特殊で扱いにくいもの」になってしまい、そのようなものがどんな経過をたどり今残っていないのかということを完全に忘れ去ってしまっているように思う。</p>
+<p>現状は、一般ユーザーにとってVP9であれAV1であれ利用を考慮する価値のないものであり、 フリーであることの価値を理解するのであればVP9は考えられるがAV1は存在自体忘れていても構わない。</p>
+<p>ユーザーが使うならばH.265(あるいはH.264)が良い。 (特許問題など気持ち悪いとは思うが…)</p>
+<p>画質、処理速度、コスト、処理の安定性などH.265(x265)の何が好まれていて、何を達成しなければならないのか、優位性を口にするくらいなら真剣に考えて欲しいと思う。</p>
+</div>
+</ins>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

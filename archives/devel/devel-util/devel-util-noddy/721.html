@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-09-09T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-09-09T00:00:00+09:00" />
+    <title>Markdownで書かれたスライドをHTMLとポータブルPDFと印刷用PDFにする - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Markdownで書かれたスライドをHTMLとポータブルPDFと印刷用PDFにする</h1></header>
+        <article id="MainArticle">
+<p>Aki SI&amp;EのPR用に書いたものだが、Markdownで書き、Web(HTML)、配布用PDF、印刷用PDFの3種類を生成する考えでいた。</p>
+
+<p>手でやろうかと思っていたのだが、再生成の回数も多そうだったので、自動化できるようにした。</p>
+
+<p>Markdownで記述したドキュメントと、オリジナルサイズの画像ディレクトリ、<code>mogrify -geometry x300</code>でリサイズした画像ディレクトリが用意されている。
+Web用のものについてはHTMLで出力し、リサイズされた画像のWebサーバー上のコピーを参照しなければならない。</p>
+
+<p>PDFについては、MarkdownをLaTeXに変換してという方法もあるにはあったが、画像を含めた細かなデザインを施したかったため、HTMLをベースにPDFに変換することにした。</p>
+
+<p>MarkdownコンバータはRubyのKramdownを使用。改ページはないため、<code>wkhtmltopdf</code>を用いてPDFに変換することとした。
+参照しているディレクトリの違いで2回ループを回す。</p>
+
+<p>それぞれHTMLは別に出力し、テンポラリファイルとして出力したHTMLを元にPDFのテンポラリファイルを生成、<code>unitepdf</code>を使ってこれを結合する。</p>
+
+<p>専用のコードなので多くをハードコーディングしているが、これで正常に機能する。</p>
+
+<pre><code>#!/usr/bin/ruby
+# -*- mode: ruby; coding: UTF-8 -*-
+
+require 'kramdown'
+require 'erb'
+
+def treat_md(file, findex)
+  $article_body = doc = Kramdown::Document.new(File.read(file)).to_html
+  
+  $article_title = doc[/&lt;h1[^&gt;]*&gt;(.*?)&lt;\/h1&gt;/, 1]
+  
+  foot = Array.new
+  if findex &gt; 0
+    foot &lt;&lt; '&lt;a href="' + ( SOURCEFILES[findex - 1].sub(/\.md$/, '')  + ".html" ) + '"&gt;前へ&lt;/a&gt;'
+  end
+  
+  foot &lt;&lt; '&lt;a href="/si/" target="_top"&gt;Aki SI&amp;Eトップページへ&lt;/a&gt;'
+  
+  if findex &lt; ( SOURCEFILES.length - 1 )
+    foot &lt;&lt; '&lt;a href="' + ( SOURCEFILES[findex + 1].sub(/\.md$/, '')  + ".html" ) + '"&gt;次へ&lt;/a&gt;'
+  end
+  
+  $article_footer = foot.join
+end
+
+
+TEMPLATE = &lt;&lt;'END'
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" http://www.w3.org/TR/xhtml1/dtd/xhtml1-transitional.dtd"&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;&lt;%= $article_title %&gt;&lt;/title&gt;
+    &lt;meta http-equiv="content-language" content="ja" /&gt;
+    &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
+    &lt;style&gt;
+body {
+% case $mode
+% when :Web
+  font-size: 130%;
+  color: #333;
+  font-weight: bold;
+  margin: 0px;
+  padding: 0px;
+% else
+  font-size: 18pt;
+  color: #000;
+  font-weight: bold;
+  margin: 2cm auto;
+  padding: auto;
+% end
+  background-color: #fff;
+  font-family: "Migu 1C"
+}   
+
+h3 {
+  font-size: 135%;
+}
+
+#Container {
+  margin: auto auto 100px;
+  max-width: 950px;
+  text-align: center;
+}
+
+img {
+% case $mode
+% when :Web
+  height: 300px;
+% else
+  height: 18em;
+  max-width: 100%;
+% end
+}
+
+ul {
+  text-align: left;
+  margin: auto 1.8em;
+}
+
+
+#ArticleFooter {
+% if $mode != :Web
+  display:none;
+% end
+  position: fixed;
+  bottom: 0px;
+  margin: 0px;
+  width: 100%;
+  max-height: 100px;
+  background-color: #339;
+  color: #fff;
+  text-align: center;
+}
+
+#ArticleFooter a {
+  padding: 0 0.8em;
+  text-decoration: none;
+  color: #fff
+}
+
+#ArticleFooter a:hover {
+  text-decoration: underline;
+}
+    &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="Container"&gt;
+    &lt;%= $article_body.gsub(
+      %r{src="img/},
+      %(src="#{$img_type}_img/)
+    ) 
+    %&gt;
+  &lt;/div&gt;
+    &lt;div id="ArticleFooter"&gt;
+      &lt;%= $article_footer %&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+END
+
+$article_body = nil
+$article_footer = nil
+$article_title = nil
+
+SOURCEFILES = Dir.entries(".").select {|i| i =~ /\.md$/ }.sort
+
+# HTML
+$img_type = "/img/si/intro_slideshow/resized"
+$mode = :Web
+
+SOURCEFILES.each_with_index do |x, i|
+  begin
+  treat_md(x, i)
+  File.open("out/#{x.sub(".md", ".html")}", "w") do |f|
+    f.puts(ERB.new(TEMPLATE, nil, "%&lt;").result)
+  end
+  ensure
+    $article_body = nil
+    $article_footer = nil
+    $article_title = nil
+  end
+end
+
+# Web PDF
+$img_type = "resized"
+$mode = :PDF
+
+SOURCEFILES.each_with_index do |x, i|
+  begin
+  treat_md(x, i)
+  fn = "out/_tmp_#{x.sub(".md", ".html")}"
+    File.open(fn, "w") do |f|
+      f.puts(ERB.new(TEMPLATE, nil, "%&lt;").result)
+    end
+  system('wkhtmltopdf "%s" "%s"' % [ fn, fn.gsub(".html", ".pdf") ])
+  ensure
+    $article_body = nil
+    $article_footer = nil
+    $article_title = nil
+  end
+end
+
+system 'pdfunite out/_tmp_*.pdf out/portable.pdf'
+system 'rm out/_tmp_*'
+
+# Printable
+$img_type = "original"
+$mode = :PDF
+
+SOURCEFILES.each_with_index do |x, i|
+  begin
+  treat_md(x, i)
+  fn = "out/_tmp_#{x.sub(".md", ".html")}"
+    File.open(fn, "w") do |f|
+      f.puts(ERB.new(TEMPLATE, nil, "%&lt;").result)
+    end
+  system('wkhtmltopdf "%s" "%s"' % [ fn, fn.gsub(".html", ".pdf") ])
+  ensure
+    $article_body = nil
+    $article_footer = nil
+    $article_title = nil
+  end
+end
+
+system 'pdfunite out/_tmp_*.pdf out/printable.pdf'
+system 'rm out/_tmp_*'
+</code></pre>
+
+<p>完成したものについては</p>
+
+<ul>
+  <li><a href="http://reasonset.net/si/introductions/01.html">ウェブ版</a></li>
+  <li><a href="https://drive.google.com/open?id=0B8qOYFKDmnHwelFJNEFkVElYUmc">Google PDF版</a></li>
+</ul>
+
+<p>Google DOCs Viewerはスライドショー向きではないので、ウェブ版を使うか、PDFをダウンロードするのがお勧め。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

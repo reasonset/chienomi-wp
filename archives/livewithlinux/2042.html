@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-07-09T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-07-09T00:00:00+09:00" />
+    <title>Inflatonにおけるサーバープロビジョニングのおはなし - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Inflatonにおけるサーバープロビジョニングのおはなし</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>Inflatonにおけるサーバープロビジョニングに関する質問があったので、記事にしようと思う。</p>
+<p>基本的にはこの部分は、私の(=Inflatonの)基本的方針を踏襲したものになっている。 つまり、</p>
+<ul>
+<li>一般的である、あるいは流行であるということにはとらわれず</li>
+<li>Unixの流儀に従い</li>
+<li>堅牢で確実なツールと手法で</li>
+<li>全ての理解が容易であるように</li>
+</ul>
+<p>している。</p>
+<h2 id="前提">前提</h2>
+<p>Inflatonにおいては、一般的ではない前提が成り立っている。</p>
+<p>まず、「私が前提になっているということ」である。</p>
+<p>つまり、私に属人化することは基本的に問題視されない。 それよりも私の能力が発揮できることが優先されるのでやり方は好きに選べる。</p>
+<p>もうひとつは、会社自体が少数精鋭になっているということだ。</p>
+<p>これを前提に一般的な手法を避けたりもしていて、「IT業界の人間」が直ちに即戦力になるような状況にない。 戦力になるまで、1年くらいは育てて使う方針になっている。</p>
+<p>その間賃金が低いとしても、300万円くらいは利益を出さない人のために使うということである。 しかも、まっさらな状態から1年でちゃんとやれるようになるとしたら、つきっきりで教えなくてはならない。 私だとえらいことになってしまうし、全てを教えられるレベルのエンジニアだと年俸600万円は下らないだろう。</p>
+<p>これは「1人増えるのが一大イベント」であるからこそできることで、新卒採用があるような会社ではここまでの方法はとれない。</p>
+<p>ここまでの前提を以て、他とは違うInflaton styleを可能にしている。</p>
+<h2 id="正しい方法">正しい方法</h2>
+<p>ConoHaの場合、「スタートアップスクリプト」という機能があり、サーバー構成時にスクリプトを実行させることができる。 cloud-config形式とシェルスクリプト形式をサポートしているという。</p>
+<p>ConoHaに限らなければ、Chefなどのツールを使うのが一般的である。</p>
+<p>もちろん、これらの方法はInflatonでは採用していない。</p>
+<h2 id="我々の方法">我々の方法</h2>
+<p>基本的に</p>
+<ul>
+<li>ドキュメントを書く</li>
+<li>シェルスクリプトを書く</li>
+</ul>
+<p>の2点である。</p>
+<p>ドキュメントは手順書と言っていいのかはわからないが、基本的に最低限コマンドが打てればこれだけ読んで構築できるレベルの内容になっている。 開発も実務も忙しいのに事業かけもちでドキュメントもちゃんと書いていることについては是非とも褒めまくっていただきたい。</p>
+<p>シェルスクリプトのほうは、より正確に表現するならZshバッチになっている。 正直なところ、ドキュメントを読むよりもこちらを読むほうがわかりやすいだろう。</p>
+<p>何のために、といったことに関しては、そのサービスを構成するものに関する、内部向け外部向けのドキュメントが存在するため、それを見れば確認できる。</p>
+<p>それぞれちゃんとした理由がある。</p>
+<p>まず、ドキュメントが揃っている最大の理由は、しばらく触ってないソフトウェアやサービスに関して、私が覚えていられないことと、説明する時間が割けないことだ。</p>
+<p>弊社取締役はMimir Yokohamaの生徒さんでもあり、私が書くレベルのドキュメントがあればだいたいは理解できる。 このため、ちゃんとドキュメントがあるだけでも私の負担は確実に減る。そして、ドキュメントがなければ私は開発に戻ってくるのが大変になる。</p>
+<p>そして、システム構成に関してはあまり固定化されていない。そもそもコンポーネントの変更をしやすいように設計してあり、サーバー面での変更というのは相当カジュアルに行われている。</p>
+<p>もちろん、理由は私が管理しているからであるが、もうひとつの理由としてArch Linuxだからというのもある。 Arch Linuxは普通にバージョンも上がれば、役割を担うソフトウェアが変更されることもある。だから、構築から運用を固定化したところで、固定化したものが自動的に通用しなくなって困るだけなのだ。</p>
+<p>ドキュメントに関しては単純に都度アップデートしている形だが、実はシェルスクリプトとドキュメントの2段構成にしている大きな理由として、「サーバー構築手順が次のサーバーで成立する可能性はかなり低い」というのがある。 一番躓くのがパッケージ名の変更である。Archは非常にカジュアルにパッケージ名を変更するので、インストールするパッケージ名の指定がコケる原因になる場合が多い。 加えていえば、サーバーソフトウェアの設定ファイルの項目も、意外と頻繁に変わる。</p>
+<p>そこで</p>
+<ol type="1">
+<li>ドキュメントで手順を確認</li>
+<li>そのパートのバッチスクリプトを実行、あるいはドキュメント記載のコマンドをコピペしながら実行</li>
+<li>躓いた場合は原因を確認し、ドキュメントとスクリプトをアップデート</li>
+</ol>
+<p>という形でstep by stepで進めていくと構築できるようになっている。 Inflatonとしてはサーバーを増やすのは年に数えるほどでしかないため、完全自動化するのはメリットよりデメリットのほうが大きい。</p>
+<p>サーバーインスタンス増加による増強よりは、新しいことをやるために構成の異なるサーバーを立てる頻度のほうが高い。 だから作業においてコアになることが確定している部分…例えば<code>zsh</code>, <code>grml-zsh-config</code>, <code>zsh-theme-powerlevel9k</code>, <code>screen</code>のインストールと、<code>/etc/zshrc.local</code>の設定などはそれでひとつのスクリプトにまとめられている。 なので、このスクリプトは使い回しが効く。</p>
+<p>Inflatonでサーバーを立てるということは、最近始まったばかりなので稀な話だが、「システムの構築」そのものは数え切れないくらいやっている。 今でも何らかの理由でシステムを作ることは年に10回くらいはあるし、15年とか前だと週イチなんてペースだったので、知識と経験があるし、効率化も進んでいる。 結局のところ「最適解を追い求めている以上、ゴージャスな方法で固定するよりは変更しやすい方法のほうがいい」というのが教訓なのだ。</p>
+<p>ここには私の信念、及び流儀も絡む。 私は「完璧たりうる」と思っているし、かつ「完璧と動的である」と思っている。だからこそ、「完璧を追い求めることにこそ意味がある」と信じている。 そのためには「動いた状態」で固定することには意味がないし、「動的な最善」であるArch Linuxなのである。</p>
+<p>一例としては、現在Plutoのサーバーではsshd_config(5)の<code>Ciphers</code>は</p>
+<pre><code>Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com</code></pre>
+<p>である。この設定の主たるところは<code>chacha20-poly1305@openssh.com</code>が外されていることで、外している理由はSSHの処理が比較的重いサービス特性上、サーバー側でAES-NIを使いたいからである。</p>
+<p>余談だが、AMDプロセッサはBulldozer以降でAES-NIをサポートしており、IntelはIvy Bridgeまではi3においてAES-NIがサポートされていなかった。 こうしたことを含め、性能の低いデバイスにおいてはAES-NIがなく、計算量の多いAESは重いということになるのだが、コネクションが1本であるクライアントにとっては大した話ではなく、多数のコネクションをさばくサーバー側で軽くすることが優先である。</p>
+<p>しかし、この設定では<code>aes128-ctr</code>が最初に来ており、今後10年で変更されることを意味している。</p>
+<p>つまり常に動的に構成され、動的に変更されるのである。 構成時はむしろ構成変更タイミングでもあると言っていい。</p>
+<p>手順スクリプトは</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode zsh"><code class="sourceCode zsh"><span id="cb2-1"><a href="#cb2-1"></a>pacman -S grml-zsh-config tmux zsh-completions zsh-syntax-highlighting zsh-theme-powerlevel9k zsh-history-substring-search vim vim-plugins rsync</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">cat</span> <span class="kw">&gt;</span> /etc/zshrc.local <span class="kw">&lt;&lt;EOF</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>setopt vi</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a>autoload -U history-search</span>
+<span id="cb2-6"><a href="#cb2-6"></a>#zle -N history-beginning-search-backward-end history-search</span>
+<span id="cb2-7"><a href="#cb2-7"></a>#zle -N history-beginning-search-forward-end history-search</span>
+<span id="cb2-8"><a href="#cb2-8"></a>bindkey &quot;^P&quot; history-beginning-search-backward</span>
+<span id="cb2-9"><a href="#cb2-9"></a>bindkey &quot;^N&quot; history-beginning-search-forward</span>
+<span id="cb2-10"><a href="#cb2-10"></a>bindkey &quot;\e[5~&quot; history-beginning-search-backward</span>
+<span id="cb2-11"><a href="#cb2-11"></a>bindkey &quot;\e[6~&quot; history-beginning-search-forward</span>
+<span id="cb2-12"><a href="#cb2-12"></a>bindkey -M viins &quot;\e[5~&quot; history-beginning-search-backward</span>
+<span id="cb2-13"><a href="#cb2-13"></a>bindkey -M viins &quot;\e[6~&quot; history-beginning-search-forward</span>
+<span id="cb2-14"><a href="#cb2-14"></a>bindkey -M vicmd &quot;\e[5~&quot; history-beginning-search-backward</span>
+<span id="cb2-15"><a href="#cb2-15"></a>bindkey -M vicmd &quot;\e[6~&quot; history-beginning-search-forward</span>
+<span id="cb2-16"><a href="#cb2-16"></a>...</span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="kw">EOF</span></span></code></pre></div>
+<p>みたいな感じで、普通にコマンドラインの手順のバッチと、catを使ったファイル生成から成り立っているのだが、ステップ中で躓いた場合、Vimで<code>d:2</code>してそのステップからやり直すようにすれば良い。 <code>dgg</code>でない理由は、「失敗時にそのステップを終了する」ため、先頭で</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode zsh"><code class="sourceCode zsh"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">TRAPZERR()</span> <span class="kw">{</span> <span class="kw">exit</span> 48 <span class="kw">}</span></span></code></pre></div>
+<p>としているからだ。</p>
+<p>付して述べるなら、「理解していなくても使える」というのはInflatonとしては嬉しいことではなくて、「理解する前提で育てる」方向だから、 「知悉しやすい、教材としても優れたものにしておく」という考え方になってもいる。</p>
+<p>プロビジョニングツールを使うことでディストリビューション間の差異を吸収しやすくなるという面はあるが、 ディストリビューション変更をするような場合は、パッケージに含まれるファイルの詳細を把握しなければ潜在的に危険であると考えているので、そのような吸収をしてもらう必要はない。</p>
+<p>同様にプロビジョニングツールを使うことで構成することそのものを容易にする面もあるが、そもそも構成が普通でないので、これも全く役に立たない。 例えば私は個人としては2017年までサーバーにDeleGateを使っていたが、DeleGateを構成することなど誰も考えていないし、そこまで極端ではなくとも常に普通にはない構成になっている。 こうしたことから、定番の構成を容易にする機能というのは助けにならず、こうした機能を理由にツールを選択することもない。</p>
+<p>サーバーに依存したツールを使うことも、「サーバーの変更」という選択を難しくさせるので、望ましいとは思えない。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

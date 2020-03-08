@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-10-05T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-10-05T00:00:00+09:00" />
+    <title>設定が少ないことは良いことか - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>設定が少ないことは良いことか</h1></header>
+        <article id="MainArticle">
+<h2 id="減っていく項目">減っていく項目</h2>
+<p>近年のUIは「項目数削減」というのがひとつのテーマになっている。</p>
+<p>WindowsでもVistaが最も設定項目数が多く、7以降設定項目数は減っている。 だが、細かなことを言えばXPの時点で事実上の設定項目は減り始めていた。</p>
+<p>設定項目を減らすということについては2種類の理屈がある。</p>
+<p>ひとつは、コモディティ化に関することである。 これはMacにあったように、「ユーザーをできることから遠ざける」というものだ。 一般ユーザーはどうせ能力がないのだからそもそも機能を隠蔽してしまおうという考えだ。</p>
+<p>もうひとつはスマートフォンやタブレットを想定したいわゆるタッチUIだ。 タッチはどうしても精密に行うことができないため、UIはそれなりに大きくて間隔もなくてはいけない。 また、表示スペースもないためUI部品を並べると表示スペースが減ってしまう。 そこでなるべく少ない部品を表示するようになった。また、ラベル(アイコンに対するテキスト)ももたず、抽象化されたアイコンを使用するUIが一般化した。</p>
+<p>タッチUIのデザインはデザイントレンドとしてパソコンのUIにも大きな影響を与えた。 フラットデザイン流行りも、労力の削減もあるが、タブレットのスレートデザインに対して奥行きがあるように見えるのが印象を損なうことや、小さい画面をフルに活かすためにはフラットデザインのほうがスペースを取りやすかったというのもある<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>。</p>
+<p>だが、それ以降は単純に「デザイントレンド」という名の思考停止のためにUI部品が減り、設定項目も減るという状態になった。</p>
+<p>それは一方でユーザーが迎合したという点もある。</p>
+<h2 id="少なすぎる設定多すぎる設定">少なすぎる設定、多すぎる設定</h2>
+<p>まず一般的にちょうどよいと思われるCinnamonの設定を見てみよう。</p>
+<figure><a href="/wp-content/uploads/2018/10/cinnamon-power.jpeg"><img src="/wp-content/uploads/2018/10/cinnamon-power.jpeg" alt="" width="883" height="527" class="size-full wp-image-1747" /></a><figcaption> Cinnamon 電源管理</figcaption></figure>
+<p>私は全く難しくないと思う。 電源ケーブルをつないでいるときはリッドクローズでスリープしてほしくないといった違いもあるだろうし、電源ボタンが押されたときの挙動なども設定したいだろう。</p>
+<p>だが、これすらも嫌だ、見たくないという人が結構いるのだ。 まるで英語アレルギーのようだ。</p>
+<p>対してGnomeを見てみよう。</p>
+<figure><a href="/wp-content/uploads/2018/10/gnome-power.jpeg"><img src="/wp-content/uploads/2018/10/gnome-power.jpeg" alt="" width="1058" height="754" class="size-full wp-image-1753" /></a><figcaption> Gnome 電源管理</figcaption></figure>
+<p>項目はありそうに見えるが、全くそうではない。</p>
+<p>画面の明るさとキーボードの明るさは電源設定ではなく、単純に照明の設定である。 Cinnamonでは画面の明るさ、ブランクスクリーンなどは「画面の設定」にある。 Wi-FiやBluetoothの設定も単なるオンオフであり、電源管理とはあまり関係がない。</p>
+<p>事実上電源設定としては「ブランクスクリーンにするまでの時間」「リッドクローズ時に “スリープする” か “無視する” かの二択」「電源ボタンの挙動」の3点しか設定できない。</p>
+<p>これですら嫌がる人もいるのだが。</p>
+<p>対してKDE Plasmaの設定だ。</p>
+<figure><a href="/wp-content/uploads/2018/10/kde-power.jpeg"><img src="/wp-content/uploads/2018/10/kde-power.jpeg" alt="" width="1920" height="1016" class="size-full wp-image-1754" /></a><figcaption> KDE 電源管理</figcaption></figure>
+<p>あまり細やかに設定可能である。 ACアダプタとバッテリーの設定違いのほか、バッテリー残量が少ない場合(「残量が少ない」の量も定義可能)に加え、アクティビティというPlasmaに備わっている機能によって特別な設定をすることができる。 これはプレゼンテーションモードやロングトラベルモードなどを自由に自分で定義できることになる。アクティビティは自由に切り替え可能であり、アクティビティに対して特別な電源設定を適用することができるからだ。 ちなみに、アクティビティごとにACアダプタかバッテリかといったことも設定できる。 さらに、「低レベル」とは別に「危険レベル」を設定することができる。</p>
+<p>「思ったのと違う」「望んだのと違う」という挙動は非常に強いストレスになる。 だが、「望ましい挙動」というのは人によって差異があり誰もが望むものにはできない。 だからこそ「設定」によってジャストフィットさせられるのは大きいのだ。</p>
+<p>それはLinuxの魅力であり、KDE Plasmaの魅力でもある。 だが、現実には「設定項目が多い」ことそのものを嫌う人がかなりいるのだ。</p>
+<p>私としても気持ちはわからないではない。 だが、経験からすればそれは正しくない。「たくさん設定しなければならない」のはうんざりするのだが(例えばKDE Plasmaのショートカットキーは非常に多く、重要なものを含め大部分は設定されていない)、デフォルト設定が練られていれば「違和感のある部分を調整する」だけの話なのでむしろ望ましい。</p>
+<p>だったら設定方法も重要になる。 Unix伝統のテキストファイルはだったら大規模な修正や変更を加える場合には優れている。 例えば私はtmuxをscreenキーバインドで使用しているが、ひとつひとつ設定していたらやってられないだろう。 一方で機能がわかりにくいものについてはわかりやすいGUIインターフェイスが欲しい。 Firefoxの<code>about:config</code>やWindowsのレジストリなどは悪いインターフェイスの代表例だろう。</p>
+<p>実際、Firefoxの設定はあまり多くはない。 一時期のバージョンと比べれば遥かに少なくなっている(だが、逆にある一時期のバージョンよりは増加している)。</p>
+<figure><a href="/wp-content/uploads/2018/10/firefox-settings.jpeg"><img src="/wp-content/uploads/2018/10/firefox-settings.jpeg" alt="" width="1920" height="1080" class="size-full wp-image-1748" /></a><figcaption> Firefox 設定画面</figcaption></figure>
+<p>一方、伝統的に裏設定を含む細かな設定を可能にする<code>about:config</code>は残されている。 一部の設定はこちらに回されてしまったということにもなる。</p>
+<figure><a href="/wp-content/uploads/2018/10/firefox-config.jpeg"><img src="/wp-content/uploads/2018/10/firefox-config.jpeg" alt="" width="1920" height="1080" class="size-full wp-image-1749" /></a><figcaption> Firefox about:config</figcaption></figure>
+<p><code>about:config</code>の設定は設定が何を意味しているのか知る術が欠如しており、良いインターフェイスとは言えない。 確かにこれはなるべくなら遠ざけたい設定だろう。 だが、果たして「こんなものは存在しないほうがいい」のだろうか?</p>
+<h2 id="uiを少なくした結果">UIを少なくした結果</h2>
+<p>GTK+ツールキットはGIMPの成果物である。</p>
+<p>大本をたどるとGIMPをKDEに統合するKIMPの炎上騒ぎがキッカケとなってGnomeが誕生することになる。 このあたりの話は<a href="https://togetter.com/li/907864">Togetterにまとめがある</a>。</p>
+<p>この時点でGnomeはGIMPの成果物を間借りしていた。これはGIMP 2とGTK2の関係、そしてそれを曲がりするGnomeという点でも変わらなかった。 だが、GTK3はGnomeの手動で開発されたし、依然としてGIMPはGtk2を採用している。 つまり、GTK2はGIMPの考えで作られたものだが、GTK3はあくまでGNOMEの意向を反映したものである。</p>
+<p>そのGNOMEの意向は、スマートフォン向けとして極端にメニューを減らす、というものである。</p>
+<p>確かに「操作できるところが少ない」ので「どこを操作していいか」はわかりやすいのだが、 「どこを操作すればいいか」は非常にわかりにくい。</p>
+<figure><a href="/wp-content/uploads/2018/10/gnome1.jpeg"><img src="/wp-content/uploads/2018/10/gnome1.jpeg" alt="" width="1920" height="1080" class="size-full wp-image-1751" /></a><figcaption> Gnome メニュー</figcaption></figure>
+<p>これはGnomeのメニュー画面である。 Gnomeはこれ以外にはアプリケーションやフォルダなどをワード検索によって探すいわゆるlens機能があるだけで、メニューはこれが唯一になる。</p>
+<p>さて、ここからログアウトしようとしたらどうだろうか? 一見したらパワーアイコンを押せばよさそうだが、そこにはシャットダウン, 再起動, サスペンドしかない。 右クリックしてもダメである。</p>
+<p>正解は名前部分をクリックするとメニューに登場する、だ。</p>
+<figure><a href="/wp-content/uploads/2018/10/gnome2.jpeg"><img src="/wp-content/uploads/2018/10/gnome2.jpeg" alt="" width="1920" height="1080" class="size-full wp-image-1752" /></a><figcaption> Gnome ログオフ</figcaption></figure>
+<p>私はMacを使わないので、Macはこんな感じだから別に違和感はない、という人もいるかもしれないが、現在一般的なハンバーガーメニューですら操作箇所として認識できないという人が多いことを鑑みると、これがわかりやすい操作だとは全く思えない。</p>
+<h2 id="ability-と-cakewalk-by-bandlab.-で見比べてみる">Ability と Cakewalk by Bandlab. で見比べてみる</h2>
+<p>クリエイティブ系ソフトウェアは複雑な機能を使いこなす必要があり、作業量も多いことから操作性は極めて重要になる。</p>
+<p>そんなクリエイティブ系ソフトウェアである音楽制作ソフトウェアで、UIとい意味では対照的なアプローチをとるのがAbilityとCakewalk by Bandlabだ。</p>
+<p>Cakewalk by BandlabはもともとはCakewalk SONARと呼ばれていたソフトウェアで、現代的なクリエイティブ系ソフトウェアの潮流に従って、UIはシンプルでコンテキストフルなものが採用されている。 これは動画編集ソフトウェアから始まったものだが、「クリックする場所によってクリックの意味が変わる」など複数の機能をひとつのボタン(モード)でまかなうようにしたものだ。</p>
+<figure><a href="/wp-content/uploads/2018/10/sonar.jpeg"><img src="/wp-content/uploads/2018/10/sonar.jpeg" alt="" width="1920" height="1050" class="size-full wp-image-1755" /></a><figcaption> Cakewalk by Bandlab</figcaption></figure>
+<p>一方、Abilityはこの手のソフトウェアとしては最古参となるSinger Song Writerというソフトウェアに由来し、Abilityに改名してから幾分現代的にはなったものの、従来どおり全ての機能にUIが割り当てられる方式を取っている。 元々SSWは非常に操作系の多いソフトウェアであり、ボタンそのものはコンテキストフルに切り替わるにもかかわらず非常に多い。</p>
+<figure><a href="/wp-content/uploads/2018/10/ability2.jpeg"><img src="/wp-content/uploads/2018/10/ability2.jpeg" alt="" width="1920" height="1050" class="size-full wp-image-1746" /></a><figcaption> Internet Ability 2.5 Pro</figcaption></figure>
+<p>Cakewalk by Banladがボタン数が少ないのは、スマホ向けUIのようなコモディティ化が理由ではない。 どちらかといえば、作業量が多い音楽制作に配慮し、「ボタンをクリックする」といったコストの高い操作をなるべく少なくするための工夫である。 これは音楽制作ソフトウェアに限らない。</p>
+<p>つまり、「UIをシンプルにしたがために機能を削り多くを犠牲にした」ではなく、「プロフェッショナルのためにより先鋭化した結果こうなった」ということである。</p>
+<p>とはいえ、実際のところこの手のソフトウェアはショートカットキー前提なので、ボタンの多さというのはあまり関係がない。</p>
+<p>だが、実際に使ってみると、慣れてしまえば確かにCakewalk by Bandlabは効率的だ。 私は元々SONARを使ってきたから、ショートカットキーもある程度は覚えているし、スマートツールがどのような挙動を示すかも理解している。</p>
+<p>だが、同じようにシンプルなFL STUDIOは、私がまだそれほど使っていないこともありいまひとつ効率が上がらない。</p>
+<figure><a href="/wp-content/uploads/2018/10/fl20.jpeg"><img src="/wp-content/uploads/2018/10/fl20.jpeg" alt="" width="1920" height="1050" class="size-full wp-image-1750" /></a><figcaption> Image-Line FL Studio 20</figcaption></figure>
+<p>一方、Abilityはその意味では慣れるのが簡単だ。 私はAbilityは使い始めたばかりだが、それでもどうにかこうにか使えている。 必要とする機能が選択肢の中にあるので、そこから探すだけとなっているからだ。</p>
+<p>私にとってはCakewalk by BandlabのProChannelなどが「なくてはならないもの」になってしまっているので、必ずしも便利だと感じるわけではないのだが、Cakewalk by Bandlabは(そしてライバルのCubaseや新鋭のStudio Oneも)熟達者のための道具であると感じる。 これはAdobe製品などでも感じることだ<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>。 だから、とっつきやすさではAbilityのほうが優れる。</p>
+<figure><a href="/wp-content/uploads/2018/10/studio-one-2prime.jpeg"><img src="/wp-content/uploads/2018/10/studio-one-2prime.jpeg" alt="" width="1920" height="1050" class="size-full wp-image-1756" /></a><figcaption> Presonus Studio One 4 Prime</figcaption></figure>
+<p>これはある程度時間に比例するから、ゲームなどならそれほど馴染みやすいインターフェイスではなくても、自然とだんだん使いこなせるようになるもののほうが良い結果をもたらすだろう。</p>
+<p>ではwebならどうだろうか。</p>
+<h2 id="uiは流行りではない">UIは流行りではない</h2>
+<p>基本的にUIを流行りで書く人は流行りのデザインがどうなっているかを知っているし、開発者はそのデザインがどのように操作するものなのかを知っている。 だから本当にそのUIが使いやすいかということは判断できなくなってしまう。</p>
+<p>そのため、デザイナーがいいと信じているデザインはユーザーに理解されないということは本当に多い。</p>
+<p>実際、Chienomiにもハンバーガーメニューがあるけれども、このメニューが使われることはほとんどない。 だから「ハンバーガーメニューで操作するUI」は失敗だと思っている。 Mimir Yokohamaでもハンバーガーメニューを導入しているけれども、あまりにも誰も気づかないので同内容を他にも配置し、ハンバーガーメニューは第二の操作手段にしてしまっている。</p>
+<p>正直コモディティ化したUIはパワーユーザーのみならずライトユーザーにすら使いやすいものではないようだ。 現状このUIこそ最善というものはないように思われるし、思考停止することなく良いUIを追い求めていきたい。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>現在の画面解像度であれば別にスペースを損なわず立体的印象を持たせることも可能なはずだが、当時はそうではなかった。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>私はAdobe製品も持ってはいるのだが、ほとんど使っていないため全く使いこなせていない。使い方は非常に難しいと感じている。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-01-22T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-01-22T00:00:00+09:00" />
+    <title>LinuxでNvidiaもIntelもおかしなことになっているのでRadeonにかえてみた - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>LinuxでNvidiaもIntelもおかしなことになっているのでRadeonにかえてみた</h1></header>
+        <article id="MainArticle">
+<h2 id="もういやだ">もういやだ</h2>
+<p>パワフルなThinkStation P720ワークステーションだが、最近様子がおかしい。 Nvidiaではおなじみの</p>
+<ul>
+<li>画面が点滅する</li>
+<li>X11 APIでスクリーンキャストするとウィンドウが消えてしまう (だからスクリーンショットでもウィンドウが消える)</li>
+</ul>
+<p>という問題は直る気配がない…どころか、従来はVblankとFlippingを禁止すれば抑制できたのだが、最近はダメだ。 さらにいえば、Nvidia固有だったこの問題は、最近ではIntelでも発生する、というかINtelのほうがひどくなっている。</p>
+<p>そして、追加で</p>
+<ul>
+<li>Libreofficeが使っているSAL PLUGINとglibの連携が腐ってしまって、ほとんど操作不能なレベルでフリーズする</li>
+<li>Vivaldiでありとあらゆる操作においてフリーズする</li>
+</ul>
+<p>という問題が追加された。 Libreofficeの問題は最初Nvidiaだけだったが、現在はIntelでも発生するし、<code>SAL_USE_VCLPLUGIN=gen</code>で防げたのだが、現在はこれも無理である。</p>
+<p>そして、4kディスプレイにしてからビデオメモリが足りないのか、ウィンドウを開いていくとウィンドウ領域がグリッド状に表示され、かすかにウィンドウが見える場合もあるがほとんどの場合見えず、操作もできないという状態になる、ということに悩まされた。 作業効率が恐ろしく悪いことになってしまうため、毎日とてもストレスだし、貴重な時間を、1日で1-2時間程度失っている状態だった。</p>
+<p>もうこれは耐えられない。</p>
+<p>一方、Godavariはこのような問題を発生しない。 「じゃあGodavariでやれよ」と思うかもしれないが、Godavariは全面的にとっても非力である。よく馬鹿にされるくらいには。</p>
+<p>それで、現在の出費は痛いし、TSMCは7mmプロセッサを控えている状態だというのはわかっているが、 結局のところRadeon 3000シリーズは噂の域を出ないということも踏まえて、思い切ってRadeon RX580を購入することにした。</p>
+<h2 id="なぜrx580か">なぜRX580か</h2>
+<p>最大の理由はLinuxにおけるパフォーマンスである。</p>
+<p>WindowsにおいてはVega RXもそれなりの性能を示すようだが、Linuxにおいては多くの場合Vega RXとの性能差は誤差の範疇に留まる。 Vega RXでもGTX1060は越えない、というような所ぅたいだ。</p>
+<p>にもかかわらずVega RXはずっと高値を維持しており、相当にコストパフォーマンスが悪い。 しかも、Vega RXはNvidiaと比べても相当燃費が悪いようで、「電気をめちゃくちゃ食う」のである。</p>
+<p>そもそも私のP720はQuadro P6000のSLIを想定しているためキャパシティとしては耐えられないこともないのだが、家の電気回線はそうではないし、 無駄な電気は使いたくない。</p>
+<p>また、Vega RXのパフォーマンスはVega RX 64であっても「Nvidia GTX1070に届かない程度」というのがWindowsにおいても現実であるようで、 ゲームのことを考えて高性能なカードを選ぶ、という気にもなれなかった。</p>
+<p>タイミングは悪いなぁ、やたら高いなぁと思いつつも、Linuxにおいてはベストな選択肢となりそうなRX580を選択したということだ。</p>
+<p>製品はAMD専門メーカーSapphireのゲーミング向けNITRO+シリーズSA-RX580-8GDN+001V2 VD6801を選択した。 オーバークロック製品で、発熱量は多いが性能は高いようだ。</p>
+<h2 id="p720にsapphire-nitro-rx580はギリギリ入る">P720にSapphire NITRO+ RX580は「ギリギリ入る」</h2>
+<p>製品が届いてびっくりした。 「大きい」</p>
+<p>いやもう、比べるのが無意味なぐらい大きい。 「ミドルクラスだし、GTX960と同じくらいだろう」とか思ってサイズのことは一切気にしなかったのだが、「これはやばいかもしれない」と感じるほど大きかった。 ゲーミング向けトップモデルはこれより大きいのか!?</p>
+<p>入らないかもしれない、と懸念したが、結局はギリギリながら収まった。 上下とも入るが、下段に関しては電源配線に触れてしまう。 また、サイドパネルに接触するため、サイドパネルがしめづらくなる。</p>
+<p>「普通に入る」とは言い難い、「かろうじて入った」である。 だが、入る。</p>
+<p>なお、SA-RX580-8GDN+001V2は補助電源が8ピン+6ピンというGTX1080Ti並の要求で、P720の標準の補助電源は2本であるためこれを全部使ってしまい、SLI構成はできない。 汎用の拡張コネクタがあるのだが、こちらは専用品で、なおかつLenovoとして単体の販売はしていないので、Crossfire構成にしたい場合は予めP6000のような「補助電源を2つ使う」ビデオカードを2枚構成にしておく必要がある。</p>
+<p>クーリングパイプがまるでインテークマニホールドのようで、さらにSAPPHIREのロゴが青く輝き、大変かっこいい。 まぁ、P720の場合サイドパネルが透明なわけでもないので、全く見えないが。</p>
+<h2 id="消費電力は">消費電力は</h2>
+<p>4114+Quadro P400構成と比較すると、アイドル時で107Wと、約60W増えた。 運用時も140から220Wで、60W増加と見ていいだろう。 ただし、変動しやすくなったため、平均すると80W増加とみたほうがいいかもしれない。</p>
+<p>ただし、変動しやすくなったのは、「今までP400で処理しきれなかった分を即座に処理する瞬発力があるため」と見ることができ、効率的には変わっていないかもしれない。</p>
+<p>「省電力」という印象はなくなってしまったが、性能を考えればまぁ想定通りといったところ。</p>
+<h2 id="問題は解消したか">問題は解消したか</h2>
+<p>ほぼyesである。</p>
+<ul>
+<li>画面の点滅はなくなった。代わりにログイン時に画面がおかしくなることがあるが、支障は実際にはない</li>
+<li>スクリーンショット、及びスクリーンキャスティングでウィンドウが消える不具合はなくなった</li>
+<li>Libreofficeがフリーズする問題は解消された</li>
+<li>Vivaldiが異様にフリーズするという問題は <em>軽減された</em></li>
+<li>ウィンドウが表示できなくなる問題は解消された</li>
+</ul>
+<p>また、私が非常に不満としていた、私お気に入りのフラゲ<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>が重すぎるという問題が事実上解消された。</p>
+<p>この問題自体はつい先日からChromiumがマルチスレッドでFlashを処理してくれるようになり、最大で12.5%(5スレッド)で処理してくれるためにかなり軽減されてはいたのだが、 ビデオ描画のもたつきがなくなったためか、全く支障なくなった。 不思議なものだ。 まぁ、Flashはビデオアクセラレーションの対象ではあるのだが。</p>
+<p>ちなみに、このゲームがあまりにも重いのは「4114が非力で、うち特有の問題」と考えていたのだが、先日Thinkpad X1でやってみたところ、とてもプレイできないくらい重かった。 というわけで、むしろ「このハイパフォーマンスマシンですらもこの程度」という状態だったと考えられる。 恐らくはWindowsであれば支障ないのだろう。</p>
+<h2 id="vivaldiの重さはどこから">Vivaldiの重さはどこから</h2>
+<p>RX580になってVivaldiが操作のたびに、あるいはフォーカスするたびに止まる (タブ=レンダリングプロセスが止まるのではなく、Vivaldi全体が止まる)という問題は解消された。</p>
+<p>ちなみに、Intelはこの問題はより深刻で、Vivaldiを立ち上げたあとメニュー操作をするとウィンドウマネージャごと固まってしまう。</p>
+<p>だが、依然としてふたつの問題がある。</p>
+<p>ひとつは、右クリックでメニューを開くとかなり長い時間固まるということだ。 これはstraceしてみると</p>
+<pre><code>read(17, &quot;!&quot;, 2)                        = 1
+write(18, &quot;!&quot;, 1)                       = 1
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+munmap(0x7fc6fd5f7000, 8832)            = 0
+openat(AT_FDCWD, &quot;/usr/local/share/fonts/Commercial/FONT-COMP-SET21/Fontstyles2/FontGraphic_Mac/UniversalWalk.otf&quot;, O_RDONLY) = 251
+fstat(251, {st_mode=S_IFREG|0644, st_size=8832, ...}) = 0
+mmap(NULL, 8832, PROT_READ, MAP_PRIVATE, 251, 0) = 0x7fc6fd5f7000
+close(251)                              = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/DeletedManjaro/UmePlus/umeplus-p-gothic.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/DejaVuSans.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Monospace/font-bh-ttf-1.0.3/luxisr.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/gsfonts/NimbusSans-Regular.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/MuktiNarrow.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/malayalam.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/Sampige.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/padmaa-Medium-0.5.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/VL-Gothic-Regular.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/OTF/ipag.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/TSCu_Paranar.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/NanumGothic.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Korean/UnDotumBold.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Commercial/Unknown/CODE2000.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Morisawa/\343\203\222\343\203\251\343\202\256\343\203\216\344\270\270\343\202\264 Pr6N W4.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Morisawa/\343\203\222\343\203\251\343\202\256\343\203\216\344\270\270\343\202\264 Upr W4.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/Mathematica6.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/Mathematica7.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/AndikaRegular.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/Tsuyuzora-bunko/XZBB.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/WadaLab/wlcmaru2004aribu4430/wlcmaru2004aribu.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/OTF/FiraSans-Regular.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/nukamiso/nukamiso_yamiyootf_beta07.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/OTF/Vollkorn-Regular.otf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/share/fonts/TTF/Ricty-Regular.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Commercial/Motoya/NFbc1kp.ttc&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/Motoya/MTLc3m.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/tfont/TGothic-GT01.ttc&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab69000, 57344, MADV_DONTNEED) = 0
+madvise(0x3a38dab8b000, 49152, MADV_DONTNEED) = 0
+madvise(0x3a38d9095000, 8994816, MADV_DONTNEED) = 0
+access(&quot;/usr/local/share/fonts/Japanese/UchidaAkira/OradanoGSRR.ttf&quot;, R_OK) = 0
+madvise(0x3a38dab8b000, 385024, MADV_DONTNEED) = 0</code></pre>
+<p>という感じで、フォントを片っ端から読んでいて、ものすごく時間がかかっている感じだ。 ちなみに、これはChromiumだと起動時に発生するため、フォント数が増えるとChromiumは起動が遅くなるのだが、Vivaldiではコンテキストメニューの表示がすさまじく遅くなる。 また、この問題はフォームをクリックしたときに発生するため、非常にストレスになっている。</p>
+<p>もうひとつはページをロードしたときにロードの途中で異様に時間がかかる。 これはstraceを見ても止まるわけではないのだが、特徴的な要素は見つからず、コンソールで見るとただ単に飛んでいる。 これはChromiumでも発生するため、恐らくBlinkの問題だ。</p>
+<p>Vivladi固有の問題のほうは時間があるときに報告するつもりだ。</p>
+<p>現状では「Firefoxを使う」というのが解決策になりそうだ。 Chromiumは最近とにかく重くなっている。CPUの使い方がえぐいし、異様に処理に時間がかかるようになった。 フリーズしている、と感じるような処理時間で、原因がよくわからないケースが多い。 これがバージョン71から発生していることは認識しているのだが、そもそも「ウェブレンダリングを難しくしすぎている」というのが問題で、 「なんでもかんでもウェブでやろうとするのやめてくれないかなぁ」と心底思う。</p>
+<p>だいたいこの流れや、レンダリングエンジンの複雑さがGoogleの胸先三寸になってしまっていることにはとても気持ち悪さを感じている。</p>
+<h2 id="radeon-rx580はどうだったか">Radeon RX580はどうだったか</h2>
+<p>なお、RTX2000シリーズは通常利用での暴走や出火などが問題視されていることからあまり完成度は高くないと見られており、 AMDは14nmプロセスでNvidiaより圧倒的に性能が低く、それでありながらライバルと位置づけるNvidia製品よりもずっと高い、という状況である。 しかもTSMCは7nmプロセスの新しいカードを用意しており、Radeon VIIという新製品は「RTX2080相当の性能で、価格的にも同等。Vega RX 64比では性能は1.8倍」とのたまっている。 TSMC、及びAMDは7nmで攻勢をかけるつもりのようで、とにかく時期が悪いのは確かだ。</p>
+<p>だから、今買うならGTX1080かRTX2070あたりが妥当な判断で、RX580が4万円程度はするという点を考えると普通の(Windowsの、ゲーマーの)ユーザーには「迷わず買う人以外は買わないほうがいい」レベルの製品だろうとは思う。</p>
+<p>Linuxにおける性能は、おおよそWindowsにおけるGeForceとの関係と同等。 つまり、NvidiaがWindowsと比べて半分程度の性能しか出せていない以上、AMDのドライバもWindows版と比べて半分程度、と考えれば良いのではないだろうか。 以前はもっともっと差が開いていたのでだいぶ健闘しているといって良さそうだ。現在はNvidiaのプロプライエタリドライバとAMDのオープンソースドライバ(AMDGPU)は同等の出来ということになる。 <em>性能面では、だが</em></p>
+<p>ゲーミング部分で言うと、ドライバの出来と、ゲームにおける最適化の結果として圧倒的にGeForce寄りであり、Radeonはその力を発揮できないという状態が続いている。 だから、ゲーム用途では何も考えずにGeForceでいいというレベルだし、多分それはRadeon VIIが出ても変わらない。</p>
+<p>一方、Linuxのワークステーションユースで不満が出るという気はしなかった。 vdpauinfoでは</p>
+<pre><code>display: :0   screen: 0
+API version: 1
+Information string: G3DVL VDPAU Driver Shared Library version 1.0
+
+Video surface:
+
+name   width height types
+-------------------------------------------
+420    16384 16384  NV12 YV12 
+422    16384 16384  UYVY YUYV 
+444    16384 16384  Y8U8V8A8 V8U8Y8A8 
+
+Decoder capabilities:
+
+name                        level macbs width height
+----------------------------------------------------
+MPEG1                          --- not supported ---
+MPEG2_SIMPLE                    3 65536  4096  4096
+MPEG2_MAIN                      3 65536  4096  4096
+H264_BASELINE                  52 65536  4096  4096
+H264_MAIN                      52 65536  4096  4096
+H264_HIGH                      52 65536  4096  4096
+VC1_SIMPLE                      1 65536  4096  4096
+VC1_MAIN                        2 65536  4096  4096
+VC1_ADVANCED                    4 65536  4096  4096
+MPEG4_PART2_SP                  3 65536  4096  4096
+MPEG4_PART2_ASP                 5 65536  4096  4096
+DIVX4_QMOBILE                  --- not supported ---
+DIVX4_MOBILE                   --- not supported ---
+DIVX4_HOME_THEATER             --- not supported ---
+DIVX4_HD_1080P                 --- not supported ---
+DIVX5_QMOBILE                  --- not supported ---
+DIVX5_MOBILE                   --- not supported ---
+DIVX5_HOME_THEATER             --- not supported ---
+DIVX5_HD_1080P                 --- not supported ---
+H264_CONSTRAINED_BASELINE       0 65536  4096  4096
+H264_EXTENDED                  --- not supported ---
+H264_PROGRESSIVE_HIGH          --- not supported ---
+H264_CONSTRAINED_HIGH          --- not supported ---
+H264_HIGH_444_PREDICTIVE       --- not supported ---
+HEVC_MAIN                      186 65536  4096  4096
+HEVC_MAIN_10                   186 65536  4096  4096
+HEVC_MAIN_STILL                --- not supported ---
+HEVC_MAIN_12                   --- not supported ---
+HEVC_MAIN_444                  --- not supported ---
+
+Output surface:
+
+name              width height nat types
+----------------------------------------------------
+B8G8R8A8         16384 16384    y  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 A8I8 I8A8 
+R8G8B8A8         16384 16384    y  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 A8I8 I8A8 
+R10G10B10A2      16384 16384    y  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 A8I8 I8A8 
+B10G10R10A2      16384 16384    y  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 A8I8 I8A8 
+
+Bitmap surface:
+
+name              width height
+------------------------------
+B8G8R8A8         16384 16384
+R8G8B8A8         16384 16384
+R10G10B10A2      16384 16384
+B10G10R10A2      16384 16384
+A8               16384 16384
+
+Video mixer:
+
+feature name                    sup
+------------------------------------
+DEINTERLACE_TEMPORAL             y
+DEINTERLACE_TEMPORAL_SPATIAL     -
+INVERSE_TELECINE                 -
+NOISE_REDUCTION                  y
+SHARPNESS                        y
+LUMA_KEY                         y
+HIGH QUALITY SCALING - L1        y
+HIGH QUALITY SCALING - L2        -
+HIGH QUALITY SCALING - L3        -
+HIGH QUALITY SCALING - L4        -
+HIGH QUALITY SCALING - L5        -
+HIGH QUALITY SCALING - L6        -
+HIGH QUALITY SCALING - L7        -
+HIGH QUALITY SCALING - L8        -
+HIGH QUALITY SCALING - L9        -
+
+parameter name                  sup      min      max
+-----------------------------------------------------
+VIDEO_SURFACE_WIDTH              y        48     4096
+VIDEO_SURFACE_HEIGHT             y        48     4096
+CHROMA_TYPE                      y  
+LAYERS                           y         0        4
+
+attribute name                  sup      min      max
+-----------------------------------------------------
+BACKGROUND_COLOR                 y  
+CSC_MATRIX                       y  
+NOISE_REDUCTION_LEVEL            y      0.00     1.00
+SHARPNESS_LEVEL                  y     -1.00     1.00
+LUMA_KEY_MIN_LUMA                y  
+LUMA_KEY_MAX_LUMA                y  </code></pre>
+<p>また、vainfoは</p>
+<pre><code>vainfo: VA-API version: 1.3 (libva 2.3.0)
+vainfo: Driver version: Mesa Gallium driver 18.3.1 for Radeon RX 580 Series (POLARIS10, DRM 3.27.0, 4.20.1-1-MANJARO, LLVM 7.0.0)
+vainfo: Supported profile and entrypoints
+      VAProfileMPEG2Simple            : VAEntrypointVLD
+      VAProfileMPEG2Main              : VAEntrypointVLD
+      VAProfileVC1Simple              : VAEntrypointVLD
+      VAProfileVC1Main                : VAEntrypointVLD
+      VAProfileVC1Advanced            : VAEntrypointVLD
+      VAProfileH264ConstrainedBaseline: VAEntrypointVLD
+      VAProfileH264ConstrainedBaseline: VAEntrypointEncSlice
+      VAProfileH264Main               : VAEntrypointVLD
+      VAProfileH264Main               : VAEntrypointEncSlice
+      VAProfileH264High               : VAEntrypointVLD
+      VAProfileH264High               : VAEntrypointEncSlice
+      VAProfileHEVCMain               : VAEntrypointVLD
+      VAProfileHEVCMain               : VAEntrypointEncSlice
+      VAProfileHEVCMain10             : VAEntrypointVLD
+      VAProfileJPEGBaseline           : VAEntrypointVLD
+      VAProfileNone                   : VAEntrypointVideoProc</code></pre>
+<p>と当初対応しておらず、重大な弱点であった「H.265の非対応」は解消されているようだ。 (ただし、VP8/9には対応していない)</p>
+<p>実際に試してみたところ、<code>hevc_vaapi</code>でのエンコードは116fpsと、P400でのNVENCには劣るもののかなりの優秀さを見せた。これだけ速ければ十分に実用的だろう。 画質がNVENCだと実用には厳しいところがあったのだが、VCEの場合いくらか画質がいいためより実用しやすい。 それでも、利用できる場合は「普通は画質を少しでも良く保存したい」ために「速さ優先」とはなりづらく限定的だが。</p>
+<p>さらにNvidiaと違い、Waylandのコンポジターがちゃんと動作するというのも大きなメリットだろう。</p>
+<p>消費電力的にも、あまり電気を使わないプロセッサを使っているからという事情が前提になってしまってはいるものの、使いづらくなるほどではない。 気持ちとしては「もっと消費電力が少なかったらなぁ」というのと、「2万円台前半だったらなぁ」という気持ちはとてもしてしまうのだが、そうした点を除けば「入れておけばとりあえず安心できるカード」であると言えるだろう。 「とりあえず入れる」には巨大すぎて入れるケースを随分選ぶが。</p>
+<p>DVI-Dがひとつ、HDMIとDPがふたつずつで計5出力というところも、使いやすく不満になりにくい。 このビデオカードは大きさ的にも電力的にもそう来やすく選べるものではないが、Linuxでのグラフィックにまつわる不満を感じているのなら、RX580と言わずとも(例えば560でも)Radeonにする価値はありそうだ。</p>
+<h2 id="将来的には">将来的には</h2>
+<p>「ゲームをする事情」と「デスクトップユースとして普通のアプリを動かす事情」は似ているのだが、「計算力を求める事情」と「Linuxにおいて快適な仕様」とは大きな違いが出てきている。</p>
+<p>だから、贅沢を言えば2種類の仕様を用意できると最善で、贅沢を言えば、 「Ryzen + GeForce (主にWindows及びゲーム向け)」と「Ryzen Threadripper + Radeon (Linux及び計算向け)」の2台で編成できたらなぁ、と思う。 Zen2でこれを構成するのはなかなかドリーミーだ。</p>
+<p>とはいえ、現実的に1台に絞るとしたら、「Ryzen + Radeon」という構成で「現実的な計算力とLinuxで扱いやすいグラフィック」というのを取るだろう。</p>
+<p>現状、P720はどうなのかというと、やはり4114に求めたものと諦めていたものというのが大きい。</p>
+<p>「メニーコア」という性能は、それを発揮する場面というのは本当に少ない。 実際、私の普段の運用では4114ですら持て余し気味である。 ところが、普段遣いではあらゆるアプリで処理性能が足りずストレスフルである。 「普通の使い方でモバイルi3程度の快適性しか求められない」というのはわかっていたが、それでもこのマシンのクラスを考えるととても残念な感じがする。</p>
+<p>対して、実際にメニーコアを求めるケースでは4114では全然足りないのだが、それでも処理性能はi7とは段違いであった。 「4114はフルコアを活用できたとしてもi7に劣る」と考えていたが、実際は第8世代Core i7よりもずっと高速に動作した。 シングルコア性能も諦めていたほどに低くはなく、「さすがにそれなりに性能はある」と感じることができる。 そもそも、20コア40スレッドであるから、「20スレッドスケールテスト」が手元でできるというのもかなりのメリットだった。 だから、ちゃんと求めたものは実現できているし、価格を考えれば完全に目的を達成できるほどではないというのはわかっていた。</p>
+<p>だが、結局のところ現状P720の最大の魅力は「省電力」である。 48Wから90W程度でありながら非常に優れた処理性能を発揮する、というのはかなり魅力的だ。</p>
+<p>だが、やっぱりコンピュータは「性能が足りるか否か」であり、エクスペリエンスが良いかと聞かれるとYESとは答えがたい。 部分的にボトルネックになるブラウジングが全体の作業の足を引っ張るという状況も痛い。</p>
+<p>「エクスペリエンスは諦めて処理量を増やしたい」というのとは矛盾しているのだが、やはりエクスペリエンスを優先したい気持ちが湧いてくる。 今回RX580にしたことで飛躍的にエクスペリエンスが向上したことも大きな理由になっている。 というより、RX580にしたことでP720がとりあえず不満ないくらいの動作をしてくれるようになった。 だから、バランス的には今の状態は悪くないのかもしれない。</p>
+<p>Erina/Surtrに関する研究が一区切りついて、あまりデータプロセッシングすることがなくなったというのも大きい。 圧倒的に重い処理であったことから、これのためにメニーコアを求めたし、それによって成果も挙げたのだが、これがなくなると相当頻繁に回されるタスクを考えても実際8コアもあればあまり支障はなく、16コアのRyzenが用意されるのであれば不満はなさそうに思える。</p>
+<p>ただ、ゲームをすることに関していえばGeForce優位は揺るぎそうにもないし、かといってLinuxでは現状NvidiaもIntelもなかなかの惨状ということを考えればRadeon以外選択肢はないという状態であり、 これが2台構成を求める理由ともなっているが、1台を選ぶのであればLinuxエクスペリエンスを優先することになるだろう。</p>
+<p>ただ、Zen2の世代ではまだP720は現役で、しかも「非常に高機能で並列処理能力は高いが、通常の使い方ではそれほど性能は高くなく、消費電力はやや少なめで、筐体はとても大きい」マシンをメイン以外で使うというのは非常に難しい。 今Godavariがそうであるように、「主にWindows環境(音楽制作)、必要なときは計算資源または分離された帯域としてのLinux」みたいな使い方になるだろうか。 実際、音楽制作では機材がIntelプロセッサを想定したドライバでAMDドライバだといまいちうまく動かないケースもあり、現在のP720のような構成は非常に好ましい。 多くのVSTプラグインを使う場合も4114はかなり良い働きをしてくれる。 それでも、なんとも微妙な話で、Zen2世代でメイン機の差し替えを行うかは悩ましいところではある。</p>
+<p>やはり「それぞれの用途で最適化した理想の2台」なんて夢見がちな話をするに留めるとして、多分本当に多くの人にとって有益なのは現時点で性能的にやや微妙な立ち位置にあるRyzen Gが不満のない性能まで引き上げられること、 あるいはRX 580相当のRadeonがもっと安く、省電力でコンパクトなものとして出てくることだろう。それは、次の世代で実現するかもしれないし、Zen3の世代まで待たねばならないかもしれない。</p>
+<p>一方、X11はいよいよ限界を迎えている感もあるが、一方でWaylandがよくなっているわけでもない。 IntelもNvidiaも不具合が出る状態が続けばかなり苦しいことになるだろう。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>具体的にはFlower Knight Girlである。 なお、 <em>18禁バージョンもあるため</em> 検索される際にはくれぐれも留意願いたい。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

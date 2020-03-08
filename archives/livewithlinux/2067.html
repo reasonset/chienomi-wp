@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-08-10T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-08-10T00:00:00+09:00" />
+    <title>Manjaro/Arch Linux, DiscordがAURから消滅 Snappy利用に …Snappy? - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Manjaro/Arch Linux, DiscordがAURから消滅 Snappy利用に …Snappy?</h1></header>
+        <article id="MainArticle">
+<h2 id="重要な追記">重要な追記</h2>
+<p><a href="/archives/livewithlinux/2074">新しい記事に状況の更新が書かれている</a></p>
+<h2 id="あらまし">あらまし</h2>
+<p><a href="https://twitter.com/ManjaroLinux/status/1159217685114380290">Manjaro Linuxの2019-08-07のツイートによれば</a></p>
+<blockquote>
+<p>We are happy to announce the availability of <span class="citation" data-cites="discordapp">@discordapp</span> <span class="citation" data-cites="ManjaroLinux">@ManjaroLinux</span>. Read more about it on our forums: <a href="https://t.co/XbuhEJCFUC" class="uri">https://t.co/XbuhEJCFUC</a> <a href="https://t.co/MH7Pjhn6EH" class="uri">https://t.co/MH7Pjhn6EH</a></p>
+</blockquote>
+<p>というわけで、なんかDiscordの扱いが変わったらしい。</p>
+<p>というわけでAURを見てみると…AURからDiscordがなくなっている! Extra行きでもない!!</p>
+<p>で、フォーラムを見てみると「Snappy使えよ」ということになっている。</p>
+<p>Snappy?</p>
+<h2 id="sanppy">Sanppy</h2>
+<p>Snappyについては<a href="https://ja.wikipedia.org/wiki/Snappy">Wikipediaに既に記事がある</a>。</p>
+<blockquote>
+<p>Snappyとはカノニカルが設計・開発したソフトウェアデプロイメントシステムかつパッケージ管理システムであり、元々はUbuntu Phoneオペレーティングシステム用に設計・開発された。</p>
+</blockquote>
+<p>a-ha?</p>
+<p>ちゃんと<a href="https://wiki.archlinux.jp/index.php/Snap">Archwikiにも記事がある</a>。 そして、<a href="https://snapcraft.io/install/discord/manjaro">snapcraftのサイトにManjaroについての記述がある</a>。</p>
+<p>が、どれも後述するようにちょっと微妙である。</p>
+<p>簡単に言えば、パッケージがライブラリとか全部含めてSquashFSにしてあるのでディストリビューションごとの調整とかいらないよ、という話である。</p>
+<p>はっきりいってしまえば、いわゆるポータブルアプリである。 こういうの、前からちょいちょいあった。そして、いろんな意味で微妙なのである。</p>
+<p>一番の理由は容量をえらいとる、というのがある。 管理がばらつくとか、制御しづらいとか、パッケージの信頼性が担保しにくいとか、他にも理由はたくさんある。</p>
+<h2 id="インストール">インストール</h2>
+<p>必要なのはcommunityパッケージの<code>snapd</code></p>
+<pre><code>$ sudo pacman -S snapd</code></pre>
+<p>snapdをenableしろと言っているが、snapdが必要なのはパッケージ操作時のみ。</p>
+<pre><code>$ sudo systemctl start snapd</code></pre>
+<p>Discordをインストール。結構長い。</p>
+<pre><code>$ sudo snap install discord</code></pre>
+<p>パッケージ操作はもうしないのでsnapdは止めてしまって良い</p>
+<pre><code>$ sudo systemctl stop snapd
+$ sudo systemctl stop snapd.socket</code></pre>
+<h2 id="起動と感触">起動と感触</h2>
+<p>Snappyを使って起動する。snapdは必要ない。</p>
+<pre><code>$ snap run discord</code></pre>
+<p>起動すると、フォント選択とフォントレンダリングに少し違和感があること、カーソルが異なるものになってしまうことが気になる。 あと、Cinnamon上でアプリケーションアイコンが表示されない(systrayには表示される。これは.desktopファイルの設定によらず改善しない)。</p>
+<p>また、アプリケーションアイコンのコンテキストメニュー(通称デスクトップメニュー)に機能しない “New Window” がある。</p>
+<p>使えないわけではないけど、やっぱりいまいちだ…</p>
+<p>(2019-08-12 追記)</p>
+<p>システムを再起動したところ</p>
+<ul>
+<li>アイコンは出るようになった</li>
+<li><code>discord</code>コマンドで実行できるようになっている (<code>/var/lib/snapd/snap/bin/discord</code>を呼んでいる)</li>
+<li>カーソルとフォントは相変わらず</li>
+<li>.desktopメニューに“New Window”があるのは相変わらず。<code>[Desktop Action]</code>は定義されてないけれど</li>
+<li>systrayのDiscordアイコンクリック時に“Top Secret Control Panel”が出る。これは右クリックの挙動で、クリック時はwindow activateされるのが正しいはず</li>
+</ul>
+<h2 id="snappyについて">Snappyについて</h2>
+<p>Manjaroの場合AURにDiscordがあったので、それを前提にするのであれば大幅な後退であるというのが基本的な印象だ。</p>
+<p>しかし、それはちょっと傲慢過ぎる。</p>
+<p>Arch LinuxやManjaro Linuxの場合、ほとんどのソフトウェアはAURにあり、そのいずれも(Launchpadと比べても)クオリティが高く調整が行き届いている。 だが、現実には依然としてバイナリのみの配布となっていて、Ubuntu向けdebパッケージのみが配布されているケースはかなり多い。Discordもそうである。</p>
+<p>このようなソフトウェアの存在のために現実的にはUbuntuパッケージが使えるUbuntu系列のディストリビューション、AURで調整されているArch系列のディストリビューションぐらいしか選べないという状況が出来上がる。せいぜいがFedora。 実際にopenSUSE, Mageia, Sabayon Linux, PCLinuxOSを使っていたときは使えるソフトウェアに著しい制限がかかる状況であった。</p>
+<p>そうした状況は健全とはいい難いため、そのようななんらかのポリシーによって限定的なパッケージでバイナリ配布されるソフトウェア<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>が広くディストリビューションを限定せずに利用できる、という意味ではSnappyによってサポートされるというのは悪い話ではない。</p>
+<p>だが、Snappyに統一されるべきかというと、ちょっと首肯は難しい。 Snapcraftがどれだけメンテナンスされるか、きちんとチェックされるかというところで、やはり信頼感はかなり差がある。Launchpadが結構ひどく、AURがほとんどのパッケージはちゃんとしていることを考えるとやはりAURで欲しい。クオリティ的にもSnappyがいまいちであることを考えるとSnappyを理由にAURからドロップするのは結構残念な気持ちになる。</p>
+<p>余談だが、Ubuntu向けdebパッケージで提供されるっていうのは結構扱いにくい。debパッケージはちょっと特殊なので、PKGBUILDを書いてリアッセンブルするのが割と手間なのだ。specを変換するだけのRPMのほうがずっと楽だろう…と私は思うのだが、なぜかAURのパッケージ群はRPMがあるソフトウェアでも大抵debをリアッセンブルしているので、ひょっとしたらこれは私の認識が正しくないのかもしれない。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>「バイナリ配布だから限定的なパッケージである」という理解は間違っている。例えばFirefoxはLinux向け完パケバイナリが存在し、ポータブルアプリとして実行可能である。<a href="#fnref1" class="footnote-back" role="doc-backlink">&#x21a9;︎</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

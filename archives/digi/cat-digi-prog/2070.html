@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-08-11T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-08-11T00:00:00+09:00" />
+    <title>Stellaの言語デザイン - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Stellaの言語デザイン</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>Stellaの話、第三段。 今回は、特徴的な「Stella logicとDSL」の話をしていく。</p>
+<p>正直なところ、Stella logicは仕方ないとはいえあまりスマートではない設計がなされている。 なおかつYAML形式だ。 確かに知識が少なくても書けるようには工夫されているが、その一方で労力、時間、そしてミス発生の余地という犠牲を払うことになる。</p>
+<p>だが、このYAML形式、というのがポイントになっている。 その不自由は、与えられたものを使うだけの人にとってのみのものだからだ。</p>
+<h2 id="stella-logicの構造">Stella logicの構造</h2>
+<p>Stella logicの肝となるのはcontext leafと呼ばれるものだが、これは</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">[</span><span class="at"> method</span><span class="kw">,</span><span class="at"> arg </span><span class="kw">]</span></span></code></pre></div>
+<p>という構造をしている。 methodはtests及びactionsが存在し、それぞれ「テスト名」「アクション名」と呼ばれている。 argの型はmethodによって決まっており、</p>
+<pre><code>[ method, arg1, arg2...]</code></pre>
+<p>のようにはならず、常に単一の値である。</p>
+<p>例えば</p>
+<pre><code>[ match, String ]</code></pre>
+<p>のように定義されており、ものによっては</p>
+<pre><code>[ msg, (String|Array)]</code></pre>
+<p>のように定義されている。</p>
+<p>もうなんとなくわかるかもしれないが、思いっきりLispである。 もっとも、Stella logicはなんとなくLispっぽいだけで純粋にLispスタイルなわけではない。</p>
+<p>基本的にはcontext leafまでは次のように定義されている。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb5-1"><a href="#cb5-1"></a>root.is_a? <span class="dt">Hash</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>root.has_key? <span class="st">&quot;Context&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>root[<span class="st">&quot;Context&quot;</span>].is_a? <span class="dt">Array</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a>root[<span class="st">&quot;Context&quot;</span>].all? <span class="kw">do</span> |context_tree|</span>
+<span id="cb5-5"><a href="#cb5-5"></a>  context_tree.all? <span class="kw">do</span> |context_branch| </span>
+<span id="cb5-6"><a href="#cb5-6"></a>    context_branch.is_a? <span class="dt">Hash</span> &amp;&amp; context_branch.has_key? <span class="st">&quot;tests&quot;</span> &amp;&amp; context_branch.has_key? <span class="st">&quot;actions&quot;</span> <span class="kw">and</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a>    context_branch[<span class="st">&quot;tests&quot;</span>].is_a? <span class="dt">Array</span> <span class="kw">and</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a>    context_branch[<span class="st">&quot;actions&quot;</span>].is_a? <span class="dt">Array</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a>  <span class="kw">end</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="kw">end</span></span></code></pre></div>
+<p>もっと具体的には次のようになる。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb6-1"><a href="#cb6-1"></a>root = {<span class="st">&quot;Context&quot;</span> = {<span class="st">&quot;main&quot;</span> =&gt; <span class="dt">Array</span>.new} }</span>
+<span id="cb6-2"><a href="#cb6-2"></a>root[<span class="st">&quot;Context&quot;</span>][<span class="st">&quot;main&quot;</span>].push({<span class="st">&quot;tests&quot;</span> =&gt; <span class="dt">Array</span>.new, <span class="st">&quot;actions&quot;</span> =&gt; <span class="dt">Array</span>.new})</span></code></pre></div>
+<p>有効なcontext leafまで書くと</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb7-1"><a href="#cb7-1"></a>root = {<span class="st">&quot;Context&quot;</span> = {<span class="st">&quot;main&quot;</span> =&gt; <span class="dt">Array</span>.new} }</span>
+<span id="cb7-2"><a href="#cb7-2"></a>root[<span class="st">&quot;Context&quot;</span>][<span class="st">&quot;main&quot;</span>].push({<span class="st">&quot;tests&quot;</span> =&gt; [ [<span class="st">&quot;match&quot;</span>, <span class="st">&quot;Hello&quot;</span>] ], <span class="st">&quot;actions&quot;</span> =&gt; [ [<span class="st">&quot;msg&quot;</span>, [<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>] ] ]})</span></code></pre></div>
+<p>みたいな感じ。</p>
+<p>Lispで書くと</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1"></a>&#39;(</span>
+<span id="cb8-2"><a href="#cb8-2"></a>  (<span class="st">&quot;Context&quot;</span> (</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    (<span class="st">&quot;main&quot;</span> (</span>
+<span id="cb8-4"><a href="#cb8-4"></a>      (<span class="st">&quot;tests&quot;</span> (</span>
+<span id="cb8-5"><a href="#cb8-5"></a>        (<span class="st">&quot;match&quot;</span> <span class="st">&quot;Hello&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6"></a>      ))</span>
+<span id="cb8-7"><a href="#cb8-7"></a>      (<span class="st">&quot;actions&quot;</span> (</span>
+<span id="cb8-8"><a href="#cb8-8"></a>        (<span class="st">&quot;msg&quot;</span> (<span class="st">&quot;Hello, &quot;</span> <span class="st">&quot;world!&quot;</span>))</span>
+<span id="cb8-9"><a href="#cb8-9"></a>      ))</span>
+<span id="cb8-10"><a href="#cb8-10"></a>    ))</span>
+<span id="cb8-11"><a href="#cb8-11"></a>  ))</span>
+<span id="cb8-12"><a href="#cb8-12"></a>)</span></code></pre></div>
+<p>である。そして、YAMLにすると</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">Context</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="at">  </span><span class="fu">main</span><span class="kw">:</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="at">    </span><span class="kw">-</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="at">      </span><span class="fu">tests</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">[</span><span class="at">match</span><span class="kw">,</span><span class="at"> Hello</span><span class="kw">]</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="at">      </span><span class="fu">actions</span><span class="kw">:</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="kw">[</span><span class="at">msg</span><span class="kw">,</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;Hello,&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;world!&quot;</span><span class="kw">]]</span></span></code></pre></div>
+<p>となる。 類似の感覚でRubyで書くと</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb10-1"><a href="#cb10-1"></a>{</span>
+<span id="cb10-2"><a href="#cb10-2"></a>  <span class="st">&quot;Context&quot;</span> =&gt; {</span>
+<span id="cb10-3"><a href="#cb10-3"></a>    <span class="st">&quot;main&quot;</span> =&gt; [</span>
+<span id="cb10-4"><a href="#cb10-4"></a>      {</span>
+<span id="cb10-5"><a href="#cb10-5"></a>        <span class="st">&quot;tests&quot;</span> =&gt; [</span>
+<span id="cb10-6"><a href="#cb10-6"></a>          [<span class="st">&quot;match&quot;</span>, <span class="st">&quot;Hello&quot;</span>]</span>
+<span id="cb10-7"><a href="#cb10-7"></a>        ],</span>
+<span id="cb10-8"><a href="#cb10-8"></a>        <span class="st">&quot;actions&quot;</span> =&gt; [</span>
+<span id="cb10-9"><a href="#cb10-9"></a>          [<span class="st">&quot;msg&quot;</span>, [<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>]]</span>
+<span id="cb10-10"><a href="#cb10-10"></a>        ]</span>
+<span id="cb10-11"><a href="#cb10-11"></a>      }</span>
+<span id="cb10-12"><a href="#cb10-12"></a>    ]</span>
+<span id="cb10-13"><a href="#cb10-13"></a>  }</span>
+<span id="cb10-14"><a href="#cb10-14"></a>}</span></code></pre></div>
+<p>さらにJSONで書くと</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">{</span><span class="dt">&quot;Context&quot;</span><span class="fu">:{</span><span class="dt">&quot;main&quot;</span><span class="fu">:</span><span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;tests&quot;</span><span class="fu">:</span><span class="ot">[[</span><span class="st">&quot;match&quot;</span><span class="ot">,</span><span class="st">&quot;Hello&quot;</span><span class="ot">]]</span><span class="fu">,</span><span class="dt">&quot;actions&quot;</span><span class="fu">:</span><span class="ot">[[</span><span class="st">&quot;msg&quot;</span><span class="ot">,[</span><span class="st">&quot;Hello, &quot;</span><span class="ot">,</span><span class="st">&quot;world!&quot;</span><span class="ot">]]]</span><span class="fu">}</span><span class="ot">]</span><span class="fu">}}</span></span></code></pre></div>
+<p>この中ではRubyで書くのが<code>,</code>を忘れそうで一番危ない。 ちなみに、これに関してはPerlで書いてもRubyと全く同じになる。</p>
+<p>入れ子が深く複雑に見えるが、作業自体は骨格ができてしまえばコピペ+改変でがんばれるので難易度自体は低い。 これを可能にするためコピペベースとなるサンプルも提供されている。</p>
+<h2 id="yamlで書くである合理性">「YAMLで書く」である合理性</h2>
+<p>見ての通り、Stella Logicは連想配列, 配列, 文字列の組み合わせによって表現できる。 これらは多くのプログラミング言語に備わる基本的データ型である。</p>
+<p>そして、そのような基本的データ型であるからこそYAMLやJSONで表すことができる。</p>
+<p>YAMLは汎用性のあるデータフォーマットだ。</p>
+<p>以上を以て「Stella logicは任意の言語で記述できる」が成立する。 例えばRubyなら</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb12-1"><a href="#cb12-1"></a>require <span class="st">&#39;YAML&#39;</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3"></a>root = { <span class="st">&quot;Context&quot;</span> =&gt; {　<span class="st">&quot;main&quot;</span> =&gt; [</span>
+<span id="cb12-4"><a href="#cb12-4"></a>  {</span>
+<span id="cb12-5"><a href="#cb12-5"></a>    <span class="st">&quot;tests&quot;</span> =&gt; [</span>
+<span id="cb12-6"><a href="#cb12-6"></a>      [<span class="st">&quot;match&quot;</span>, <span class="st">&quot;Hello&quot;</span>]</span>
+<span id="cb12-7"><a href="#cb12-7"></a>    ],</span>
+<span id="cb12-8"><a href="#cb12-8"></a>    <span class="st">&quot;actions&quot;</span> =&gt; [</span>
+<span id="cb12-9"><a href="#cb12-9"></a>      [<span class="st">&quot;msg&quot;</span>, [<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>]]</span>
+<span id="cb12-10"><a href="#cb12-10"></a>    ]</span>
+<span id="cb12-11"><a href="#cb12-11"></a>  }</span>
+<span id="cb12-12"><a href="#cb12-12"></a>]}}</span>
+<span id="cb12-13"><a href="#cb12-13"></a></span>
+<span id="cb12-14"><a href="#cb12-14"></a><span class="dt">YAML</span>.dump root, <span class="dt">STDOUT</span></span></code></pre></div>
+<p>で良いわけだ。</p>
+<p>専用の記述法を提供すればもっと簡単に書けるようになるが、そうなるとその記述法以外は許されなくなってしまう。 「このようにYAMLで書いてください」ということをそのまま受け取るだけであれば、もっと良い記述法が提供されるべきと思ってしまうだろうが、知識と発想さえあれば汎用性があり容易な手段で提供されることは良いことだと判断できるだろう。</p>
+<p>ちなみに、JSONでなくYAMLである理由は、「JSONだと閉じ括弧のあとのカンマを忘れるから」である。 プログラマですら忘れるものを一般の人が意識できるわけもない。</p>
+<p>なお、YAMLでの出力は難しい言語処理系を使う場合、JSONで出力しておき、</p>
+<pre><code>$ ruby -ryaml -rjson -e &#39;YAML.dump JSON.load(ARGF), STDOUT&#39; logic.json</code></pre>
+<p>なんてワンライナーで変換できる。</p>
+<h2 id="だからdsl">だからDSL</h2>
+<p>とはいえ、YAMLで書くのは結構かったるい。 基本的なスタンスは「書きやすい方法は各々用意すべし」なのだが、それが難しく不自由を強いられるケースもあるだろう。</p>
+<p>そのため、Stella logic builderというRubyライブラリを提供している。</p>
+<p>このライブラリは、Stella logicを書きやすいようにするための語彙を提供する。 例えばコンテキストリーフノード<code>msg</code>について</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb14-1"><a href="#cb14-1"></a>msg(<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>)</span></code></pre></div>
+<p>のように書けるようにする。これを使うだけで前述のコードが</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb15-1"><a href="#cb15-1"></a>{ <span class="st">&quot;Context&quot;</span> =&gt; {　<span class="st">&quot;main&quot;</span> =&gt; [</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  {</span>
+<span id="cb15-3"><a href="#cb15-3"></a>    <span class="st">&quot;tests&quot;</span> =&gt; [</span>
+<span id="cb15-4"><a href="#cb15-4"></a>      match(<span class="st">&quot;Hello&quot;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5"></a>    ],</span>
+<span id="cb15-6"><a href="#cb15-6"></a>    <span class="st">&quot;actions&quot;</span> =&gt; [</span>
+<span id="cb15-7"><a href="#cb15-7"></a>      msg(<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>)</span>
+<span id="cb15-8"><a href="#cb15-8"></a>    ]</span>
+<span id="cb15-9"><a href="#cb15-9"></a>  }</span>
+<span id="cb15-10"><a href="#cb15-10"></a>]}}</span></code></pre></div>
+<p>とちょっと読みやすくなる。 もちろん、こんな使い方をするためでなく、Rubyで独自のより書きやすい書き方を制作する際の補助である。</p>
+<p>同ライブラリには私なりの書きやすい書き方も用意されている。</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb16-1"><a href="#cb16-1"></a>c = <span class="dt">Stella</span>::<span class="dt">Builder</span>.new</span>
+<span id="cb16-2"><a href="#cb16-2"></a>c.cxt(<span class="st">&quot;main&quot;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3"></a>c.push(</span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="st">&quot;tests&quot;</span> =&gt; [match(<span class="st">&quot;Hello&quot;</span>)]</span>
+<span id="cb16-5"><a href="#cb16-5"></a>  <span class="st">&quot;actions&quot;</span> =&gt; [msg(<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>)]</span>
+<span id="cb16-6"><a href="#cb16-6"></a>)</span>
+<span id="cb16-7"><a href="#cb16-7"></a>c.out</span></code></pre></div>
+<p><code>Stella::Builder#cxt</code>はデフォルトが<code>"main"</code>なので別に呼ばなくて良い。</p>
+<p><code>Stella::Builder#out</code>は出力用メソッドなので、前述と同じ内容の記述であれば必要ない。 つまり、</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb17-1"><a href="#cb17-1"></a>c = <span class="dt">Stella</span>::<span class="dt">Builder</span>.new</span>
+<span id="cb17-2"><a href="#cb17-2"></a></span>
+<span id="cb17-3"><a href="#cb17-3"></a>c.push(</span>
+<span id="cb17-4"><a href="#cb17-4"></a>  <span class="st">&quot;tests&quot;</span> =&gt; [match(<span class="st">&quot;Hello&quot;</span>)]</span>
+<span id="cb17-5"><a href="#cb17-5"></a>  <span class="st">&quot;actions&quot;</span> =&gt; [msg(<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>)]</span>
+<span id="cb17-6"><a href="#cb17-6"></a>)</span></code></pre></div>
+<p>である。すっきり。</p>
+<p>これはRubyistにとって書きやすい設計を目指しているものであるから、「不自由を強いられる人にとって書きやすい書き方」ではない。 同ライブラリはそのような人に向けた書き方も提供している。それがStella DSLだ。</p>
+<p>Stella DSLを用いて書くと次のようになる。</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb18-1"><a href="#cb18-1"></a>dsl</span>
+<span id="cb18-2"><a href="#cb18-2"></a></span>
+<span id="cb18-3"><a href="#cb18-3"></a>as <span class="st">&quot;main&quot;</span> <span class="kw">do</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a>  on match(<span class="st">&quot;Hello&quot;</span>)</span>
+<span id="cb18-5"><a href="#cb18-5"></a>  act msg(<span class="st">&quot;Hello,&quot;</span> <span class="st">&quot;world!&quot;</span>)</span>
+<span id="cb18-6"><a href="#cb18-6"></a><span class="kw">end</span></span>
+<span id="cb18-7"><a href="#cb18-7"></a></span>
+<span id="cb18-8"><a href="#cb18-8"></a>finish</span></code></pre></div>
+<p>次のような書き方も可能。</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb19-1"><a href="#cb19-1"></a>dsl</span>
+<span id="cb19-2"><a href="#cb19-2"></a></span>
+<span id="cb19-3"><a href="#cb19-3"></a>as <span class="st">&quot;main&quot;</span> <span class="kw">do</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a>  lets <span class="kw">do</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a>    match(<span class="st">&quot;Hello&quot;</span>)</span>
+<span id="cb19-6"><a href="#cb19-6"></a>    msg(<span class="st">&quot;Hello, &quot;</span>, <span class="st">&quot;world!&quot;</span>)</span>
+<span id="cb19-7"><a href="#cb19-7"></a>  <span class="kw">end</span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="kw">end</span></span>
+<span id="cb19-9"><a href="#cb19-9"></a></span>
+<span id="cb19-10"><a href="#cb19-10"></a>finish</span></code></pre></div>
+<p>あまり違いがないように見えるかもしれないが、コンテキストリーフノードが複数ある場合は大きく変わってくる。</p>
+<p>跡形もないだろう? Stella LogicがYAMLであることが何かを縛り付けるためではなく、それぞれの技倆における自由を与えるものであることがおわかりいただけたかと思う。 もちろん、Sella DSLが正解なわけではなく、むしろ可能なのであれば最も書きやすい方法で書くことが推奨される。</p>
+<p>Stella DSLはRuby内部DSLであるため、書き方の自由度は高く、表現上の自由度は大幅に上がっている。 Chienomiを読んでいる諸兄諸姉はプログラミングのできる人がかなり多かろうから、ここまで説明すれば十分に理解していただけていることと思う。</p>
+<p>ちなみに、メタ記述法をとらないのであれば<code>match("Hello")</code>と書く方法自体はとても簡単で</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">def</span> match(str)</span>
+<span id="cb20-2"><a href="#cb20-2"></a>  [<span class="st">&quot;match&quot;</span>, str]</span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="kw">end</span></span></code></pre></div>
+<p>で良い。</p>
+<p>Stella DSLはプログラムを自在に書けない人のためのStella logicの別記法であると同時に、「Stella logicはあなたの技術力によって生成するものである」という原則の純正サンプルである、ということだ。</p>
+<h2 id="SpecialDSL">専用記法とは</h2>
+<p>専用記法を採用するとしたら、多分こんな感じだろう。</p>
+<pre><code>@main
+
+/test
+
+match Hello
+
+/act
+
+msg &quot;Hello, &quot; world!</code></pre>
+<p><code>@</code>でコンテキスト切り替え、<code>/</code>で定義する内容の宣言になっている(<code>test</code>で新規リーフになる)。 メソッドの引数はShell wordsとして解釈される。</p>
+<p>他の記法と比べて文法が非常に寛容でエラーになる可能性が低い。 この記法自体は良いと考えていると、なんなら今からでも採用したいくらいだし、実際それは可能である。</p>
+<p>だが、もしいまからこの記法を採用するとしたら、それはStella Logic(YAML)を生成するメタフォーマットになるだろう。 このルールがあるため、新たなる記法を追加するのは簡単だ。</p>
+<p>それがもし、Stellaが受け付けるのがこのフォーマットだけだとしたらどうだろう? もちろん、それをプログラムによって生成することは不可能ではないが、そのジェネレータ、トランスレータは各々が実装しなくてはならない。 そして、これはジェネレータが生成しやすいフォーマットでもない。</p>
+<p>YAMLという一般的なフォーマットをStellaが受け付けることによって扱いやすくなっていることが分かるだろう。</p>
+<h2 id="in-the-codes">in the codes</h2>
+<p>Stella DSLは基本的に記法が異なるだけで、考え方は変わっていない。 ところが、最終的にYAMLを出力すればいいため、自由度はもっともっと高い。</p>
+<p>例えば私が書いた「選択後特定のアクションを経て同一のコンテキストに合流する」というコードは</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">def</span> sel(<span class="st">msgs: </span><span class="dv">nil</span>, <span class="st">opts: </span><span class="dv">nil</span>, <span class="st">params: </span><span class="dv">nil</span>)</span>
+<span id="cb22-2"><a href="#cb22-2"></a>  ccount = <span class="ot">@ccount</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>  cpre = <span class="ot">@cpre</span></span>
+<span id="cb22-4"><a href="#cb22-4"></a>  pname = <span class="ot">@pname</span></span>
+<span id="cb22-5"><a href="#cb22-5"></a>  as(<span class="st">&quot;</span><span class="ot">#{@cpre}#{@ccount}</span><span class="st">&quot;</span>) {</span>
+<span id="cb22-6"><a href="#cb22-6"></a>    on finally</span>
+<span id="cb22-7"><a href="#cb22-7"></a>    </span>
+<span id="cb22-8"><a href="#cb22-8"></a>    actarg = []</span>
+<span id="cb22-9"><a href="#cb22-9"></a>    msgs.each {|i| actarg.push msg(i)} <span class="kw">if</span> msgs</span>
+<span id="cb22-10"><a href="#cb22-10"></a>    params.each {|i| actarg.push appendparam(pname, i)} <span class="kw">if</span> params</span>
+<span id="cb22-11"><a href="#cb22-11"></a></span>
+<span id="cb22-12"><a href="#cb22-12"></a>    ohash = {}</span>
+<span id="cb22-13"><a href="#cb22-13"></a>    opts[<span class="dv">0</span>].each_with_index {|x, i| ohash[x] = <span class="st">&quot;</span><span class="ot">#{</span>cpre<span class="ot">}#{</span>ccount<span class="ot">}</span><span class="st">-</span><span class="ot">#{</span>i + <span class="dv">1</span><span class="ot">}</span><span class="st">&quot;</span> }</span>
+<span id="cb22-14"><a href="#cb22-14"></a>    actarg.push(sel(ohash))</span>
+<span id="cb22-15"><a href="#cb22-15"></a></span>
+<span id="cb22-16"><a href="#cb22-16"></a>    act *actarg</span>
+<span id="cb22-17"><a href="#cb22-17"></a>  }</span>
+<span id="cb22-18"><a href="#cb22-18"></a></span>
+<span id="cb22-19"><a href="#cb22-19"></a></span>
+<span id="cb22-20"><a href="#cb22-20"></a>  opts[<span class="dv">1</span>].each_with_index <span class="kw">do</span> |x, i|</span>
+<span id="cb22-21"><a href="#cb22-21"></a>    as <span class="st">&quot;</span><span class="ot">#{@cpre}#{@ccount}</span><span class="st">-</span><span class="ot">#{</span>i + <span class="dv">1</span><span class="ot">}</span><span class="st">&quot;</span> <span class="kw">do</span></span>
+<span id="cb22-22"><a href="#cb22-22"></a>      on finally</span>
+<span id="cb22-23"><a href="#cb22-23"></a>      act *x, pass(<span class="st">&quot;</span><span class="ot">#{</span>cpre<span class="ot">}#{</span>ccount + <span class="dv">1</span><span class="ot">}</span><span class="st">&quot;</span>)</span>
+<span id="cb22-24"><a href="#cb22-24"></a>    <span class="kw">end</span></span>
+<span id="cb22-25"><a href="#cb22-25"></a>  <span class="kw">end</span></span>
+<span id="cb22-26"><a href="#cb22-26"></a></span>
+<span id="cb22-27"><a href="#cb22-27"></a>  <span class="ot">@ccount</span> += <span class="dv">1</span></span>
+<span id="cb22-28"><a href="#cb22-28"></a><span class="kw">end</span></span></code></pre></div>
+<p>となっている。(Stella DSLを使っている)</p>
+<p>余談だが、インスタンス変数をわざわざローカル変数にしているのは、<code>StellaDSL#as</code>は<code>Object#instance_eval</code>を呼ぶのでインスタンス変数が読めなくなるためである。</p>
+<p><code>Stella::Builder</code>クラスは<code>Stella::Builder#push</code>などによって簡単にコンテキストリーフの追加が可能であるため、よりプログラム的に生成しやすい。</p>
+<p>例えば実用的な意味があるかどうかは別として、学習を元に条件とアクションのペアを生成していき、トポロジカルソートによって構成する、という方法もありうるわけだ。</p>
+<h2 id="finally">finally</h2>
+<p>“Stella logicはLispライクな考え方のYAMLである”</p>
+<p>これによって得られたものは</p>
+<ul>
+<li>容易に変換でき、任意の言語で書くことができる</li>
+<li>任意の言語を用いて容易に異なる記法を実装することができる</li>
+<li>ループや再利用、関数的コールなど本質的記述に含められない機能を生成に含めることで利用できる</li>
+<li>単純な記述でなくプログラムによって生成するといった応用が効きやすい</li>
+</ul>
+<p>結局、どれほど気の利いたフォーマットや記法を提供することよりも、汎用性があり単純な形式を採用するほうがユーザーに利する。 そこまで考えて採用したわけではないのだが、そのことが改めて実感できるものであった。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

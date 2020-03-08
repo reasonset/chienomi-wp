@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-09-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-09-17T00:00:00+09:00" />
+    <title>Manjaro LinuxでJACK (JACK Audio Connection Kit) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Manjaro LinuxでJACK (JACK Audio Connection Kit)</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>Mimir Yokohamaの授業で必要になったので、ちゃんとJACK試すことにした。</p>
+<p>割と大変だったので共有しておく。</p>
+<p>なお、私の環境ではオーディオデバイスは4つある。</p>
+<ul>
+<li>Intel HDA</li>
+<li>AMD Radeon Ellesmere HDMI Audio</li>
+<li>Audio4DJ</li>
+<li>US-366</li>
+</ul>
+<p>ただし、このうちUS-366はLinux上で動作しない。</p>
+<p>ここでの目標はAudio4DJのチャンネルBで鳴らすこと。 Audio4DJはチャンネルを2つ持っていて、チャンネルBはスピーカーとヘッドフォンの両方から出るようになっている。</p>
+<p>また、Manjaro Linuxなので最初からJACKもPulseAudioも入っている前提。</p>
+<h2 id="jackって">JACKって?</h2>
+<p>PulseAudioが世界<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>を支配する以前の混沌世界において燦然と輝くプロフェッショナル仕様のサウンドサーバである。</p>
+<p>ESDやaRtsと違ってルーティングを中心に考えられていた、ソフトウェアパッチベイだったのが特徴。MIDIにも対応している。</p>
+<p>「高機能、故に複雑」の典型であり、しかもその高機能というのがものすごく限られた人にしか求められていないものなので、大抵の人にとっては関心の外。限られた人というのは</p>
+<ul>
+<li>レイテンシ大事 (音楽制作するとか、PCにつないで演奏するとか、音ゲーするとか)</li>
+<li>ハイレゾ派</li>
+</ul>
+<p>である。</p>
+<p>現在に至ってはPulseAudioがあって、だいたいPulseAudio使っていれば欲しい結果に至るため、なおさら使われない。</p>
+<h2 id="実作業">実作業</h2>
+<h3 id="qjackctlを入れる">qjackctlを入れる</h3>
+<p>Jackをコマンドラインで操作するのは非人道的なので、qjackctlを入れておく。</p>
+<h3 id="サウンドデバイスを確認">サウンドデバイスを確認</h3>
+<p><code>aplay -l</code>が見やすい。</p>
+<pre><code>% aplay -l
+**** ハードウェアデバイス PLAYBACK のリスト ****
+カード 0: Audio4DJ [Audio 4 DJ], デバイス 0: Audio 4 DJ [Audio 4 DJ]
+  サブデバイス: 0/2
+  サブデバイス #0: subdevice #0
+  サブデバイス #1: subdevice #1
+カード 1: PCH [HDA Intel PCH], デバイス 0: ALC662 rev3 Analog [ALC662 rev3 Analog]
+  サブデバイス: 0/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 3: HDMI 0 [HDMI 0]
+  サブデバイス: 1/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 7: HDMI 1 [HDMI 1]
+  サブデバイス: 1/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 8: HDMI 2 [HDMI 2]
+  サブデバイス: 1/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 9: HDMI 3 [HDMI 3]
+  サブデバイス: 1/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 10: HDMI 4 [HDMI 4]
+  サブデバイス: 1/1
+  サブデバイス #0: subdevice #0
+カード 2: HDMI [HDA ATI HDMI], デバイス 11: HDMI 5 [HDMI 5]
+  サブデバイス: 0/1
+  サブデバイス #0: subdevice #0</code></pre>
+<p>RX580、HDMIとDP全部足しても5つしかないのに、サウンドデバイスが5つもあるな…</p>
+<h3 id="pamをいじる">PAMをいじる</h3>
+<p><code>/etc/security/limits.conf</code>に次の内容を追加。</p>
+<pre><code>@realtime        -       rtprio          99
+@realtime        -       memlock         unlimited</code></pre>
+<h3 id="グループの追加">グループの追加</h3>
+<p><code>audio</code>グループと<code>realtime</code>グループに当該ユーザーを追加する。</p>
+<p>このあとリログすればいいはずなのだけど、なぜかリログしても反映されなかったのでリブートすることになった。(それに気づかずちょっとハマった)</p>
+<h3 id="pulseaudioから除外する">PulseAudioから除外する</h3>
+<p><code>pavucontrol</code>でミキサーを開いたら、「設定」から当該デバイスを「オフ」にする。</p>
+<p>これでPulseAudioはデバイスを手放す。</p>
+<h3 id="cpu-governerをperformanceに">CPU GovernerをPerformanceに</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">sudo</span> cpupower freqency-set -g performance</span></code></pre></div>
+<h3 id="qjackctlを起動して設定">qjackctlを起動して設定</h3>
+<p>qjackctlを起動したら「設定」から必要な設定を行う。</p>
+<p>インターフェイスは<code>aplay -l</code>で確認したものと同じ。</p>
+<p>ドライバーは<code>alsa</code>で良い(恐らく最初からそうなっている)。</p>
+<p>Jackを使うだけなら、PAMをいじってグループを追加する作業を省略して、「リアルタイム」というのをオフにすれば機能する。</p>
+<p>サンプルレートはデバイスが対応しているものを指定する。 一応、<code>/proc/asound/card*/codec#0</code>というファイルに書いてあるのだけど、Audio4DJはそもそもこのファイルがなかった。 (もっとも、私はAudio4DJが44100,44800,96000なのは知っているので問題ない)</p>
+<p>高くすれば音質がいい、みたいに思うかもしれないが、音源と等しいのが最も良い。 CDなら44100だし、44100は大体サポートされているから、44100が多分一番いい。 逆に、ハイレゾを再生するのに44100にしているとハイレゾの意味がほぼない(ビット深度はまた別だから意味があるかもしれない)。 44100と48000のどちらかしかサポートされていないカードというのも、まぁまぁある。</p>
+<p>なお、何度も何度も言うけれど、音楽制作では普通、20kHzより上(というより大体16kHzより上)なんてただのノイズなのでばっさり切っているからハイサンプリングレートなんてライブ音源でもない限り意味がない。だって、フォーマット的に鳴るようになっていたって、データ的に消してあるんだから。</p>
+<p>フレーム/ピリオドは小さくすればリアルタイム性は上がるけど、それは動くのを確認してから。 <em>詰め過ぎ注意。</em></p>
+<p>あとは「その他」はお好みで。この状態ではD-Busは使えない。</p>
+<p>ここまでやったら、「メッセージ」を開いておき、「開始」をクリック。 うまくいったらおめでとう。</p>
+<h3 id="jackを試す">Jackを試す</h3>
+<p>mpvを使うのが楽。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">mpv</span> --ao=jack some-sound-file.mp3</span></code></pre></div>
+<p>鳴らなかったらなぜ鳴らないかを考える。</p>
+<h3 id="audio4dj-channel-b">Audio4DJ Channel-B</h3>
+<p>Audio4DJのデバイス指定自体は<code>hw:Audio4DJ</code>でいいのだけど、これだと<code>hw:Audio4DJ,0,0</code>なのでChannel Aで鳴る。</p>
+<p>Channel Bで鳴らしたい場合、選択肢にないので、インターフェイスを編集して<code>hw:Audio4DJ,0,1</code>と書く必要がある(デバイス0, サブデバイス1)。</p>
+<p>私の場合、HDMIもデバイス指定が見つからなかった。</p>
+<h2 id="jack2を使う">Jack2を使う</h2>
+<p><code>jack2</code>パッケージもある(デフォルトで入ってはいない)。</p>
+<p>Jack2を使う場合は、D-Busが使えるので、<code>jack2</code>にパッケージを置き換えるだけでqjackctlでのD-Busオンが効く。</p>
+<p>ただ、D-Busなしで確かめてからにしないと混乱することになる。</p>
+<h2 id="リアルタイムカーネルはいらない">リアルタイムカーネルはいらない</h2>
+<p>普通のカーネルでも十分レイテンシは詰められたし、リアルタイムカーネルの必要性は感じなかった。</p>
+<p>(現在のカーネルは低遅延に対応している)</p>
+<h2 id="pulseaudio経由">PulseAudio経由</h2>
+<p><code>pulseaudio-jack</code>パッケージを入れると、PulseAudio側でJackに対応してくれる。</p>
+<p>「アプリケーションがPulseAudioで鳴らした音をJackに渡したい」という場合、</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="ex">pacmd</span> load-module module-jack-sink</span></code></pre></div>
+<p>でOK。 この方法を使ってJackで鳴らすメリットがほとんど見つからないけれど、Jackで使っているオーディオデバイスがPulseAudioで鳴らせないので、Jack非対応アプリケーションでもそのサウンドデバイスから鳴らしたい場合に有効。</p>
+<h2 id="pro-audioしましょ">Pro Audioしましょ?</h2>
+<p><code>pro-audio</code>グループに音楽制作系のパッケージがごっそり入っている。</p>
+<p>ぶっちゃけ、音楽制作環境としてはニコニコに上げる程度の話だとしても、Linux Pro Audioってまるで話にならないのだけど、「音楽制作体験したい」程度のレベルであればWindowsでフリー音源揃えたりするよりは、色々と整った状態で始められる。</p>
+<p>でも現実問題として、Studio OneとかCakewalk by Bandlab.とかは無料でDAW自体は手に入るわけで(特にCakewalk by Bandlab.は最新の完全なSONAR)、操作性とか機能性とか圧倒的にそっちのほうがいいし、本格的にやろうってなったときにも繋がりやすい。 音源も、KOMPLETE Startとか、UVI Workstationとか入れると普通に使えてしまうし。</p>
+<p>そうだからつまり、音楽制作者だからといって、別にLinuxでJack使うわけじゃないのが現実。 一応、パッとでもしたい時などのためにPro Audioは入れてはいるけれども。</p>
+<p>※ 私はプロの音楽家であり、音楽作る仕事している。</p>
+<p>Linux Musicianとか色々とだいぶ特殊すぎる。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p>真面目にいうと、Linuxのサウンドシステムの世界である。<a href="#fnref1" class="footnote-back" role="doc-backlink">&#x21a9;︎</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

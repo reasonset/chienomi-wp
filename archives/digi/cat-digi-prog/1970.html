@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-02-28T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-02-28T00:00:00+09:00" />
+    <title>はやわかり レスポンシブルCSS - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>はやわかり レスポンシブルCSS</h1></header>
+        <article id="MainArticle">
+<h2 id="まえがき">まえがき</h2>
+<p>リクエストがあったので、レスポンシブルウェブサイトを構築するCSSの基本的な考え方を簡単にまとめよう。</p>
+<p>これは、CSSやHTML自体を書けない人を対象にしたものでは <strong>ない</strong> 。</p>
+<h2 id="ケース分けの仕方">ケース分けの仕方</h2>
+<p>CSSのメディアクエリを使用する。 メディアクエリの詳細については<a href="https://developer.mozilla.org/ja/docs/Web/CSS/Media_Queries/Using_media_queries">MDNに記事がある</a>。</p>
+<p>ほとんどの場合メディア特性には<code>width</code>または<code>height</code>を使用する。 広く使われてはいないが、<code>aspect-ratio</code>, <code>orientation</code>は基本的なメディア特性であり、非常に有用である。 この両者を組み合わせることで(ゲーム画面のように)スクリーンサイズに合致するレイアウトが可能になる。</p>
+<p>典型的なケースでは、レイアウトボックスが<code>1000px</code>幅だとして、ビューポートに1000pxがなければ画面いっぱいにfallbackする。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" title="1"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">min-width</span>: <span class="dv">1000</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb1-3" title="3">    <span class="kw">width</span>: <span class="dv">1000</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-4" title="4">    <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-5" title="5">  }</a>
+<a class="sourceLine" id="cb1-6" title="6">}</a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">max-width</span>: <span class="dv">999</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb1-8" title="8">  <span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb1-9" title="9">    <span class="kw">width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-10" title="10">    <span class="kw">margin</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-11" title="11">  }</a>
+<a class="sourceLine" id="cb1-12" title="12">}</a></code></pre></div>
+<p>ただし、このようなケースでは次のように書くべきだ。 そして、実際にこのように書くべきケースは非常に多く、メディアクエリを必要とするケースは表示切り替えくらいのものである。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb2-1" title="1"><span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb2-2" title="2">  <span class="kw">width</span>: <span class="dv">1000</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb2-3" title="3">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb2-4" title="4">  <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb2-5" title="5">}</a></code></pre></div>
+<p>この場合、<code>#MainBox</code>は幅<code>1000px</code>をまず確保しようとする。 しかし、<code>min-width</code>によって制約されているため、<code>1000px</code>の幅が包括ブロックの100%を越える場合は包括ブロックの100%に留められる。 これによってビューポート幅を突き破ることがないようにできる。</p>
+<p><code>width</code>によって判定するのは「コンテナの中央寄せ」という、2003年以来の文法に従っているためだ。 だから、しっかりとデザインするのであればまた異なった設定になるだろう。</p>
+<h2 id="html構造">HTML構造</h2>
+<p>基本的なレイアウトでは全体を収めるためのボックスを用意する。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">&lt;body&gt;</span></a>
+<a class="sourceLine" id="cb3-2" title="2">  <span class="kw">&lt;section</span><span class="ot"> id=</span><span class="st">&quot;MainBox&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb3-3" title="3">  <span class="kw">&lt;/section&gt;</span></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="kw">&lt;/body&gt;</span></a></code></pre></div>
+<p>この中にレイアウトしていくのだが、基本的には「左であり、上である」「右であり、下である」という順序で書く。 これを入れ替えるのはCSSでは少し難しい。 ただ、良いCSSを書くには「可能な限りJavaScriptに頼らない」という気持ちは必須である。</p>
+<p>「本文コンテナとサイドバー」という構成であれば、サイドバーの内容を上にしたいのであれば左サイドバーになるし、サイドバーの内容を下にしたいのであれば右サイドバーになる。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">&lt;body&gt;</span></a>
+<a class="sourceLine" id="cb4-2" title="2">  <span class="kw">&lt;section</span><span class="ot"> id=</span><span class="st">&quot;MainBox&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb4-3" title="3">    <span class="kw">&lt;article</span><span class="ot"> id=</span><span class="st">&quot;MainContent&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb4-4" title="4">    <span class="kw">&lt;/article&gt;</span></a>
+<a class="sourceLine" id="cb4-5" title="5">    <span class="kw">&lt;nav</span><span class="ot"> id=</span><span class="st">&quot;SideBar&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb4-6" title="6">    <span class="kw">&lt;/nav&gt;</span></a>
+<a class="sourceLine" id="cb4-7" title="7">  <span class="kw">&lt;/section&gt;</span></a>
+<a class="sourceLine" id="cb4-8" title="8"><span class="kw">&lt;/body&gt;</span></a></code></pre></div>
+<p>横並びレイアウトで最も基本的なのは「コンテナをテーブルに、コンテンツをセルに」である。 この場合、例え縮小しても横並びは維持されるし、<code>min-width</code>などではみ出す場合、そのままoverflowする。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb5-1" title="1"><span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb5-2" title="2">  <span class="kw">display</span>: <span class="dv">table</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-3" title="3">  <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-4" title="4">}</a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb5-6" title="6">  <span class="kw">width</span>: <span class="dv">800</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-7" title="7">  <span class="kw">display</span>: <span class="dv">table-cell</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-8" title="8">}</a>
+<a class="sourceLine" id="cb5-9" title="9"><span class="pp">#SideBar</span> {</a>
+<a class="sourceLine" id="cb5-10" title="10">  <span class="kw">width</span>: <span class="dv">300</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-11" title="11">  <span class="kw">display</span>: <span class="dv">table-cell</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb5-12" title="12">}</a></code></pre></div>
+<p>コンテナ側のサイズが決まっていて、サイドバーのサイズを指定しないことでサイドバーをある程度縮小させることを許すことができる。 これは、最低限必要な幅を確保した上で、それよりも幅があるのであればもう少しスペースをとって表示することができる。</p>
+<p>次のCSSでは、<code>1000px</code>を下回るのであればtableによる表示を諦めるが、ボックス自体は最大<code>1200px</code>まで伸張する。 <code>1200px</code>の場合、その割合としてはサイドバーが<code>200px</code>から<code>300px</code>の間で、残りがメインになる。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb6-1" title="1"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">min-width</span>: <span class="dv">1000</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb6-2" title="2">  <span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb6-3" title="3">    <span class="kw">display</span>: <span class="dv">table</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-4" title="4">    <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-5" title="5">    <span class="kw">min-width</span>: <span class="dv">1000</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-6" title="6">    <span class="kw">max-width</span>: <span class="dv">1200</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-7" title="7">  }</a>
+<a class="sourceLine" id="cb6-8" title="8">  <span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb6-9" title="9">    <span class="kw">min-width</span>: <span class="dv">800</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-10" title="10">    <span class="kw">display</span>: <span class="dv">table-cell</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-11" title="11">  }</a>
+<a class="sourceLine" id="cb6-12" title="12">  <span class="pp">#SideBar</span> {</a>
+<a class="sourceLine" id="cb6-13" title="13">    <span class="kw">min-width</span>: <span class="dv">200</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-14" title="14">    <span class="kw">max-width</span>: <span class="dv">300</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-15" title="15">    <span class="kw">display</span>: <span class="dv">table-cell</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb6-16" title="16">  }</a>
+<a class="sourceLine" id="cb6-17" title="17">}</a></code></pre></div>
+<p>十分なスペースがないときに右のボックスを下に送るのであれば、メディアクエリは必要ない。 <code>inline-block</code>として配置することで、overflow時はボックスを並べないようにすることができる。</p>
+<p>この場合、サイズ指定は並んだときに確保すべきボックスと、単独になったときに伸張すべきボックスの大きさを意識する必要がある。 また、内包されているボックスの位置と大きさはいずれも<code>#MainBox</code>にbindされていることを忘れてはいけない。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb7-1" title="1"><span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb7-2" title="2">  <span class="kw">width</span>: <span class="dv">1450</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-3" title="3">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-4" title="4">  <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-5" title="5">}</a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb7-7" title="7">  <span class="kw">min-width</span>: <span class="dv">800</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-8" title="8">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-9" title="9">  <span class="kw">display</span>: <span class="dv">inline-block</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-10" title="10">}</a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="pp">#SideBar</span> {</a>
+<a class="sourceLine" id="cb7-12" title="12">  <span class="kw">min-width</span>: <span class="dv">300</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-13" title="13">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-14" title="14">  <span class="kw">display</span>: <span class="dv">inline-block</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb7-15" title="15">}</a></code></pre></div>
+<h2 id="表示ボックスそのものの変更">表示ボックスそのものの変更</h2>
+<p>ボックスのレイアウトではなく、内容そのものをレスポンシブルに変更したい場合は<code>display</code>を上手に使うといい。 例えば次の場合、<code>#TOC</code>は十分な幅がないとき省略される。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb8-1" title="1"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">max-width</span>: <span class="dv">999</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb8-2" title="2">  <span class="pp">#TOC</span> { <span class="kw">display</span>: <span class="dv">none</span><span class="op">;</span> }</a>
+<a class="sourceLine" id="cb8-3" title="3">}</a></code></pre></div>
+<p>メニューは十分な幅があれば横に配列しようとするが、ないのであればそのまま縦に配列する。</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb9-1" title="1"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">min-width</span>: <span class="dv">1000</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb9-2" title="2">  <span class="pp">#MainMenu</span> li { <span class="kw">display</span>: <span class="dv">inline-block</span><span class="op">;</span> }</a>
+<a class="sourceLine" id="cb9-3" title="3">}</a></code></pre></div>
+<p>同一の内容に対して異なる表示を提供したい場合は、予め複数書いておくようにして、メディアクエリで<code>display: block;</code>と<code>display: none</code>を入れ替えるのが良い。 この場合、同内容はジェネレータによって生成されるべきである。PureBuilder Simplyの場合、Pandocテンプレートを使うことにより内容の反復を避けることができる。 より一般的にはテンプレートそのものをeRubyなどで生成し、値を置き換えるのが良いだろう。</p>
+<p>順序の変更も、「複数書いておいて、表示を切り替える」のが最も無難である。</p>
+<p>がんばるのであれば、<code>position: absolute</code>あるいは<code>position: fixed</code>を使うことで「見かけ上の順序」をごまかすことができる。 これらはビューポートをそのまま使うブロックに対して指定することが多いためあまり意識しないだろうが、座標起点は包括ブロックであり、また包括ブロックとしても機能する。 以下の例では十分な幅があればサイドバーは左に表示されるが、十分な幅がないとき、サイドバーは下に表示される。</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">&lt;body&gt;</span></a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="kw">&lt;section</span><span class="ot"> id=</span><span class="st">&quot;MainBox&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb10-3" title="3">    <span class="kw">&lt;nav</span><span class="ot"> id=</span><span class="st">&quot;SideBar&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb10-4" title="4">    <span class="kw">&lt;/nav&gt;</span></a>
+<a class="sourceLine" id="cb10-5" title="5">    <span class="kw">&lt;article</span><span class="ot"> id=</span><span class="st">&quot;MainContent&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb10-6" title="6">    <span class="kw">&lt;/article&gt;</span></a>
+<a class="sourceLine" id="cb10-7" title="7">  <span class="kw">&lt;/section&gt;</span></a>
+<a class="sourceLine" id="cb10-8" title="8"><span class="kw">&lt;/body&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb11-1" title="1"><span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb11-2" title="2">  <span class="kw">width</span>: <span class="dv">1000</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-3" title="3">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-4" title="4">  <span class="kw">margin</span>: <span class="bu">auto</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-5" title="5">}</a>
+<a class="sourceLine" id="cb11-6" title="6"></a>
+<a class="sourceLine" id="cb11-7" title="7"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">min-width</span>: <span class="dv">1100</span><span class="dt">px</span>) {</a>
+<a class="sourceLine" id="cb11-8" title="8">  <span class="pp">#SideBar</span> {</a>
+<a class="sourceLine" id="cb11-9" title="9">    <span class="kw">position</span>: <span class="dv">absolute</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-10" title="10">    <span class="kw">top</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-11" title="11">    <span class="kw">left</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-12" title="12">    <span class="kw">min-width</span>: <span class="dv">300</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-13" title="13">    <span class="kw">max-width</span>: <span class="dv">300</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-14" title="14">  }</a>
+<a class="sourceLine" id="cb11-15" title="15"></a>
+<a class="sourceLine" id="cb11-16" title="16">  <span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb11-17" title="17">    <span class="kw">position</span>: <span class="dv">absolute</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-18" title="18">    <span class="kw">top</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-19" title="19">    <span class="kw">right</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-20" title="20">    <span class="kw">min-width</span>: <span class="dv">700</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-21" title="21">    <span class="kw">max-width</span>: <span class="dv">700</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb11-22" title="22">  }</a>
+<a class="sourceLine" id="cb11-23" title="23">}</a></code></pre></div>
+<h2 id="表示コンテンツの変更">表示コンテンツの変更</h2>
+<p>レスポンシブルに異なるバナーをコンテンツ中に表示したいような場合は、JavaScriptを利用するほうが良い。 ただし、メディアクエリと背景画像を使うことでCSSで処理できないこともない。</p>
+<p>各ページ共通のものであればテンプレートに組み込んで表示ボックスの切り替えが良い。</p>
+<p>表示コンテンツの表示の仕方でいえば、<code>max-width</code>, <code>min-width</code>, そして<code>margin</code>の値をコントロールするようにするといいだろう。</p>
+<h2 id="おまけビューポートを全部使う">おまけ。ビューポートを全部使う</h2>
+<p>文字主体のコンテンツの場合、文字サイズをビューポートに基づくようにすれば問答無用でビューポートいっぱい使うデザインが可能。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb12-1" title="1"><span class="pp">#MainBox</span> {</a>
+<a class="sourceLine" id="cb12-2" title="2">  <span class="kw">max-width</span>: <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb12-3" title="3">  <span class="kw">margin</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb12-4" title="4">  <span class="kw">padding</span>: <span class="dv">0</span><span class="dt">px</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb12-5" title="5">}</a>
+<a class="sourceLine" id="cb12-6" title="6"><span class="im">@media</span> (<span class="kw">orientation</span>: <span class="dv">portrait</span>) {</a>
+<a class="sourceLine" id="cb12-7" title="7">  <span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb12-8" title="8">    <span class="kw">font-size</span>: <span class="dv">5</span><span class="dt">vw</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb12-9" title="9">  }</a>
+<a class="sourceLine" id="cb12-10" title="10">}</a>
+<a class="sourceLine" id="cb12-11" title="11"><span class="im">@media</span> (<span class="kw">orientation</span>: <span class="dv">landscape</span>) {</a>
+<a class="sourceLine" id="cb12-12" title="12">  <span class="pp">#MainContent</span> {</a>
+<a class="sourceLine" id="cb12-13" title="13">    <span class="kw">font-size</span>: <span class="dv">5</span><span class="dt">vh</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb12-14" title="14">  }</a>
+<a class="sourceLine" id="cb12-15" title="15">}</a></code></pre></div>
+<p><code>5vw</code>は一応、1行に20文字入る計算になる。 この場合、横幅が小さい場合は文字数が、縦幅が小さい場合は行数がある程度確保されるようにするという基準になっている。 その上でなるべく大きい文字にする。画面いっぱい使って大きく文字を表示するのでお年寄りにもやさしい。</p>
+<p>標準的に1920pxに対して16pxの文字とすると120文字入るので<code>0.85vh</code>となるのだが、これをすると非常に小さくなってしまう。</p>
+<p>これをやると拡大縮小がかなり制限されてしまうことから、「大きく文字を表示する」前提で考えたほうが良い。 <code>2vh</code>くらいあればちょっと大きめに表示されるが、拡大できないので<code>2.5vh</code>くらいをスタートに考えたほうが良いかもしれない。 特にウィンドウをタイルしたときなどで縦長になるとすごく小さい、などということもありえるのだ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-05-22T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-05-22T00:00:00+09:00" />
+    <title>PureBuilder Simplyのアップデート (ReST完全対応) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>PureBuilder Simplyのアップデート (ReST完全対応)</h1></header>
+        <article id="MainArticle">
+<p>3ヶ月ぶりとなったPureBuilder Simplyのアップデート。</p>
+<p>今回はMimir Yokohamaのウェブサイトの新連載(そもそも連載開始にお金かかるので時期未定)でReSTructured Textを使うため、ReSTに完全対応した。</p>
+<p>完全対応のポイントは、従来きちんと対応できていなかったdocinfo(Bibliographic Elements)に対応するようにした。</p>
+<p>ただし、これは「対応した」という言い方が適切なのかどうかわからない。 ひとつは、自力でdocinfoを解釈する部分が間違っていたのと、仕様の理解自体正しくなかったので適正にした。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb1-1" data-line-number="1">File.open([dir, filename].join(&quot;/&quot;)) do |f|</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    l = f.gets</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="st">-        if l =~ /:[A-Za-z]+: .*/ #docinfo</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="st">-          docinfo_lines = [l.chomp]</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="va">+        if l =~ /:([A-Za-z]+): (.*)/ #docinfo</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="va">+          frontmatter = { $1 =&gt; [$2.chomp] }</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="va">+          last_key = $1</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">        # Read docinfo</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">        while(l = f.gets)</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">            break if l =~ /^\s*$/ # End of docinfo</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="st">-            if l =~ /^\s+- / &amp;&amp; (docinfo_lines.last.kind_of?(Array) || docinfo_lines.last =~ /^:.*?: +-/) # List items</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="st">-              if docinfo_lines.last.kind_of?(String)</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="st">-                docinfo_lines.last =~ /^:(.*?): +- *(.*)/</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="st">-                docinfo_lines[-1] = [ [$1, $2] ]</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="st">-              end</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="st">-              docinfo_lines.last[1].push(l.sub(/^\s+- +/).chomp)</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="st">-            elsif l =~ /^\s+/ # Continuous line</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="st">-              docinfo_lines.last &lt;&lt; &quot; &quot; + $&#39;.chomp</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="st">-            elsif l =~ /^:.*?: +.*/</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21"><span class="st">-              docinfo_lines.push l.chomp</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="va">+            if l =~ /^\s+/ # Continuous line</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23"><span class="va">+              docinfo_lines.last.push($&#39;.chomp)</span></a>
+<a class="sourceLine" id="cb1-24" data-line-number="24"><span class="va">+            elsif l =~ /:([A-Za-z]+): (.*)/</span></a>
+<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="va">+              frontmatter[$1] = [$2.chomp]</span></a>
+<a class="sourceLine" id="cb1-26" data-line-number="26"><span class="va">+              last_key = $1</span></a>
+<a class="sourceLine" id="cb1-27" data-line-number="27">            end</a>
+<a class="sourceLine" id="cb1-28" data-line-number="28">        end</a>
+<a class="sourceLine" id="cb1-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb1-30" data-line-number="30"><span class="st">-          # Convert Hash.</span></a>
+<a class="sourceLine" id="cb1-31" data-line-number="31"><span class="st">-          frontmatter = {}</span></a>
+<a class="sourceLine" id="cb1-32" data-line-number="32"><span class="st">-          docinfo_lines.each do |i|</span></a>
+<a class="sourceLine" id="cb1-33" data-line-number="33"><span class="st">-            if i.kind_of?(Array) #list</span></a>
+<a class="sourceLine" id="cb1-34" data-line-number="34"><span class="st">-              # Array element</span></a>
+<a class="sourceLine" id="cb1-35" data-line-number="35"><span class="st">-              frontmatter[i[0]] = i[1]</span></a>
+<a class="sourceLine" id="cb1-36" data-line-number="36"><span class="st">-            elsif i =~ /^:author: .*[,;]/ #author</span></a>
+<a class="sourceLine" id="cb1-37" data-line-number="37"><span class="st">-              # It work only pandoc style author (not Authors.)</span></a>
+<a class="sourceLine" id="cb1-38" data-line-number="38"><span class="st">-              author = i.sub(/:author: /, &quot;&quot;)</span></a>
+<a class="sourceLine" id="cb1-39" data-line-number="39"><span class="st">-              if author.include?(&quot;;&quot;)</span></a>
+<a class="sourceLine" id="cb1-40" data-line-number="40"><span class="st">-                author = author.split(/ *; */)</span></a>
+<a class="sourceLine" id="cb1-41" data-line-number="41"><span class="st">-              elsif author.include?(&quot;,&quot;)</span></a>
+<a class="sourceLine" id="cb1-42" data-line-number="42"><span class="st">-                author = author.split(/ *, */)</span></a>
+<a class="sourceLine" id="cb1-43" data-line-number="43"><span class="st">-              end</span></a>
+<a class="sourceLine" id="cb1-44" data-line-number="44"><span class="va">+          # Treat docinfo lines</span></a>
+<a class="sourceLine" id="cb1-45" data-line-number="45"><span class="va">+          frontmatter.each do |k,v|</span></a>
+<a class="sourceLine" id="cb1-46" data-line-number="46"><span class="va">+            v = v.join(&quot; &quot;)</span></a>
+<a class="sourceLine" id="cb1-47" data-line-number="47"><span class="va">+            if((k == &quot;author&quot; || k == &quot;authors&quot;) &amp;&amp; v.include?(&quot;;&quot;)) # Multiple authors.</span></a>
+<a class="sourceLine" id="cb1-48" data-line-number="48"><span class="va">+              v = v.split(/\s*;\s*/)</span></a>
+<a class="sourceLine" id="cb1-49" data-line-number="49"></a>
+<a class="sourceLine" id="cb1-50" data-line-number="50"><span class="st">-              frontmatter[&quot;author&quot;] = author</span></a>
+<a class="sourceLine" id="cb1-51" data-line-number="51"><span class="st">-            elsif i =~ /^:(.*?): +(\d{4}-\d{2}-\d{2}[T ]\d{2}[0-9: T+-]*)$/ #datetime</span></a>
+<a class="sourceLine" id="cb1-52" data-line-number="52"><span class="st">-              key = $1</span></a>
+<a class="sourceLine" id="cb1-53" data-line-number="53"><span class="st">-              time = DateTime.parse($2)</span></a>
+<a class="sourceLine" id="cb1-54" data-line-number="54"><span class="st">-              frontmatter[key] = time</span></a>
+<a class="sourceLine" id="cb1-55" data-line-number="55"><span class="st">-            elsif i =~ /^:(.*?): +(\d{4}-\d{2}-\d{2}) *$/ #date</span></a>
+<a class="sourceLine" id="cb1-56" data-line-number="56"><span class="st">-              key = $1</span></a>
+<a class="sourceLine" id="cb1-57" data-line-number="57"><span class="st">-              time = Date.parse($2)</span></a>
+<a class="sourceLine" id="cb1-58" data-line-number="58"><span class="st">-              frontmatter[key] = time</span></a>
+<a class="sourceLine" id="cb1-59" data-line-number="59"><span class="st">-            elsif i =~ /^:(.*?): +/</span></a>
+<a class="sourceLine" id="cb1-60" data-line-number="60"><span class="st">-              key = $1</span></a>
+<a class="sourceLine" id="cb1-61" data-line-number="61"><span class="st">-              value = $&#39;</span></a>
+<a class="sourceLine" id="cb1-62" data-line-number="62"><span class="st">-              frontmatter[key] = value</span></a>
+<a class="sourceLine" id="cb1-63" data-line-number="63"><span class="va">+            elsif k == &quot;date&quot; # Date?</span></a>
+<a class="sourceLine" id="cb1-64" data-line-number="64"><span class="va">+              # Datetime?</span></a>
+<a class="sourceLine" id="cb1-65" data-line-number="65"><span class="va">+              if v =~ /[0-2][0-9]:[0-6][0-9]/</span></a>
+<a class="sourceLine" id="cb1-66" data-line-number="66"><span class="va">+                v = DateTime.parse(v)</span></a>
+<a class="sourceLine" id="cb1-67" data-line-number="67"><span class="va">+              else</span></a>
+<a class="sourceLine" id="cb1-68" data-line-number="68"><span class="va">+                v = Date.parse(v)</span></a>
+<a class="sourceLine" id="cb1-69" data-line-number="69"><span class="va">+              end</span></a>
+<a class="sourceLine" id="cb1-70" data-line-number="70"><span class="va">+            else # Simple String.</span></a>
+<a class="sourceLine" id="cb1-71" data-line-number="71"><span class="va">+              nil # keep v</span></a>
+<a class="sourceLine" id="cb1-72" data-line-number="72">            end</a>
+<a class="sourceLine" id="cb1-73" data-line-number="73"><span class="va">+</span></a>
+<a class="sourceLine" id="cb1-74" data-line-number="74"><span class="va">+            frontmatter[k] = v</span></a>
+<a class="sourceLine" id="cb1-75" data-line-number="75">        end</a>
+<a class="sourceLine" id="cb1-76" data-line-number="76"></a>
+<a class="sourceLine" id="cb1-77" data-line-number="77">    elsif l &amp;&amp; l.chomp == &quot;..&quot; #YAML</a>
+<a class="sourceLine" id="cb1-78" data-line-number="78">        # Load ReST YAML that document begins comment and block is yaml.</a>
+<a class="sourceLine" id="cb1-79" data-line-number="79"><span class="va">+          @extra_meta_format = true # ReST + YAML is not supported by Pandoc.</span></a>
+<a class="sourceLine" id="cb1-80" data-line-number="80">        lines = []</a>
+<a class="sourceLine" id="cb1-81" data-line-number="81"></a>
+<a class="sourceLine" id="cb1-82" data-line-number="82">        while(l = f.gets)</a></code></pre></div>
+<p>考え方自体に大きな変更があったため、変更行数も多い。 ただし、<code>22165f2</code>よりも<code>8f6e453</code>のほうが以前のバージョンとの違いは少なくなっている。</p>
+<p>ここでひとつポイントだ。ReSTの仕様上、<code>authors</code>が<code>a,b,c</code>と書かれた場合は3人の著者になる。<code>a,b,c;</code>と書かれた場合は1人の著者になる。 だが、Pandocは<code>;</code>でのみ分割するので、この仕様に従っている。このため非常にシンプルな仕様だ。</p>
+<p>基本的にdocinfoの場合、<code>authors</code>と<code>date</code>のみが特別扱いされる。 Pandoc的にもそのような仕様になっており、<code>authors</code>を<code>author</code>の代わりに書ける点も正式な仕様に従っている。 PureBuilderもこれにならって、それ以外のフィールドについては特別扱いしない。 また、Pandocは仕様にない項目を入れてもエラーにしないため、この点も合わせてある。</p>
+<p>この上で、メタデータの解釈はPandocに委ねることにした。 従来は<code>-M</code>オプションを付加して上書きしていたのだが、解釈の違いからバグにもなったし、Pandocのほうが優秀なのでこのような挙動は取りやめた。</p>
+<p>ただし、PureBuilder的にはこれではちょっと困る。 サイトの内容に関する情報をメタデータに記述する風習があるため、メタデータに書ける内容が決められてしまうのは困るのだ。</p>
+<p>そこで従来サポートされていた「ReSTでも先頭をコメントにした場合はそのあとYAMLメタデータを書くものとする」という仕様も維持している。 この場合、Pandocは解釈できないため、<code>@extra_meta_format</code>というインスタンス変数を追加し、これが真の場合のみ<code>-M</code>オプションでのメタデータを使うことにした。</p>
+<p>こうしてReSTも完全対応できることとなった。 asciidocも結構人気があるらしいのだけど、Pandocが入力にasciidocをサポートしていないのでサポートすることはできない。 Textileをサポートしてほしい人がいれば対応は考えなくもないけれど、私が知る限りPureBuilderでTextileを使いたい人はいないはずだ。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>比較的複雑な構造を書けることがPureBuilderの利点であり、また簡易な記述をしたい人にとってもMarkdownが困ることはないはずだからだ。Textileにはコメント機能があるため、サポートすること自体は不可能ではない。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

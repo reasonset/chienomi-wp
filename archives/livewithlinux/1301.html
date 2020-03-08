@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-06-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-06-03T00:00:00+09:00" />
+    <title>一連のサーバー&SSH技 応用・実用編 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>一連のサーバー&SSH技 応用・実用編</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>このブログは多くが検索によって解決法を探してたどり着いた読者に支えられている。</p>
+<p>このような場合、その人が向いている方向としては二種類ある。</p>
+<p>ひとつは、なにをしようとしているかが(適切かはどうかはともかく)決まっている場合だ。 ポートフォワーディングしたい、とか、SSHでなんとかならないか、とか、自分の中で絞り込みができている場合である。</p>
+<p>もうひとつは自分の現状だけを認識している場合だ。 例えば「ストレージがいっぱいなった」とか、「家のデータに外からアクセスできなくて不便だ」とか。 どのような解決方法があるのか、あるいは解決可能なのかどうかから探している状態だ。</p>
+<p>このふたつは明確に異なる。</p>
+<p>前者であればポイントを絞った答が欲しい一方、自分の中にある前提が間違っていると解決まで回り道をすることになる。 後者であれば何をどう考えて調べればいいのか絞り込んでいくほうが難しい。</p>
+<p>しかし前者の問題は解決できるのだが、後者の問題は解決できない、という人が割と多い。 問題を定義し、設計し、手法を構築することは地力が求められ、知識の体系化が進んでいないために発想力が求められると難しい、というケースだ。</p>
+<p>そこで、今回はそのあたりに踏み込んで解説していく。</p>
+<p>個別ケースや個々の人の理解に合わせた内容は仕事としてやっているので、<a href="https://www.mimir.yokohama/">興味があればのぞいてみてほしい</a>。</p>
+<h2 id="overview">Overview</h2>
+<h3 id="definition">Definition</h3>
+<p>親と同居しているごく普通のLinuxer少女が、日々を便利にするために奮闘する姿でも描けばよい。</p>
+<p>…と思ったのだが、VPSを用意するにあたりクレジットカードが必要になるあたり、やはりペット同居のごく普通の乙女、もちろんLinuxerである、ぐらいにとどめておくのが無難か。</p>
+<h3 id="phase-1">phase 1</h3>
+<p>ストレージの不足を解消するためのNAS導入と、監視カメラの設置を行う。</p>
+<p>スマートフォンはきっと愛猫の写真と動画でいっぱいなのだろう。 これに愛猫が勝手にツナ缶を空けて食べてしまわないかチェックしておく必要がある。</p>
+<h3 id="phase-2">phase 2</h3>
+<p>NASに写真を保存するようにしたはいいが、このままでは仕事中に愛猫の写真を堪能できない。</p>
+<p>24時間愛猫とたわむれるためには家にあるデータにもアクセスできなくてはならない。</p>
+<h3 id="phase-3">phase 3</h3>
+<p>もし愛猫がトラに進化しそうなときには急いで家にかえりこれを阻止しなくてはならない。</p>
+<p>また、愛猫がNASからハードディスクを取り出そうとしたときにはデータ保護のためにNASを緊急停止する必要があるはずだ。</p>
+<h2 id="構成と発展">構成と発展</h2>
+<h3 id="予めお断り">予めお断り</h3>
+<p>コピペでできるようにすることを目標としているわけではないので、詳しい手順などは各自学んでほしい。</p>
+<p>難しい部分は過去の記事で解説している。</p>
+<h3 id="家用コンピュータを導入する">家用コンピュータを導入する</h3>
+<p>この手順において一番最初に、そして独立して効果を発揮するのはNASなのだが、設定なども面倒なので、とりあえずコンピュータを用意しよう。</p>
+<p>この段階でラップトップがあるのであれば、NASがさき、デスクトップは後でも構わないし、 この場合必ずしもデスクトップである必要はない。 だが、総合的に考えてよりよいコンピュータ環境を構築するのが目標なので、このような余剰部分も今回は入れていく。</p>
+<p>さて、やはりコストパフォーマンスを考えても、デスクトップPCは性能が高い。 そこでデスクトップを導入することにしたいが、おしゃれに気を使う乙女としては部屋にあまりに無骨な機械を導入するのは気が引ける。 かといってせっかくコンピュータを導入するならいろいろしてみたい。 悩みに悩んだ彼女は神に問うた。天の声(はるか)はこう答えた</p>
+<p>「Pavilion Waveあたりにしとけば?」</p>
+<p>まじめに答えて、まじめに構築する話はそのうち<a href="https://www.mimir.yokohama/">Mimir Yokohama</a>でやることにしよう。</p>
+<h3 id="nasを導入する">NASを導入する</h3>
+<p>NASの導入と構築もそのうち向こうでやることにする。 今回はLinuxでのテクニック中心なので、簡単に。</p>
+<p>ReadyNASあたりが鉄板だろうし、WebDAV(HTTP)で共有すればスマートフォンのデータを転送するのも簡単だ。</p>
+<p>もう少しスマートな話をすると、まずはReadyNASでストレージ環境を作り、共有の作成まで進める。 共有をSMBにして、</p>
+<pre><code># mount -t cifs //nas-aa-bb-cc/shared1 /srv/nas</code></pre>
+<p>のようにマウントする。</p>
+<p>次にスマートフォンをLinuxデスクトップに接続し、MTP経由でデータをコピーする。 あとは</p>
+<pre><code>$ rsync -rv ~/Pictures/20180602 /srv/nas/</code></pre>
+<p>のようにして(<code>/</code>の有無に注意)コピーすればバックアップが確保された状態になる。</p>
+<h3 id="監視カメラを導入する">監視カメラを導入する</h3>
+<p>これはどちらかといえばSocks Proxyの説明のためなので詳しくは省くけれども、ウェブカムとmotionを使うのが定番。動体検知もできる。</p>
+<p>これについては結構設定が色々ややこしい。 興味がある人は“Linux motion カメラ”で検索すれば色々でてくるので参考にすれば良い。 設定ファイルを眺めるのも悪くない。</p>
+<h3 id="ネットワークに接続する">ネットワークに接続する</h3>
+<p>NASを導入する時点で有線でのネットワークは構築されているはずだが、無線LANルーターを含めて、さらに <em>有線での</em> インターネット接続環境を構築する。</p>
+<h3 id="vpsを契約する">VPSを契約する</h3>
+<p>私は<a href="https://www.conoha.jp/">ConoHa</a>のと<a href="http://dream.jp/vps/">ServerMan@VPS</a>のユーザーだが、<a href="https://vps.sakura.ad.jp/">さくらのVPS</a>も結構定番。</p>
+<p>今回はゲートウェイとして使うだけなので、最低限でも大丈夫でSSH接続だけできるようにすればよいが、発展的にはあまりおすすめできない。</p>
+<p>VPSを契約したらサーバーを設定し、SSHログイン可能な状態にしておく。</p>
+<h3 id="ラップトップを買う">ラップトップを買う</h3>
+<p>外からアクセスできるコンピュータが必要である。 ラップトップを買おう。ネットカフェのような環境からアクセスすることを考えるべきではない。</p>
+<h3 id="sshを設定する">SSHを設定する</h3>
+<p>ラップトップで2つのSSH鍵を作り、それぞれデスクトップとサーバーのauthorized keyとして登録する。</p>
+<p>制限をかけてもいいが、今回の場合鍵のパスワード保護が可能なため、特にかけないほうが良いだろう。</p>
+<p>ラップトップ側の<code>~/.ssh/config</code>は設定が必要。</p>
+<pre><code>Host vps
+  User jrh
+  Port 22
+  HostName vps.example.com
+  IdentityFile ~/.ssh/vpslogin_rsa
+
+Host target-proxy
+  User jrh
+  Port 10000
+  HostName localhost
+  IdentityFile ~/.ssh/proxylogin_rsa
+  ProxyCommand ssh -CW %h:%p vps</code></pre>
+<p>この場合、VPSのログインしてからリバースプロキシを介してデスクトップにログインする。</p>
+<p><code>localhost</code>はVPSから見たlocalhost(VPSの<code>lo</code>)だが、デスクトップにログインするためのSSHを実行するのはラップトップである。</p>
+<p>単純にログインしたあとログインする場合、デスクトップにログインするSSHを実行するのはVPSなので、これがProxyCommandの特徴となる。</p>
+<p>単純にSSHを張るだけであればデスクトップからVPSにログインできるようにして、</p>
+<pre><code>$ ssh -R 22:localhost:10000 vps</code></pre>
+<p>のようにすればよいのだが、経験ではそれはうまくいかないのでそれは<a href="/archives/livewithlinux/1260">記事にした</a>。</p>
+<h3 id="外から家のデータにアクセスする">外から家のデータにアクセスする</h3>
+<p>これでSSH経由でアクセスできるようになったので、デスクトップでNASをマウントしておけばデータは利用可能な状態になる。 Nemo, Thunarならばアドレス欄に<code>sftp://target-proxy/</code>と入力すればアクセス可能。NautilusならConnect to Serverから。 Dolphin/Konquerorにも同等の機能はあるのだが、うまく動作しない場合がある。</p>
+<h3 id="vpsのコンソールやmotionのストリーミングにアクセスする">VPSのコンソールやmotionのストリーミングにアクセスする</h3>
+<p>VPSのコンソールなどWebインターフェイスをもつものについてはインターネットに公開するべきではなくインターネットに閉じておくべきだが、これでは外出中にコントロールできない。</p>
+<p>だが、SSHでアクセスできる状態であれば、簡単に解決できる。</p>
+<pre><code>$ ssh target-proxy -NCD 8888</code></pre>
+<p>Chromiumが簡単。</p>
+<pre><code>$ chromium --proxy-server=&quot;socks://localhost:8888&quot;</code></pre>
+<p>Vivladiでも良い。</p>
+<pre><code>$ vivaldi-stable --incognito --proxy-server=&quot;socks://localhost:8888&quot;</code></pre>
+<p>Firefoxなら専用プロファイルか</p>
+<pre><code>$ firefox -P proxylogin</code></pre>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

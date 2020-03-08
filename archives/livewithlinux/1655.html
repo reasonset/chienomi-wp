@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-22T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-22T00:00:00+09:00" />
+    <title>ELECOM EX-G UltimateLaser MouseとLinux (未解決) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ELECOM EX-G UltimateLaser MouseとLinux (未解決)</h1></header>
+        <article id="MainArticle">
+<p>珍しく伝統的なLinux問題のお話をする。</p>
+<p>私はELECOMのEX-G UltimateLaser Mouseを愛用している。</p>
+<p>EX-Gシリーズは10個のボタンがあり、10番目はDPI変更ボタンになっているのだが、Ultimate Laser Mouseだけはファンクションボタンが3つある12ボタンマウスになっている。</p>
+<p>せっかくなので、というか使いたい意図があって残り3つのボタンを使おうとしたのだが、 <code>xev</code>で見るとファンクションボタンが全部button 9になっている。 button 9は進むボタンに当てられていて、実際進むボタンとして機能する。</p>
+<p>しかし、これでは困る。ドライバが間違っているのだろうか。 まずはデバイスがどう認識されているのか確認する。</p>
+<pre data-caption="/proc/bus/input/devices"><code>I: Bus=0003 Vendor=056e Product=00d3 Version=0100
+N: Name=&quot;ELECOM ELECOM UltimateLaser Mouse&quot;
+P: Phys=usb-0000:00:14.0-14.1/input0
+S: Sysfs=/devices/pci0000:00/0000:00:14.0/usb1/1-14/1-14.1/1-14.1:1.0/0003:056E:00D3.0003/input/input4
+U: Uniq=
+H: Handlers=event4 mouse0 
+B: PROP=0
+B: EV=17
+B: KEY=1f0000 0 0 0 0
+B: REL=143
+B: MSC=10</code></pre>
+<pre data-caption="lsusb -v"><code>Bus 001 Device 010: ID 056e:00d3 Elecom Co., Ltd 
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               1.10
+  bDeviceClass            0 
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0         8
+  idVendor           0x056e Elecom Co., Ltd
+  idProduct          0x00d3 
+  bcdDevice            0.01
+  iManufacturer           1 ELECOM
+  iProduct                2 ELECOM UltimateLaser Mouse
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength       0x003b
+    bNumInterfaces          2
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0xa0
+      (Bus Powered)
+      Remote Wakeup
+    MaxPower              100mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           1
+      bInterfaceClass         3 Human Interface Device
+      bInterfaceSubClass      1 Boot Interface Subclass
+      bInterfaceProtocol      2 Mouse
+      iInterface              0 
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.00
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength      89
+         Report Descriptors: 
+           ** UNAVAILABLE **
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0008  1x 8 bytes
+        bInterval              10
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        1
+      bAlternateSetting       0
+      bNumEndpoints           1
+      bInterfaceClass         3 Human Interface Device
+      bInterfaceSubClass      0 
+      bInterfaceProtocol      0 
+      iInterface              0 
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.00
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength      46
+         Report Descriptors: 
+           ** UNAVAILABLE **
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x82  EP 2 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0008  1x 8 bytes
+        bInterval              10
+can&#39;t get debug descriptor: Resource temporarily unavailable
+Device Status:     0x0000
+  (Bus Powered)</code></pre>
+<p>うぅむ、正しく認識されているようだ。 ドライバはどうなっているのだろう。</p>
+<pre data-caption="/var/log/Xorg.0.log"><code>[    16.960] (**) ELECOM ELECOM UltimateLaser Mouse: Applying InputClass &quot;evdev pointer catchall&quot;
+[    16.960] (**) ELECOM ELECOM UltimateLaser Mouse: Applying InputClass &quot;libinput pointer catchall&quot;
+[    16.960] (II) Using input driver &#39;libinput&#39; for &#39;ELECOM ELECOM UltimateLaser Mouse&#39;
+[    16.960] (**) ELECOM ELECOM UltimateLaser Mouse: always reports core events
+[    16.960] (**) Option &quot;Device&quot; &quot;/dev/input/event4&quot;
+[    16.960] (**) Option &quot;_source&quot; &quot;server/udev&quot;
+[    17.017] (II) event4  - ELECOM ELECOM UltimateLaser Mouse: is tagged by udev as: Mouse
+[    17.017] (II) event4  - ELECOM ELECOM UltimateLaser Mouse: device is a pointer
+[    17.017] (II) event4  - ELECOM ELECOM UltimateLaser Mouse: device removed
+[    17.076] (**) Option &quot;config_info&quot; &quot;udev:/sys/devices/pci0000:00/0000:00:14.0/usb1/1-14/1-14.1/1-14.1:1.0/0003:056E:00D3.0003/input/input4/event4&quot;
+[    17.076] (II) XINPUT: Adding extended input device &quot;ELECOM ELECOM UltimateLaser Mouse&quot; (type: MOUSE, id 9)
+[    17.077] (**) Option &quot;AccelerationScheme&quot; &quot;none&quot;
+[    17.077] (**) ELECOM ELECOM UltimateLaser Mouse: (accel) selected scheme none/0
+[    17.077] (**) ELECOM ELECOM UltimateLaser Mouse: (accel) acceleration factor: 2.000
+[    17.077] (**) ELECOM ELECOM UltimateLaser Mouse: (accel) acceleration threshold: 4
+[    17.134] (II) event4  - ELECOM ELECOM UltimateLaser Mouse: is tagged by udev as: Mouse
+[    17.134] (II) event4  - ELECOM ELECOM UltimateLaser Mouse: device is a pointer
+[    17.135] (II) config/udev: Adding input device ELECOM ELECOM UltimateLaser Mouse (/dev/input/mouse0)</code></pre>
+<p><code>Using input driver 'libinput' for 'ELECOM ELECOM UltimateLaser Mouse'</code> …あぁ、そういえばManjaroはlibinputに移行していたなぁ…</p>
+<pre data-caption="xinput list"><code>⎡ Virtual core pointer                          id=2    [master pointer  (3)]
+⎜   ↳ Virtual core XTEST pointer                id=4    [slave  pointer  (2)]
+⎜   ↳ ELECOM ELECOM UltimateLaser Mouse         id=9    [slave  pointer  (2)]
+⎣ Virtual core keyboard                         id=3    [master keyboard (2)]
+    ↳ Virtual core XTEST keyboard               id=5    [slave  keyboard (3)]
+    ↳ Power Button                              id=6    [slave  keyboard (3)]
+    ↳ Power Button                              id=7    [slave  keyboard (3)]
+    ↳ FCL USB Keyboard                          id=8    [slave  keyboard (3)]</code></pre>
+<pre data-caption="xinput list-props 9"><code>Device &#39;ELECOM ELECOM UltimateLaser Mouse&#39;:
+        Device Enabled (151):   1
+        Coordinate Transformation Matrix (153): 1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000
+        libinput Natural Scrolling Enabled (288):       0
+        libinput Natural Scrolling Enabled Default (289):       0
+        libinput Scroll Methods Available (290):        0, 0, 1
+        libinput Scroll Method Enabled (291):   0, 0, 0
+        libinput Scroll Method Enabled Default (292):   0, 0, 0
+        libinput Button Scrolling Button (293): 2
+        libinput Button Scrolling Button Default (294): 2
+        libinput Middle Emulation Enabled (295):        1
+        libinput Middle Emulation Enabled Default (296):        0
+        libinput Accel Speed (297):     0.000000
+        libinput Accel Speed Default (298):     0.000000
+        libinput Accel Profiles Available (299):        1, 1
+        libinput Accel Profile Enabled (300):   1, 0
+        libinput Accel Profile Enabled Default (301):   1, 0
+        libinput Left Handed Enabled (302):     0
+        libinput Left Handed Enabled Default (303):     0
+        libinput Send Events Modes Available (273):     1, 0
+        libinput Send Events Mode Enabled (274):        0, 0
+        libinput Send Events Mode Enabled Default (275):        0, 0
+        Device Node (276):      &quot;/dev/input/event4&quot;
+        Device Product ID (277):        1390, 211
+        libinput Drag Lock Buttons (304):       &lt;no items&gt;
+        libinput Horizontal Scroll Enabled (305):       1</code></pre>
+<p>やはり正しく認識されているけれど、ボタンの数は9だと思われている。</p>
+<pre data-caption="xinput get-button-map &#39;ELECOM ELECOM UltimateLaser Mouse&#39;"><code>1 2 3 4 5 6 7 8 9 </code></pre>
+<p>しかしxmodmapでは10ボタンだと思われている。</p>
+<pre data-caption="xmodmap -pp"><code>There are 10 pointer buttons defined.
+
+    Physical        Button
+     Button          Code
+        1              1
+        2              2
+        3              3
+        4              4
+        5              5
+        6              6
+        7              7
+        8              8
+        9              9
+       10             10</code></pre>
+<p>何度も言うが、 <em>Ultimate Laser Mouse は12ボタンである</em>。</p>
+<p>自力解決できず、フォーラムに質問してみたのだが、回答はつかなかった。 (解決した場合はこの記事を撤回し、投稿し直す予定)</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

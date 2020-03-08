@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-12-21T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-12-21T00:00:00+09:00" />
+    <title>ConoHaへのサーバー引っ越しレジュメ (DeleGate-Nginx/Postfix/Dovecot, Let's Encrypt) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ConoHaへのサーバー引っ越しレジュメ (DeleGate-Nginx/Postfix/Dovecot, Let's Encrypt)</h1></header>
+        <article id="MainArticle">
+<h2 id="概要">概要</h2>
+<p>作業概要は以下の通りだ</p>
+<ul>
+<li>サーバーをDTI(<span class="citation" data-cites="ServerMan">@ServerMan</span>)からConoHaに変更する</li>
+<li>サーバーOSをCentOS (6.9)からArch Linuxに変更する</li>
+<li>WebサーバーをDeleGateからNginxに変更する</li>
+<li>WebコンテンツシステムをPureBuilder2からPureBuilder Simplyに変更する</li>
+<li>Mimir YokohamaのWebコンテンツを別サーバーのWordPressから新サーバーのPureBuilder Simplyに変更する</li>
+<li>Webメニューを完全JavaScriptフリーにする</li>
+<li>Postfix/Dovecotを引っ越しする</li>
+<li>DNSサーバーをConoHaとし、DNSの設定を変更する</li>
+<li>一部のドメインを廃止とする</li>
+<li>一部のドメインの役割を変更する</li>
+<li>Let’s EncryptによるSSL証明書を取得し、HTTPSに対応する</li>
+<li>同証明書にメールも対応させる</li>
+</ul>
+<p>なお、あまり詳細な解説はしていない。 Linuxやサーバーに関する基本的な事項に対して理解していないまま実施するのは危険であるため、 「コピペ仕様」にはしていない。 詳細に対してエラーが生じるなどの理由でより情報が欲しい場合はあるだろうが、 「言っていることが理解できない」のであれば、サーバー構築をするにはまだ危険なレベルにあると思ったほうが良いだろう。</p>
+<h2 id="承前-開発">承前: 開発</h2>
+<h3 id="purebuilder-simplyの開発">PureBuilder Simplyの開発</h3>
+<p>今回のために新しいコンテンツシステムであるPureBuilder Simplyを開発した。 この詳細は別に譲ろう。</p>
+<h3 id="テンプレートの開発">テンプレートの開発</h3>
+<p>PureBuilder SimplyはPandocテンプレート+eRubyテンプレートというテンプレートを扱うことができる。 PureBuidler Simplyにテーマファイルがあるわけではないので自分で書く前提である。</p>
+<p>今回は複数の表示デザインがあるのだが(現在のところは表示されるのはアーティクルモードとプロモーションモードの2つだけだが)これは全てPandocテンプレートとCSSで実現している。</p>
+<p>もちろん、このようなテンプレートの開発はWeb屋の腕の見せ所だろう。</p>
+<h3 id="css">CSS</h3>
+<p>サイトはそれほど華やかなデザインではないが、技術的に劣っているわけではない。 その最たるものがCSSのみで書かれたハンバーガーメニューとドロワーだろう。</p>
+<p>ポイントを簡単に言うと</p>
+<ul>
+<li>ドロワーは<code>fixed</code>で上部に最初からある。<code>display: none</code>で、高さは比較的新しい単位である<code>vh</code>である</li>
+<li>ハンバーガーメニューはtransitionを使っている</li>
+<li><code>z-index</code>でメニューのほうが上になるようにする</li>
+<li>状態変遷は次のような方法でコントロールしている
+<ul>
+<li>表示されないチェックボックスを用意し、操作対象を<code>label</code>で関連づける。これにより<code>label</code>で囲まれた要素をクリックするとチェックボックスがトグルする</li>
+<li>CSSの<code>+</code>セレクタは同じ親要素を持つ次の兄弟要素に適用される</li>
+<li>チェックボックスにはチェックが入っているときに適用される疑似要素<code>:checked</code>がある</li>
+<li>そこで、チェックボックス本体の直後に対象となるセクションコンテンツを置くことでチェック状態によって状態をトグルできる</li>
+<li>ドロワーは<code>fixed</code>なのでどこに書いても構わないので、このセクションコンテンツの中におく。場所としてはメニューの位置に基づくのが良いだろう</li>
+</ul></li>
+</ul>
+<p>見た目はWordPress時とあまり変わっていないが、性能は大幅に向上した。</p>
+<h3 id="速度">速度</h3>
+<p>キャッシュの効かない初回アクセスで従来のWordPressページが5.57s、新しいページは約400msと10倍程度高速化した。</p>
+<h2 id="conohaサーバーのスタートアップ">ConoHaサーバーのスタートアップ</h2>
+<h3 id="立ち上げ">立ち上げ</h3>
+<p>ConoHaのサインアップは10分もあれば可能で、即座にサーバーを使いはじめられる。</p>
+<p>サーバー仕様は東京リージョンの1GBプランである。</p>
+<p>512GBプランは安いが、性能が十分でなく、またマイグレーションができないため、1GBプランとしている。</p>
+<p>この時点でサーバー選択が可能なので、Arch Linuxを選択する。 また、この時点である程度のセットアップが可能だ。 ここでSSH公開鍵の登録が可能である。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">ssh-keygen</span> -f ~/.ssh/conoharoot.rsa</a></code></pre></div>
+<p>のようにして専用に生成しておく。 そして<code>conoharoot.rsa.pub</code>を登録する。 名前からもわかるように、<em>ここで登録する鍵はroot鍵である</em>。</p>
+<p>また、開放するポートも選択できる。 ここで開放するポートはサーバーよりも上流でフィルタリングされる。 ここで透過していないポートに対するアクセスはサーバーに到達しない。</p>
+<p>ただし、結果的にSSHポートの変更はサーバーに負担がかかるものになっている。 少なくともパスワードログインは禁止すべきだろう。</p>
+<p>現時点ではSSHのみを通過させる。</p>
+<h3 id="初期設定">初期設定</h3>
+<p>ConoHaのArch Linuxは標準インストールではなく、ある程度調整されている。 主にSSHログインが可能で、SSH公開鍵が登録され、パスワード認証不可となっている、といったことだ。 こうした内容は<code>/etc/cloud/conoha-init/conoha-init.sh</code>によって確認可能だ。</p>
+<p>複数のサーバーを接続する予定であれば変更すべき点は多いが、そうでなければ作業は平凡だ。</p>
+<h4 id="アップデート">アップデート</h4>
+<p>まずはアップデートする。 20MB/sも出るため、超早い。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ex">pacman</span> -Syu</a></code></pre></div>
+<h4 id="zsh">Zsh</h4>
+<p>私としてはZshがないと話にならないので入れておく。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ex">pacman</span> -S zsh grml-zsh-config zsh-completions</a></code></pre></div>
+<p>これ移行はZshでの作業</p>
+<h4 id="一般ユーザーの追加">一般ユーザーの追加</h4>
+<p>もちろん、一般ユーザーは登録されていない。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="ex">useradd</span> -m -s /bin/zsh -G bin,disk,wheel jrh</a></code></pre></div>
+<p>この時点で一旦再起動しないとパスワード設定ができないので、再起動しておく。</p>
+<h4 id="パスワードの設定">パスワードの設定</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="fu">passwd</span> jrh</a></code></pre></div>
+<p>その上で<code>visudo</code>を使って<code>%wheel</code>に対するsudoを許可する。</p>
+<h4 id="pacaurとyaourtのインストール">pacaurとyaourtのインストール</h4>
+<p>AURパッケージも扱う予定であるため、pacaurを入れておく。</p>
+<pre><code># su - jrh
+% gpg --recv-keys 487EACC08557AD082088DABA1EB2638FF56C0C53
+% sudo pacman -S git
+
+%git clone --depth=1 &quot;https://aur.archlinux.org/cower.git&quot;
+%cd cower
+%makepkg -si
+%cd ..
+
+%cower -d pacaur
+%cd pacaur
+%makepkg -si</code></pre>
+<p>これでAURからのパッケージインストールが可能になったので、Yaourtを入れておく。 作業が明確に自動化されていたり、システマチックに行えるのならYaourtはいらないかもしれないが、 まとめて検索するためには欲しい。</p>
+<pre><code>% pacaur -S yaourt</code></pre>
+<h4 id="必要なソフトのインストール">必要なソフトのインストール</h4>
+<p>ここでいう「必要なソフト」は私の取り扱い上の話だ。</p>
+<pre><code>% yaourt -S ruby openbsd-netcat rsync mercurial postfix dovecot nginx fcgiwrap certbot certbot-nginx vim</code></pre>
+<h4 id="一般ユーザーでの鍵ログインの準備">一般ユーザーでの鍵ログインの準備</h4>
+<p>サーバーで受け入れの準備をする</p>
+<pre><code>% mkdir .ssh</code></pre>
+<p>ローカルで鍵を生成しておく。</p>
+<pre><code>% ssh-keygen -f ~/.ssh/conoha.rsa</code></pre>
+<p><code>~/.ssh/config</code>に設定する。 これは名前によるアクセスを可能にするためである。 (同一ホストに対する異なる鍵でのアクセスのため、鍵を指定せずに済むようにでもある) もちろん、読み替えること;</p>
+<pre><code>Host conoha-root
+  User root
+  Port 22
+  HostName conoha.site.static.cnode.io
+  IdentityFile ~/.ssh/conoharoot.rsa
+
+Host conoha
+  User jrh
+  Port 22
+  HostName conoha.site.static.cnode.io
+  IdentityFile ~/.ssh/conoha.rsa</code></pre>
+<p>rootでは作業できるので、転送する。</p>
+<pre><code>% ssh conoha-root &#39;cat &gt; /home/jrh/.ssh/authorized_keys&#39; &lt; ~/.ssh/conoha.rsa.pub</code></pre>
+<p>サーバー側でパーミッションの設定を行う</p>
+<pre><code>% sudo chown -R jrh:jrh .ssh
+% chmod go-a -R .ssh
+% chmod go-a .</code></pre>
+<p>そしてsshdリロード</p>
+<pre><code>% sudo systemctl reload sshd</code></pre>
+<h2 id="dns設定">DNS設定</h2>
+<p>ドメインを複数持っていない場合はいきなり完全移行できなかったりするので、 一時的にサブドメインを作るなどする必要がある。</p>
+<p>ConoHaコントロールパネルのDNSからDNSの設定を行う。 (DNSの設定ってなんだ、という者はサーバーを立てるにはまだ早い。修行してくるべし)</p>
+<p>これは本番サーバーのものを含む。 ただし、<em>稼働中の本番サーバーのアドレスをこの時点で変更してはならない</em>。</p>
+<p>そして、DNSサーバーをConoHaのものに変更する。</p>
+<p>今回の場合従来はドメインサービス提供のDNSを使用していたため、同サービスのメニューから変更を行った。</p>
+<h2 id="webとlets-encrypt">WebとLet’s Encrypt</h2>
+<h3 id="nginxの立ち上げとテスト">Nginxの立ち上げとテスト</h3>
+<p>従来がDeleGateで、Nginxにするため互換性は全くない。</p>
+<p>Nginxは単純にstartすればアクセス可能な状態だが、移行のための準備をしていく。</p>
+<p>まずは、Archの記述に合致するように<code>server-avilable</code>ディレクトリを読むようにしたほうが良いだろう。</p>
+<pre class="nginx"><code>http {
+    include       mime.types;
+    include       /etc/nginx/servers-avilable/*;
+    ...
+}</code></pre>
+<p>これで<code>/etc/nginx/server-avilable</code>を作ればそこに配置したファイルを読むようになった。 この時点でrestartすると…</p>
+<pre><code>Dec 19 18:45:42 archlinux nginx[9339]: 2017/12/19 18:45:42 [warn] 9339#9339: could not build optimal types_hash, you should increase either types_hash_max_size: 1024 or types_hash_bucket_size: 64; ignoring types_hash_bucket_size</code></pre>
+<p>とのことなので増やす。</p>
+<pre class="nginx"><code>http {
+    include       mime.types;
+    include       /etc/nginx/servers-avilable/*;
+    default_type  application/octet-stream;
+
+    server_names_hash_bucket_size       128;
+    types_hash_max_size                 4092;
+    ...
+}</code></pre>
+<p>配置するファイルはArchwikiに従ったもので大丈夫だ。</p>
+<pre class="nginx"><code>server {
+  listen 80;
+  listen [::]:80;
+  server_name domain.tld;
+  root /usr/share/nginx/html;
+  location / {
+    index index.htm index.html;
+  }
+
+  # ACME challenge
+  location ^~ /.well-known/acme-challenge/ {
+    default_type &quot;text/plain&quot;;
+    root /var/lib/letsencrypt;
+  }
+}</code></pre>
+<p><code>domain.tld</code>は適切なドメインに置き換えること。</p>
+<p>ここで、あまり書かれていない重要なこと。</p>
+<p><code>root</code>というのはドキュメントルートで、locationの起点となる。 つまり、</p>
+<pre><code>location /foo {
+  root /usr/share/nginx/html;
+}</code></pre>
+<p>であるとき、<code>/foo/bar.html</code>にアクセスすると読まれるファイルは<em><code>/usr/share/nginx/html/foo/bar.html</code>であって、<code>/usr/share/nginx/html/bar.html</code>ではない</em>。</p>
+<p>そのような単純なマッピングを行いたい場合は<code>root</code>ではなく<code>alias</code>を使う。</p>
+<p>ACME challengeは<code>http://domain.tld/.well-known/acme-challenge/randomnumber</code>に対して行われるため、 <code>root</code>で正しい。</p>
+<p>だが、このディレクトリがないので作っておいたほうが良いようだった。</p>
+<pre><code>% sudo mkdir -p /var/lib/letsencrypt/.well-known/acme-challenge</code></pre>
+<p>あとはcertbotを使えば良いのだが…</p>
+<pre><code>% sudo certbot certonly --email webmaster@domain.tld --webroot --webroot-path /var/lib/letsencrypt/ -d domain.tld</code></pre>
+<p>その前にConoHaのサーバー設定でHTTPをあけておかなくてはならない。 そして、<em>IPv4とIPv6両方をあけておくこと</em>。 別々になっていることに気づかず、ACME Challengeのリクエストが到達せずに(<code>/var/log/nginx/access.log</code>を見ても記録されていない)随分とハマってしまった。</p>
+<h3 id="移行作業">移行作業</h3>
+<p>各ドメインごとのドキュメントルートを作り、ファイルを配置、 さらに対応したドメインごとの設定ファイルを作る。</p>
+<p>今回の場合、Mimir Yokohamaのページは既にPureBuilder Simplyによる静的ファイルへのビルドが完了しているし、 移行対象のものに関してもPureBuilder2で静的ファイルにビルドされているものなので、単純にファイルを配置するだけの簡単なお仕事である。</p>
+<p>Aki SIE関連のアドレスはdiscontinuedなので、301を返す。</p>
+<pre class="nginx"><code>server {
+        listen 80;
+        listen [::]:80;
+        server_name aki-sie.com akisie.com aki-sie.yokohama akisie.yokohama;
+
+        return 301 http://www.mimir.yokohama/;
+}</code></pre>
+<p><code>http://journal.reasonset.net/</code>に関しては301でリダイレクトしていたので、これも反映する</p>
+<pre class="nginx"><code>server {
+        listen 80;
+        listen [::]:80;
+        server_name journal.reasonset.net;
+        return 301 http://chienomi.reasonset.net$request_uri;
+}</code></pre>
+<h3 id="nginxのlets-encryptの対応">NginxのLet’s encryptの対応</h3>
+<p>メールサーバーの移行まで完了した時点で作業を行うのだが、 certbotで必要なドメインをすべて署名してもらったら、<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>SSL対応化を行う。</p>
+<p>設定例は以下</p>
+<pre class="nginx"><code>server {
+  listen 80;
+  listen [::]:80;
+  listen 443 ssl http2;
+  listen [::]:433 ssl http2;
+
+  ssl_certificate /etc/letsencrypt/live/domain.tld/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/domain.tld/privkey.pem;
+  ssl_trusted_certificate /etc/letsencrypt/live/domain.tld/chain.pem;
+  ssl_session_timeout 1d;
+  ssl_session_cache shared:SSL:50m;
+  ssl_session_tickets off;
+  ssl_prefer_server_ciphers on;
+  add_header Strict-Transport-Security max-age=15768000;
+  ssl_stapling on;
+  ssl_stapling_verify on;
+
+  server_name domain.tld;
+
+  index index.html;
+  location / {
+    root /var/www/domain.tld/doc;
+  }
+
+  # ACME challenge
+  location ^~ /.well-known/acme-challenge {
+    root /var/lib/letsencrypt;
+  }
+}</code></pre>
+<h2 id="メールサーバーの移行">メールサーバーの移行</h2>
+<p>機能させるために一旦古い証明書で作業しているため、Let’s Encryptの証明書が取れたら証明書ファイルを変更してreload/restartすること。</p>
+<h3 id="postfix">Postfix</h3>
+<p>Postfixに関してはCentOS 6とArch Linuxではファイル配置が異なり、 バージョンの違いから設定ファイルの違いも大きく互換性に乏しい。</p>
+<p>そこで、CnetOSの設定ファイルを<code>/etc/postfix.cent</code>としてコピーする。 このほか、<code>/etc/alias*</code>も忘れずに移行する必要がある。 また、一旦古い証明書ファイルもコピーした。</p>
+<p>設定ファイルの違いを見るため、diffを取る。</p>
+<pre><code>% diff /etc/postfix.cent/main.cf /etc/postfix/main.cf &gt; main.diff
+% diff /etc/postfix.cent/master.cf /etc/postfix/master.cf &gt; master.diff</code></pre>
+<p>このdiffファイルをkwriteで<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>開く。 今回はNemoのsftp機能を使って開いた。</p>
+<p>このdiffを元に手作業で変更箇所を反映していく。 主にssl, auth, virtual関連の変更を反映する必要があった。</p>
+<p>virtual関連のファイルは<code>/home/mailuser</code>にあったため、これをコピーする。 ただし、これはvirtualメールボックスを含むため、移行完了までは継続的にアップデートする必要がある。 この前にvirtual用に設定していた<code>mailuser</code>を設定する必要もあった。</p>
+<pre><code>% sudo useradd --no-create-home --uid=20000 --shell /bin/nologin --system -U -M mailuser</code></pre>
+<p>だが、これだけではグループが適正な値にならない。 そこで、グループIDを変更した上で、ユーザーの所属する主グループIDも変更する。</p>
+<pre><code>% sudo vigr
+% sudo vipw</code></pre>
+<p>Postfixをrestartして完了。</p>
+<h3 id="dovecot">Dovecot</h3>
+<p>Dovecotに関しては設定ファイルをコピーしてそのまま使うことができた。</p>
+<p>Dovecotの設定ファイルとして<code>/home/mail</code>を使っていたので、これをコピーする。</p>
+<p>Dovecotをrestartして完了。</p>
+<h3 id="上流">上流</h3>
+<p>DNSを変更してもDNSキャッシュの関係でまだ旧サーバーにもメールが届く。 ある程度はaliasを使って転送しても良いのだが、素直にPostfixで受け取りつつ、Maildirのファイルを同期していくのが良いだろう。</p>
+<p>DeleGateを使っていたため、DeleGateのSMTP転送機能を使う方法もあるのだが、うまく動作しなかったのと、TLS接続を受け付けることができないため、諦めた。</p>
+<h2 id="セキュリティ関連">セキュリティ関連</h2>
+<p>複雑な話になるので省略。</p>
+<p>そこまで難しいことをしているわけではないが、 普通の対策と、らしい対策とで簡単には突破できないようにしている。</p>
+<h2 id="後処理旧サーバー">後処理(旧サーバー)</h2>
+<p>DovecotとDeleGateは停止してしまう。</p>
+<p>Postfixは5日程度稼働したら停止してしまっていいだろう。<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>その後、バックアップ(主にログや設定など)をとったらサーバー破棄である。</p>
+<h2 id="おまけ-conohaについて">おまけ: ConoHaについて</h2>
+<h3 id="dns">DNS</h3>
+<p>ConoHaのDNSは高速である上に非常に設定しやすい。</p>
+<p>これまで使用していたお名前.comのもの、XDomainのものは非常に設定しづらかったので、 これだけでもConoHaにする価値はあるレベルだ。</p>
+<h3 id="料金">料金</h3>
+<p>コンピューティングリソースはDTIとあまり変わらないが、料金は約倍になった。</p>
+<p>ただし、ConoHaの柔軟性やメリットを考えればそう悪くない。 両方持つと少々負担は大きいが<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>、一気に完全移行したためDTIを解約でき<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>、許容すべきコストアップだろう。</p>
+<h3 id="速度-1">速度</h3>
+<p>速い。</p>
+<p>「コンピューティングリソースは大きく変わらない」といったが、速度は明らかにあがった。 特にネットワークの高速化とストレージの高速化の恩恵は大きく、Webの応答性は明確に向上した。</p>
+<h3 id="柔軟性">柔軟性</h3>
+<p>DTI VPSは色々と柔軟性が足りず、困った。 特に、OSのバージョンをあげようにもサーバーがひとつしかないので、できない。 ConoHaなら</p>
+<ul>
+<li>インスタンスが立てられるのでサーバー仕様変更もできる</li>
+<li>OSが選べる。さらにカスタムイメージのアップロードも可能</li>
+<li>サーバーのアップグレードが簡単にできる(512MBプランを除く)</li>
+</ul>
+<h3 id="ファイアウォール">ファイアウォール</h3>
+<p>上流でフィルタリングしてくれるのはとても嬉しい。 設定が楽になる、というのもあるが、サーバーの耐障害性が勝手にあがる上に、まあまあ重いiptablesでの処理量が減るため、パフォーマンスが改善する。 リソースが限られている中では非常に嬉しい。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Let’s Encryptの証明書はSAN(Subject Alternative Name)に 対応したもので、<code>fullchain.pem</code>が全てのドメインに対応したものになる<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>Kwrite/Kateにはdiffのハイライト機能があるからだ<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>TTLは3600だったため、それに従うならば1時間待てば良いのだが…<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn4"><p>DTIが月額500円ほど(年間6000円程度), ConoHaが900円ほど(年間10800円程度)である<a href="#fnref4" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn5"><p>といっても、私はDTI SIMの契約があるため、DTIの契約そのものが終了するわけではない<a href="#fnref5" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

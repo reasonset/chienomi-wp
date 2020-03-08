@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-02-25T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-02-25T00:00:00+09:00" />
+    <title>Markdownにまつわるもろもろ - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Markdownにまつわるもろもろ</h1></header>
+        <article id="MainArticle">
+<!--
+
+##--*--*--*--*--*--*--*--*--*--*--
+# last-update : 2015-02-26 00:18:11 +09:00
+# since : 2015-02-26 00:18:18 +09:00
+# title : Markdownにまつわるもろもろ
+# tags : [ markdown, remarkable, editor, cutemarked, haroopad, puredoc, purebuilder, reasonpuilder, programming, ruby, dsl ]
+# cats : [ devel.util.useful, site ]
+##--*--*--*--*--*--*--*--*--*--*--
+
+-->
+<h3 id="markdownで書くということ">Markdownで書くということ</h3>
+<p>Markdownはもうだいぶ普及している形式だと思う。</p>
+<p>様々なマークアップ言語や記法がこれまで発達してきた。 それは例えばWikiであったり、plain2だったり、textileだったり、 場合によってはRDocだったり。</p>
+<p>しかしながら、そのいずれもそれほど普及しなかった。 だが、Markdown記法はもはやスタンダードとも言うべき普及を見せている。</p>
+<p>PureDocは当初、Markdownのような形式をとっていた。 実際に正規表現パーサだった時期もあるし、もう少し発展してZshの内部DSLだった時代もある。</p>
+<p>この目的はHTMLと印刷用フォーマットの両方を生成するドキュメントメタフォーマットで、 かつHTMLと比べ簡潔に記述できるフォーマットを求めていた。</p>
+<p>その要求を満たしてくれるのだ。 現在はPureDocはReasonSetに特化した多彩な機能を持つためMarkdownに乗り換えるということはしないが、 多くの場合Markdownで事足りるのも事実だ。</p>
+<h3 id="markdown-editor">Markdown Editor</h3>
+<p>Markdownは普及している分、専用のEditorが多く存在する。 単に強調表示や入力支援があるだけでなく、リアルタイムで表示を確認できる。</p>
+<p>主要な候補となるのは</p>
+<ul>
+<li>Markdown#Editor(Windows)</li>
+<li>Remarkable(Linux)</li>
+<li>CuteMarkEd</li>
+<li>Haroopad</li>
+</ul>
+<p>の4つであるようだ。</p>
+<p>Markdown#Editorに関しては表示領域がマッチしないことが多く、 いまひとつ使いにくい。この問題はCuteMarkEdでも生じる。</p>
+<p>Haroopadはクロスプラットフォームで、最初はフォントに違和感があったが、 CSSによってフォントを含め見栄えを指定することができる。</p>
+<p>Haroopadの弱点は、改行を反映してしまうことだろう。 だが、全体にはスタイリッシュで見やすく使いやすい。 ドキュメントの動的なリロード機能がないのと、Donateのバルーンがちょっとしつこいのは残念。 だが、Windowsではこれを使っている。 基本的に表示位置は狭い画面ではエディタ側の入力位置を上のほうにもってくると適切に表示してくれる。</p>
+<p>Haroopadの欠点として、Fcitxで入力できなくなることが結構あるというのもある。 この対応として、入力のない、空のHaroopadを立ち上げておくと入力できるようだ。</p>
+<p>RemarkableはUbuntu的なUIを持つ。 使いやすいといえば使いやすいが、D&amp;Dによって開くことができないため、ファイル操作がちょっと面倒。</p>
+<p>おもしろいのが、Remarkableはビューワがめいっぱい上までスクロールすると下にループする。下はしない。</p>
+<p>またエクスポート機能もあり、CSSにも対応する。 今のところ最も安定しているということもあり、LinuxではRemarkableを使用している。</p>
+<p>Remarkableで記述する場合は、エディタの記述部分を上のほうになるようにするか、めいいっぱい下にすると適切に表示される。 当然ながら、中途半端で適切に表示されない位置はどうしても生じる。</p>
+<p>だが、なるべくならどのエディタも最も下に書いていくのが良いようだ。</p>
+<h3 id="markdownで既存のテキストを引用する">Markdownで既存のテキストを引用する</h3>
+<p>HTMLを含め引用は<code>pre</code>されるべきではないかと思うのだが、そうなっていない。 プレーンなテキストを引用するには、次のようにすると良いようだ。</p>
+<pre><code>sed -i &quot;s/\(.*\)/&gt; \1\n&gt; /&quot;　file</code></pre>
+<p>sedの出力は改行を伴うので最後には改行はいらない。 段落を分けてもらう必要があるため、空行を入れておく。 ちょっと複雑だ。</p>
+<h3 id="markdownをpurebuilderに取り込み">MarkdownをPureBuilderに取り込み</h3>
+<p>Markdownのほうが楽に、適切に書けるケースが多いようなので、MarkdownをPureBuilderの一部として取り込んでみた。</p>
+<p>とりあえずblog用で、変換にはpandocを使う。 これはいずれPureBuilderの一部となる。</p>
+<p>ちなみに、今回コードの埋め込みは次のようにした。</p>
+<pre><code>sed &quot;s/\(.*\)/\t\1/&quot; ~/local/devel/reasonset_builder02/scripts/md_processor.rb &gt;| ~/tmp/out</code></pre>
+<p>主な動作としては、PureDoc同様のヘッダの取り扱いと、 pandocから<code>body</code>だけを切り出すことである。</p>
+<pre><code>#!/usr/bin/ruby
+# -*- mode: ruby; coding: UTF-8 -*-
+
+require &#39;yaml&#39;
+
+module YEK
+  class ReasonBuild
+
+#=NAME
+#
+#ReasonBuild MD Processor - PureBuilder script for Markdown file.
+#=SYNOPSIS
+#
+#  md_processor.rb [ _file_ ] [ -- _pandocoptions_ ... ]
+#
+#=DESCRIPTION
+#
+#MD Processor reads ARGF and process with pandoc.
+#
+#If +-s+ any _file_ given, MD Processor understands header with same style as PureDoc,
+#modify timestamp, and write out to given _file_.
+#
+#If pandoc options given, MD Processor invoke pandoc with these options.
+#Otherwise, MD Processor invoke pandoc 
+#
+# pandoc -t -s -p
+#
+    class MDProceessor
+      
+      def proc_header(file=nil)
+        @file_content ||= ARGF.read
+        # Any file given?
+        if file &amp;&amp; @file_content =~ /^##--.*$/ &amp;&amp; $&#39; =~ /^##--.*$/
+
+          begin
+            yax = $`.each_line.map {|i| i.sub(/^# /, &quot;&quot;) }.join
+            header_meta = YAML.load(yax) || Hash.new
+    
+            # Is Header missing last-update or since?
+            if  ( ! header_meta.key?(&quot;last-update&quot;) ) || ( ! header_meta.key?(&quot;since&quot;) )
+                
+              now = Time.now
+            
+              modsince, modupdate = nil, nil
+
+              # Set to since
+              if ! header_meta.key?(&quot;since&quot;) 
+                modsince = true
+                header_meta[&quot;since&quot;] = now
+              end
+            
+              # Set to last-update.
+              if ! header_meta.key?(&quot;last-update&quot;) 
+                modupdate = true
+              end
+            
+              # OK, Header is ready.
+              # Open the file!
+              File.open(file.first, &quot;r+&quot;) do |f|
+                content = f.gets(nil)
+            
+                if content.sub!(/^##--.*?^##--.*?$/m) {
+                  el = $&amp;.each_line.to_a # Get header texts.
+                
+                  el.insert(1, &quot;# since : #{now.strftime &#39;%Y-%m-%d %H:%M:%S %:z&#39;}\n&quot;) if modsince # Add since if since was not exist.
+                
+	          # Update last update time if last-upadte is not set or last-update is older than mtime.
+                  el.insert(1, &quot;# last-update : #{File.mtime(file.first).strftime &#39;%Y-%m-%d %H:%M:%S %:z&#39;}\n&quot;) if modupdate# Add last update timestamp 
+              
+                  el.join
+                }
+
+                  # Write to file if updated.
+                  f.seek(0)
+	          f.truncate(0)
+	          f.write( content )
+                end
+              end # Close file.
+            end # Missing header
+            
+          rescue # YAML or IO Rescue.
+            STDOUT.puts $!
+          end
+          
+        end # file given.
+      end #proc_header
+      
+      # Invoke pandoc, format, and out.
+      def pandoc(options)
+        
+        outstr = nil
+        
+        # filter pandoc.
+        IO.popen(( [&quot;pandoc&quot;] + options ), &quot;w+&quot;) do |io|
+          io.write @file_content
+          io.close_write
+          
+          outstr = io.gets(nil)
+        end
+                                                  
+        # subscribe content
+        flag = false
+        outstr = outstr.each_line.select do |line|
+            
+          if line =~ /^&lt;\/body&gt;$/
+            flag = false
+          end
+
+          if line =~ /^&lt;body&gt;$/
+            flag = true
+            next false
+          end
+            
+          flag
+        end.join
+        
+        return outstr
+        
+      end
+      
+      
+      def initialize
+          
+        pandoc_opt = nil
+        
+        # Get pandoc options from argv.
+        if sep = ARGV.index(&quot;--&quot;)
+          pandoc_opt = ARGV[(sep + 1) .. -1]
+          ARGV.pop
+        else
+          pandoc_opt = [ &quot;-t&quot;, &quot;html&quot;, &quot;-s&quot;, &quot;-p&quot; ]
+        end
+        
+        proc_header( ( ARGV.empty? ? nil : ARGV.dup ) )
+        
+        doc = pandoc(pandoc_opt)
+        print doc
+
+      end
+   
+    end #MDProceessor
+    
+  end
+end
+
+YEK::ReasonBuild::MDProceessor.new</code></pre>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

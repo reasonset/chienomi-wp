@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-06-20T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-06-20T00:00:00+09:00" />
+    <title>フォント帳アプリを作る → Linuxフォントの闇に触れる - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>フォント帳アプリを作る → Linuxフォントの闇に触れる</h1></header>
+        <article id="MainArticle">
+<h2 id="追記分について">追記分について</h2>
+<p>日本ではあまりなじみのない欧文<strong>コーディングフォント</strong>(プログラミング向けフォント, モノスペースフォント)を<em>なんでこんな苦労してるんだろう</em>とか思うくらいの労力を掛けてカタログ作ったので、<em>気合いれて紹介させていただく</em>。</p>
+<p>ぜひ見ていただきたい。</p>
+<h2 id="はじまりはmonospace">はじまりはmonospace</h2>
+<p>フォント一覧として“monospaceフォントの一覧を作りたい”と考えたのだ。</p>
+<p>アプリ自体は全フォント一覧も作れるようにしたが、monospace限定でも出力したい。 どのような方法があるかと考えた。</p>
+<p>調べると<code>spacing</code>の値を見ればわかるということはわかったのだが、<code>spacing</code>は<code>Monospace</code>や<code>Proportional</code>のような文字列ではなく、<code>90</code>, <code>100</code>といった値になっている。</p>
+<p>とりあえず<code>90</code>も<code>100</code>もおおよそmonospaceだということはわかったが、<code>90</code>を提示するがmonospaceでないフォントもある。</p>
+<p>だいたい<code>90</code>と<code>100</code>の違いはなんなのか…もしかしてQtのmonospaceフォント一覧に関係があるのか…</p>
+<p>と調べていくといろいろわかってきた。</p>
+<p><code>100</code>が<code>FC_MONO</code>の定数であり、<code>Monospace</code>のことであるらしい。 <code>90</code>は<code>FC_DUAL</code>であり、幅を2種類持っているもののようだ。</p>
+<p>確かに等幅和文フォントは “monospace” ではない。 “dualspace” である。</p>
+<p>では等幅和文フォントの<code>spacing</code>を<code>100</code>にした場合Qtウィジットもmonospaceとして認識してくれるのだろうか?</p>
+<h2 id="fontconfigの一覧はいじれない">FontConfigの一覧はいじれない?</h2>
+<p>で、どうやらfontconfigの設定(<code>fonts.conf</code>)はフォントを “要求されたとき” には反映されるけれど、 “リストするとき” には無視されるようだ。</p>
+<p>例えばこんな設定ファイルを作る。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot;<span class="kw">?&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="dt">&lt;!DOCTYPE </span>fontconfig SYSTEM &quot;fonts.dtd&quot;<span class="dt">&gt;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">&lt;fontconfig&gt;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;font&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">        <span class="kw">&lt;test</span><span class="ot"> compare=</span><span class="st">&quot;eq&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">            <span class="kw">&lt;string&gt;</span>Migu 1M<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">        <span class="kw">&lt;edit</span><span class="ot"> name=</span><span class="st">&quot;spacing&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">            <span class="kw">&lt;int&gt;</span>100<span class="kw">&lt;/int&gt;</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">            <span class="kw">&lt;string&gt;</span>Foogothic<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">        <span class="kw">&lt;edit</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19">            <span class="kw">&lt;string&gt;</span>Anonymous Pro<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20">            <span class="kw">&lt;string&gt;</span>Migu 1M<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23"><span class="kw">&lt;/fontconfig&gt;</span></a></code></pre></div>
+<p>Migu 1Mの<code>spacing</code>は<code>100(FC_MONO)</code>になる。</p>
+<pre><code>% fc-match &quot;Migu 1M&quot; : spacing family
+Migu 1M:spacing=100</code></pre>
+<p>けど、リストには入らない。</p>
+<pre><code>% fc-list :spacing=100 : family | grep -i migu</code></pre>
+<p>Foogothicもちゃんと認識はされているけど</p>
+<pre><code>% fc-match -a Foogothic : family | head
+Anonymous Pro
+Anonymous Pro
+Anonymous Pro
+Anonymous Pro
+Migu 1M
+Migu 1M
+Bitstream Vera Sans
+Bitstream Vera Sans
+Bitstream Vera Sans
+Bitstream Vera Sans</code></pre>
+<p>リストにはない。</p>
+<pre><code>% fc-list | grep -i foo</code></pre>
+<p><code>90(FC_DUAL)</code>を<code>100(FC_MONO)</code>として認識させると、フォントに設定されている幅を無視するアプリケーションが存在するため、リストに入れてくれるわけでもないのならばデメリットしかない。</p>
+<p>欧文フォントを和文で使いたいという場合には和文フォントを加える形にしてあげれば良いのだが</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">    <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">        <span class="kw">&lt;string&gt;</span>Envy Code R<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">    <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">    <span class="kw">&lt;edit</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">        <span class="kw">&lt;string&gt;</span>Envy Code R<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">        <span class="kw">&lt;string&gt;</span>Migu 1M<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">    <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">    <span class="kw">&lt;edit</span><span class="ot"> name=</span><span class="st">&quot;spacing&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="ot"> binding=</span><span class="st">&quot;strong&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">        <span class="kw">&lt;int&gt;</span>90<span class="kw">&lt;/int&gt;</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">    <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="kw">&lt;/match&gt;</span></a></code></pre></div>
+<p>問題はQtである。</p>
+<p>QtはMonospaceフォントとして<code>FC_MONO</code>の値よりも<code>spacing</code>が大きいフォントを提示する。</p>
+<p>問題は、<code>FC_MONO</code>は<code>100</code>であり、<code>FC_DUAL</code>は<code>90</code>であるため、<code>FC_DUAL</code>なフォントは提示されない、ということだ。</p>
+<p><a href="https://bugreports.qt.io/browse/QTBUG-67612">この問題はバグとして報告されている</a>のだが、今以て解決していない。</p>
+<p>現状、<code>monospace</code>を和文フォントにするか、適当な(使わない)欧文monospaceフォントをインストールして、その名前を利用して置き換えるくらいしかなさそうだ。</p>
+<h2 id="和文プロポーショナルフォントの話">和文プロポーショナルフォントの話</h2>
+<p>実は和文フォントは一般的には「ラテン文字はプロポーショナル、全角文字は等幅」となっており、 日本語部分までプロポーショナルになっている「和文プロポーショナルフォント」というのはかなり珍しい。</p>
+<p>このためか、ラテン部分がプロポーショナルであるにもかかわらず、<code>spacing=90</code>にしてしまうフォントが結構あるようだ。例えばDynafontとか。</p>
+<p>なので、今回のスクリプトは<code>-s 90</code>とすればdualspaceフォントを含めてリストしてくれるけれども、必ずしも等幅フォントであるとは限らない。</p>
+<h2 id="今回のスクリプト">今回のスクリプト</h2>
+<p><a href="https://github.com/reasonset/installed-font-list-html">GitHubにアップした。</a></p>
+<p>基本的にはFontConfigから値をひらってeRubyで埋め込んだHTMLを作るプログラムである。</p>
+<p>プログラム自体は至ってシンプルなものだ。 どちらかといえばFontConfigに関する知識のほうが求められる。</p>
+<p>READMEにある通り、うまく動作しない部分がある。 family名を指定しても正しく表示されないもの、fullnameがBoldなどになっているもの、 <code>spacing=90</code>といいながら等幅フォントではないもの<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>、<code>kana</code>や<code>hani</code>が実態と合っていないもの、 などなど「フォントの情報って結構ガバガバだなぁ」と感じてしまう。 もちろん、フォントの情報から取っているわけで、がフォントにウソ情報を書かれたりするとスクリプト側では処理しがたい。</p>
+<p>ウェイトの違うフォントが別ファイルになっているものと同一ファイルのもの、PlainやNormalなどRegularではない標準フォントウェイト名であるためにBoldが標準になってしまうもの、 ビットマップとスケーラブルがスタイルの違いになっているもの(例えばTelegramaはRawがビットマップ、Renderがスケーラブル)と厄介なものは色々ある。</p>
+<h2 id="欧文モノスペースフォント紹介">欧文モノスペースフォント紹介</h2>
+<p><a href="digi/cat-digi-prog/1419">ボリュームがすごーく増えてしまったので独立させました</a></p>
+<h2 id="今回の件で気づいたこと">今回の件で気づいたこと</h2>
+<h3 id="欧文フォントフェイスはかなり似ている">欧文フォントフェイスはかなり似ている</h3>
+<p>「読みやすいアルファベット」という条件がついていて、あまり標準的でない形は読みづらさにつながる。</p>
+<p>結局、こうした条件のためにだいたいのフォントが似ていて、「ターミナル」「タイプライター」「セリフ」「サンセリフ」の4種類で分類できるような形状しか生まれてこない。</p>
+<p>だが、微妙な違いが読みやすさにつながる部分もある。 現在人気のフォントはどれも似たようなサンセリフまたはターミナル体なのだけど、探せばちょっと変わったフォントもあるにはある。 人気のあるフォントの中ではMonacoやUbuntu Monoがちょっと変わったグリフをしている。逆にHackやDroid Sans Monoはものすごく普通。</p>
+<h3 id="商用フォントはいいぞ">商用フォントはいいぞ</h3>
+<p><a href="https://dank.sh/?ref=producthunt">Dark Mono</a>, Operator, Native, Range Mono, Vivala Codeなど見比べて「おっ、いいな」と思うフォントは軒並み商用フォントになっている。</p>
+<p>ただし、プログラマ、コーダーなど「日がな一日プログラムを書いている」人に関しては、これぞと気に入ったフォントがあれば買ってみるのも手ではないだろうか。 一日中向き合っているものだし。</p>
+<h3 id="欧文フォントも売られているものは高いものもある">欧文フォントも売られているものは高いものもある</h3>
+<p><a href="https://www.typography.com/fonts/operator/styles/operatormono">Operatorなんて$199もする。</a> 1書体のお値段としてはモリサワフォント並。 <a href="https://www.fsd.it/shop/fonts/pragmatapro/">Pragmata Proもデスクトップ用 * レギュラー/ボールド/イタリックで€199</a>。</p>
+<p>日本語フォントとは制作労力が雲泥の差なので、ちょっとえげつない値段だと言っていい。</p>
+<p>Dark Monoも40ポンドとかなりお高め。</p>
+<h3 id="atomはレンダリングが汚い">Atomはレンダリングが汚い</h3>
+<p>フォントのウェイトやサイズがばらつきやすく、autohintのようなガタツキも発生する。</p>
+<p>うまく表示してくれるフォントを探すのにはずいぶん苦労した。</p>
+<p>Atomでキレイに表示してくれるのはCPMonoなのだけど、CPMonoはコーディングフォントとして決して快適ではない。</p>
+<p>日本語と混ぜるなら、agave, Fantasque, Fira Code, Luculent, Mesloあたりが快適。 私は結局Fira Code+Migu 1Mにした。</p>
+<p>この組み合わせは非常に違和感がないが、後述のようにもう少し違和感があったほうが読みやすい。 その点、LuculentやMesloのほうが有力だった。</p>
+<h3 id="フォントの情報はいい加減">フォントの情報はいい加減</h3>
+<p>「漢字グリフはなくてひらがなだけなんだけど、<code>hani</code>は書いてあって<code>kana</code>は書いてない」みたいなフォントもある。</p>
+<p>商用フォントでも結構ザルである。 プログラムとしてはフォントの情報に基づいて処理するしかないわけで、「なんでここでそのフォントが?」と思うようなフォントが提示されたり、偽薬に提示されなかったりというのはここらへんに理由があるのだろう。</p>
+<h3 id="日本では紹介されていないモノスペースフォントはいろいろ">日本では紹介されていないモノスペースフォントはいろいろ</h3>
+<p>日本人としては日本語Glyphのないフォントは使えない、という感覚があるのだろう。 あまり紹介されることもない。</p>
+<p>だが、実際にはプログラム中には日本語なんてほぼ使わないわけで、モノスペースフォントは日本語Glyphがなくてもあまり困らないし、 今はglyphがなければそれなりに処理してくれるのが普通なので別に好きに組み合わせても良いのではないだろうか。</p>
+<p>日本で紹介されるものは人気があるというよりも無難なものが多く、実際にはもっと使ってみる価値のあるフォントは色々ある。</p>
+<h3 id="フォントレンダリングの微妙な差">フォントレンダリングの微妙な差</h3>
+<p>KDEアプリケーションは割とにじみ強く太めに描画するため、キレイに見える。</p>
+<p>Gnomeアプリケーションはもっとくっきり描画する。</p>
+<p>どちらもFontConfigを使っているのだけど、描画ライブラリの微妙な差なのか、見え方が割と違う。 FirefoxとChromiumの描画差は気づきやすい。</p>
+<p>そして前述のようにAtomはあまりよくない。</p>
+<h3 id="autohinterは諸悪の根源">autohinterは諸悪の根源</h3>
+<p>以前は有効にするのが一般的だったように思うautohinterだけども、有効にするとガタガタになる。</p>
+<p>フォントが寄る、ガタつく、崩れるなどのことがあったらautohinterを切るといいかも。</p>
+<h3 id="fontconfigはデフォルト設定がだいたいいい感じ">FontConfigはデフォルト設定がだいたいいい感じ</h3>
+<p>FontConfigの設定はディストリビューションによって作り込まれていることが多く、違いがあるけれども、 Arch設定だと色々いじってみても基本的にはデフォルトが良いようだ。</p>
+<p>nobitmapと、サブピクセルレンダリングの配置くいらはいじったほうがいいけども。</p>
+<h3 id="日本語とアルファベットは差があるほうが見やすい">日本語とアルファベットは差があるほうが見やすい</h3>
+<p>コーディング向きのglyphを持つ日本語フォント<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>の場合、統一感があるように調整されている。 「日本語とアルファベットの統一的デザインってなんだ」と思うかもしれないが、主にはグリフのボックスサイズと、線の太さである。</p>
+<p>普通は「半角は全角の半分」となるように設計する。Source Code JPフォントの場合は全角は半角の1.5倍幅になっている。</p>
+<p>だが、Linux環境ではこのような和文フォントのスペーシングがうまく適用されないことが多い。 Atomの場合和文フォントを指定すると縦には揃ってくれない。このことから、このようにメリットは少ない。</p>
+<p>また、日本語にアルファベットを混ぜ書きするケース(スペースを持たないケース)においては、アルファベットは「検索(eyeboll-search)の対象」であることがあり、 区別しやすいほうが良いと考えられる。</p>
+<p>このことを踏まえると、「日本語とアルファベットの統一感はなくても困らないし、むしろないほうが便利」だったりする。</p>
+<h2 id="おまけ-今回のフォント画像に使ったコード">おまけ: 今回のフォント画像に使ったコード</h2>
+<p>JavaScript組み込みHTMLのPandocテンプレートである。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dt">&lt;!DOCTYPE </span>html<span class="dt">&gt;</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="kw">&lt;html</span><span class="ot"> xmlns=</span><span class="st">&quot;http://www.w3.org/1999/xhtml&quot;</span><span class="ot"> lang=</span><span class="st">&quot;$lang$&quot;</span><span class="ot"> xml:lang=</span><span class="st">&quot;$lang$&quot;</span><span class="er">$if(dir)$</span><span class="ot"> dir=</span><span class="st">&quot;$dir$&quot;</span><span class="er">$endif$</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw">&lt;head&gt;</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">  <span class="kw">&lt;meta</span><span class="ot"> charset=</span><span class="st">&quot;utf-8&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">  <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;generator&quot;</span><span class="ot"> content=</span><span class="st">&quot;pandoc&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">  <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;viewport&quot;</span><span class="ot"> content=</span><span class="st">&quot;width=device-width, initial-scale=1.0, user-scalable=yes&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">$for(author-meta)$</a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">  <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;author&quot;</span><span class="ot"> content=</span><span class="st">&quot;$author-meta$&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">$endfor$</a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">$if(date-meta)$</a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">  <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;dcterms.date&quot;</span><span class="ot"> content=</span><span class="st">&quot;$date-meta$&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">$endif$</a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">$if(keywords)$</a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">  <span class="kw">&lt;meta</span><span class="ot"> name=</span><span class="st">&quot;keywords&quot;</span><span class="ot"> content=</span><span class="st">&quot;$for(keywords)$$keywords$$sep$, $endfor$&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">$endif$</a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">  <span class="kw">&lt;title&gt;</span>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$<span class="kw">&lt;/title&gt;</span></a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">  <span class="kw">&lt;style</span><span class="ot"> type=</span><span class="st">&quot;text/css&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">      code{<span class="kw">white-space</span>: <span class="dv">pre-wrap</span>;}</a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">      span<span class="fu">.smallcaps</span>{<span class="kw">font-variant</span>: <span class="dv">small-caps</span>;}</a>
+<a class="sourceLine" id="cb7-20" data-line-number="20">      span<span class="fu">.underline</span>{<span class="kw">text-decoration</span>: <span class="dv">underline</span>;}</a>
+<a class="sourceLine" id="cb7-21" data-line-number="21">      div<span class="fu">.column</span>{<span class="kw">display</span>: <span class="dv">inline-block</span>; <span class="kw">vertical-align</span>: <span class="dv">top</span>; <span class="kw">width</span>: <span class="dv">50%</span>;}</a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">      body { <span class="kw">padding</span>: <span class="dv">50px</span>; <span class="kw">font-size</span>: <span class="dv">25pt</span>; }</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">$if(quotes)$</a>
+<a class="sourceLine" id="cb7-24" data-line-number="24">      q { <span class="kw">quotes</span>: <span class="st">&quot;“&quot;</span> <span class="st">&quot;”&quot;</span> <span class="st">&quot;‘&quot;</span> <span class="st">&quot;’&quot;</span>; }</a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">$endif$</a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">  <span class="kw">&lt;/style&gt;</span></a>
+<a class="sourceLine" id="cb7-27" data-line-number="27">$if(highlighting-css)$</a>
+<a class="sourceLine" id="cb7-28" data-line-number="28">  <span class="kw">&lt;style</span><span class="ot"> type=</span><span class="st">&quot;text/css&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-29" data-line-number="29">$highlighting-css$</a>
+<a class="sourceLine" id="cb7-30" data-line-number="30">  <span class="kw">&lt;/style&gt;</span></a>
+<a class="sourceLine" id="cb7-31" data-line-number="31">$endif$</a>
+<a class="sourceLine" id="cb7-32" data-line-number="32">$for(css)$</a>
+<a class="sourceLine" id="cb7-33" data-line-number="33">  <span class="kw">&lt;link</span><span class="ot"> rel=</span><span class="st">&quot;stylesheet&quot;</span><span class="ot"> href=</span><span class="st">&quot;$css$&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-34" data-line-number="34">$endfor$</a>
+<a class="sourceLine" id="cb7-35" data-line-number="35">$if(math)$</a>
+<a class="sourceLine" id="cb7-36" data-line-number="36">  $math$</a>
+<a class="sourceLine" id="cb7-37" data-line-number="37">$endif$</a>
+<a class="sourceLine" id="cb7-38" data-line-number="38">$for(header-includes)$</a>
+<a class="sourceLine" id="cb7-39" data-line-number="39">  $header-includes$</a>
+<a class="sourceLine" id="cb7-40" data-line-number="40">$endfor$</a>
+<a class="sourceLine" id="cb7-41" data-line-number="41"><span class="kw">&lt;/head&gt;</span></a>
+<a class="sourceLine" id="cb7-42" data-line-number="42"><span class="kw">&lt;body&gt;</span></a>
+<a class="sourceLine" id="cb7-43" data-line-number="43"></a>
+<a class="sourceLine" id="cb7-44" data-line-number="44">$for(include-before)$</a>
+<a class="sourceLine" id="cb7-45" data-line-number="45">$include-before$</a>
+<a class="sourceLine" id="cb7-46" data-line-number="46">$endfor$</a>
+<a class="sourceLine" id="cb7-47" data-line-number="47">$if(title)$</a>
+<a class="sourceLine" id="cb7-48" data-line-number="48"><span class="kw">&lt;header&gt;</span></a>
+<a class="sourceLine" id="cb7-49" data-line-number="49"><span class="kw">&lt;h1</span><span class="ot"> class=</span><span class="st">&quot;title&quot;</span><span class="kw">&gt;</span>$title$<span class="kw">&lt;/h1&gt;</span></a>
+<a class="sourceLine" id="cb7-50" data-line-number="50">$if(subtitle)$</a>
+<a class="sourceLine" id="cb7-51" data-line-number="51"><span class="kw">&lt;p</span><span class="ot"> class=</span><span class="st">&quot;subtitle&quot;</span><span class="kw">&gt;</span>$subtitle$<span class="kw">&lt;/p&gt;</span></a>
+<a class="sourceLine" id="cb7-52" data-line-number="52">$endif$</a>
+<a class="sourceLine" id="cb7-53" data-line-number="53">$for(author)$</a>
+<a class="sourceLine" id="cb7-54" data-line-number="54"><span class="kw">&lt;p</span><span class="ot"> class=</span><span class="st">&quot;author&quot;</span><span class="kw">&gt;</span>$author$<span class="kw">&lt;/p&gt;</span></a>
+<a class="sourceLine" id="cb7-55" data-line-number="55">$endfor$</a>
+<a class="sourceLine" id="cb7-56" data-line-number="56">$if(date)$</a>
+<a class="sourceLine" id="cb7-57" data-line-number="57"><span class="kw">&lt;p</span><span class="ot"> class=</span><span class="st">&quot;date&quot;</span><span class="kw">&gt;</span>$date$<span class="kw">&lt;/p&gt;</span></a>
+<a class="sourceLine" id="cb7-58" data-line-number="58">$endif$</a>
+<a class="sourceLine" id="cb7-59" data-line-number="59"><span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;text&quot;</span><span class="ot"> size=</span><span class="st">&quot;20&quot;</span><span class="ot"> id=</span><span class="st">&quot;FontForm&quot;</span> <span class="kw">/&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;button&quot;</span><span class="ot"> value=</span><span class="st">&quot;Change&quot;</span><span class="ot"> id=</span><span class="st">&quot;FS&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-60" data-line-number="60"><span class="kw">&lt;/header&gt;</span></a>
+<a class="sourceLine" id="cb7-61" data-line-number="61">$endif$</a>
+<a class="sourceLine" id="cb7-62" data-line-number="62">$if(toc)$</a>
+<a class="sourceLine" id="cb7-63" data-line-number="63"><span class="kw">&lt;nav</span><span class="ot"> id=</span><span class="st">&quot;$idprefix$TOC&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-64" data-line-number="64">$table-of-contents$</a>
+<a class="sourceLine" id="cb7-65" data-line-number="65"><span class="kw">&lt;/nav&gt;</span></a>
+<a class="sourceLine" id="cb7-66" data-line-number="66">$endif$</a>
+<a class="sourceLine" id="cb7-67" data-line-number="67"><span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;text&quot;</span><span class="ot"> size=</span><span class="st">&quot;40&quot;</span><span class="ot"> id=</span><span class="st">&quot;FontName&quot;</span><span class="ot"> style=</span><span class="st">&quot;border: none 0px; font-size: 26pt; background-color: #fff; padding: 5px; border: #39f double 3px; color: #333; margin-top: 2em; margin-bottom: 0.8em&quot;</span> <span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb7-68" data-line-number="68">$body$</a>
+<a class="sourceLine" id="cb7-69" data-line-number="69">$for(include-after)$</a>
+<a class="sourceLine" id="cb7-70" data-line-number="70">$include-after$</a>
+<a class="sourceLine" id="cb7-71" data-line-number="71">$endfor$</a>
+<a class="sourceLine" id="cb7-72" data-line-number="72"><span class="kw">&lt;script</span><span class="ot"> type=</span><span class="st">&quot;application/javascript&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-73" data-line-number="73">  <span class="kw">var</span> fm <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;FontForm&quot;</span>)</a>
+<a class="sourceLine" id="cb7-74" data-line-number="74">  <span class="kw">var</span> nameBox <span class="op">=</span> <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;FontName&quot;</span>)</a>
+<a class="sourceLine" id="cb7-75" data-line-number="75">  <span class="va">document</span>.<span class="at">getElementById</span>(<span class="st">&quot;FS&quot;</span>).<span class="at">addEventListener</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> <span class="kw">function</span>(e) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-76" data-line-number="76">    <span class="cf">for</span> (<span class="kw">var</span> code of <span class="va">document</span>.<span class="at">getElementsByTagName</span>(<span class="st">&quot;code&quot;</span>)) <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-77" data-line-number="77">      <span class="va">code</span>.<span class="va">style</span>.<span class="at">fontFamily</span> <span class="op">=</span> <span class="va">fm</span>.<span class="at">value</span></a>
+<a class="sourceLine" id="cb7-78" data-line-number="78">      <span class="va">nameBox</span>.<span class="at">value</span> <span class="op">=</span> <span class="va">fm</span>.<span class="at">value</span></a>
+<a class="sourceLine" id="cb7-79" data-line-number="79">      <span class="va">nameBox</span>.<span class="va">style</span>.<span class="at">fontFamily</span> <span class="op">=</span> <span class="va">fm</span>.<span class="at">value</span></a>
+<a class="sourceLine" id="cb7-80" data-line-number="80">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb7-81" data-line-number="81">  <span class="op">},</span> <span class="kw">false</span>)</a>
+<a class="sourceLine" id="cb7-82" data-line-number="82"><span class="kw">&lt;/script&gt;</span></a>
+<a class="sourceLine" id="cb7-83" data-line-number="83"><span class="kw">&lt;/body&gt;</span></a>
+<a class="sourceLine" id="cb7-84" data-line-number="84"><span class="kw">&lt;/html&gt;</span></a></code></pre></div>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Iosevkaはdualspace扱いになっている。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>そもそも合成でないフォントでそのようなフォントはかなり少ない。M+(VLゴシックとMiguもこのglyph)くらいではないだろうか。Source Han Code JPとOsaka等幅は専用に調整されてリリースされているものなので含めてもいいかもしれないが。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

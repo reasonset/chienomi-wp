@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-08-31T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-08-31T00:00:00+09:00" />
+    <title>シェルスクリプト Forced Todo - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>シェルスクリプト Forced Todo</h1></header>
+        <article id="MainArticle">
+<p>Forced Todoはなかなか進まない進捗に対して、一定の時間でTODOを読み上げ、進捗を迫るものである。 あまりに進捗しないので作ってみた。</p>
+<p><a href="https://gist.github.com/reasonset/2fcda7e632fd59a355c3d91ab9b83ff0">Gist</a> <!--
+<script src="https://gist.github.com/reasonset/2fcda7e632fd59a355c3d91ab9b83ff0.js"></script>
+--></p>
+<h3 id="systray">Systray</h3>
+<p>Notifyを開始するとSystrayに常駐し、Systrayから終了できるようにした。</p>
+<p>Systrayへの常駐はMailDeliver2同様、<code>yad</code>を使うようにした。</p>
+<pre><code>notifypid=$!
+
+yad --notification --image=player-time --text=&quot;TODO NOW!&quot; --command=&quot;yad --text-info --timeout=15 --title=TODO --width 300 --height 300 --filename=$HOME/.yek/forcedtodo/todotext&quot; --menu=&#39;Edit!&#39;&quot;$task_editor $HOME/.yek/forcedtodo/todotext&quot;&#39;|Quit!quit&#39; --tooptip=&quot;Immidiately Task&quot; 
+kill $!</code></pre>
+<p>Yadのオプションについて分析してみよう。</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">オプション</th>
+<th align="left">意味</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>--notification</code></td>
+<td align="left">Systrayに常駐する</td>
+</tr>
+<tr class="even">
+<td align="left"><code>--image=player-time</code></td>
+<td align="left">Systrayのアイコンを選択</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>--text=&quot;TODO NOW!&quot;</code></td>
+<td align="left">Notificationの名前(ポップアップに影響)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>--command</code></td>
+<td align="left">左クリック時の実行コマンド</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>--menu</code></td>
+<td align="left">右クリックメニュー。項目名とコマンドを<code>!</code>で分けている。<code>quit</code>で終了</td>
+</tr>
+</tbody>
+</table>
+<p>ネストされているYadは次の通り</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">オプション</th>
+<th align="left">意味</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>--text-info</code></td>
+<td align="left">テキストダイアログ</td>
+</tr>
+<tr class="even">
+<td align="left"><code>--timeout=15</code></td>
+<td align="left">15秒でダイアログが閉じる</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>--title=TODO</code></td>
+<td align="left">ウィンドウタイトル</td>
+</tr>
+<tr class="even">
+<td align="left"><code>--width 300</code></td>
+<td align="left">ウィンドウの幅</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>--height 300</code></td>
+<td align="left">ウィンドウの高さ</td>
+</tr>
+<tr class="even">
+<td align="left"><code>--filename=...</code></td>
+<td align="left">テキストの内容となるファイル</td>
+</tr>
+</tbody>
+</table>
+<p>Zenityとは結構な違いがあることに注意。</p>
+<p>Yadは通常ブロックするため、Yadが終了しなければ戻らない。 そのため、Notifyするためのプログラムをサブシェルでバックグラウンドプロセスとして実行し、そのプロセスID(<code>$!</code>)を取得し、Yadが戻ったらKillすれば良い、ということになる。</p>
+<h3 id="notify-open-jtalk">Notify (Open JTalk)</h3>
+<p>Notifyは単一のプロセスIDを振るためにサブシェルで実行し、バックグラウンドプロセスとすることでループさせる。</p>
+<pre><code>(
+  while sleep $notify_interval
+  do
+  perl -pe &#39;s/\n/。/g&#39; ~/.yek/forcedtodo/todotext | open_jtalk &quot;$jtalk_tuning[@]&quot; -m $hts_voicefile -x $mecab_dictdir -ow $jtalk_tmpfile
+  play $jtalk_tmpfile &gt;| /dev/null &amp;|
+  notify-send -t $notify_time &quot;TODO&quot; &quot;$(&lt;$HOME/.yek/forcedtodo/todotext)&quot;
+  done
+) &amp;</code></pre>
+<p>単純な<code>sleep</code>によるループである。</p>
+<p>基本的な手順としては</p>
+<ol style="list-style-type: decimal">
+<li>Open JTalkで音声ファイルを作成</li>
+<li>合成した音声ファイルをバックグラウンドプロセスとして再生</li>
+<li>Notify Sendを使って通知に表示</li>
+</ol>
+<p>となる。</p>
+<p>ここで大きな情報はOpen JTalkだろう。</p>
+<p>Open JTalkはスピーチシンセサイザーだが、eSpeak, SVOX Pico, Festivalといったソフトウェアと比べて非常に自然で、日本語に対応している。 ただし、かなり複雑なソフトウェアだ。</p>
+<p>Manjaro(Arch)では、AURにある<code>open-jtalk</code>パッケージをインストールする。</p>
+<p>NAIST JdicファイルはAURにも存在していないが、辞書ディレクトリとして<code>/usr/share/open-jtalk/dic/</code>を使用することができる。精度は異なるかもしれない。</p>
+<p>NAIST JDicをインストールするためには、<code>mecab</code>をインストールし、さらにNaist JDicで<code>/usr/libexec</code>が指定されている部分を<code>/usr/lib</code>に変更しなくてはいけない。</p>
+<p>女声を使用するためには<code>open-jtalk-voice-mei</code>をインストールする。</p>
+<p>Open JTalkは非常に自然で、Twitterの読み上げにも使えそうだが(<code>tw</code>との組み合わせがいいだろう)、複数行を扱うことができないため、Perlで変換している。 また、Open JTalkは標準出力に吐くことはできないようだ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-12-18T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-12-18T00:00:00+09:00" />
+    <title>Paiza プログラミング彼女の解法と不満 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Paiza プログラミング彼女の解法と不満</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">めがね</a>    <ul>
+      <li><a href="#section-1" id="markdown-toc-section-1">その1</a></li>
+      <li><a href="#section-2" id="markdown-toc-section-2">その2</a></li>
+    </ul>
+  </li>
+  <li><a href="#section-3" id="markdown-toc-section-3">水着</a>    <ul>
+      <li><a href="#section-4" id="markdown-toc-section-4">その1</a></li>
+      <li><a href="#section-5" id="markdown-toc-section-5">その2</a></li>
+      <li><a href="#section-6" id="markdown-toc-section-6">その3の1</a></li>
+      <li><a href="#section-7" id="markdown-toc-section-7">その3の2(通過)</a></li>
+      <li><a href="#section-8" id="markdown-toc-section-8">その3についての検証</a></li>
+    </ul>
+  </li>
+  <li><a href="#paiza" id="markdown-toc-paiza">Paizaへの不満</a>    <ul>
+      <li><a href="#section-9" id="markdown-toc-section-9">条件が予測できない</a></li>
+      <li><a href="#section-10" id="markdown-toc-section-10">デバッグできない</a></li>
+      <li><a href="#section-11" id="markdown-toc-section-11">いつからこんなつまらない業界になったのか</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>Paizaで展開している、「プログラミング彼女」というサブコンテンツ。</p>
+
+<h3 id="section">めがね</h3>
+
+<p>Paiza B級。</p>
+
+<p>ビットマップマッチングだが、値は</p>
+
+<pre><code>0 1 1 1
+1 0 1 1
+0 1 0 0
+0 1 1 0
+</code></pre>
+
+<p>のような文字列で与えられる。マッチングパターンも同様だ。</p>
+
+<p>結構馬鹿馬鹿しい。</p>
+
+<h4 id="section-1">その1</h4>
+
+<pre><code>ip = []
+tp = []
+
+gets.chomp.to_i.times {|n| ip &lt;&lt; gets.delete(" ") }
+gets.chomp.to_i.times {|n| tp &lt;&lt; gets.chomp.delete(" ") }
+tp[0] = Regexp.new(tp[0])
+
+ip.each_with_index do |ips, ipi|
+  ips.scan(tp.first) do
+    offset = $`.length
+    if tp[1 .. -1].each.with_index.all? do |tpp, tpi|
+                                          ip[ipi + (tpi + 1)][offset, tpp.length] == tpp
+                                        end
+      print "#{ipi} #{offset}"
+      exit 0
+    end
+  end
+end
+</code></pre>
+
+<p>これが通過しなかった。</p>
+
+<p>手元でテストする限り、これで通過しないケースは発見できなかったのだが、case4で0.11secでこけてしまう。</p>
+
+<p>これは納得できないところだ。</p>
+
+<p>文字列の正規表現マッチングを行っているため、かなり魔術的に見えるだろう。
+しかし、実はそうでもない。</p>
+
+<p>「文字列」というが、Rubyの場合は文字列はバイト列も含む。
+バイナリ検索にしてもバイトパターンのマッチングは普通なので、別にそのために文字列検索を行ってもなんら問題はない。</p>
+
+<p>本来は多重配列を用いたマトリックスを求めていたのだろうけれども、Rubyの能力を考えれば配列よりも文字列のほうがはるかに扱いやすいし速いので、ちょっと魔術的でもこちらのほうが良いと考えた。</p>
+
+<h4 id="section-2">その2</h4>
+
+<pre><code>matched = Array.new
+base = Array.new
+target = Array.new
+
+gets.chomp.to_i.times { base &lt;&lt; gets.chomp.delete(" ") }
+gets.chomp.to_i.times { target &lt;&lt; gets.chomp.delete(" ") }
+
+
+target.each do |ts|
+  matched &lt;&lt; ( l = Hash.new )
+  base.each_with_index do |x, i|
+    o = -1
+    while o = x.index(ts, (o + 1))
+      l["#{i} #{o}"] = [i, o]
+    end
+  end
+end
+
+print(matched.first.keys.select do |k| 
+  y, x = *matched.first[k]
+  matched.length.times do |n|
+    unless matched[n]["#{y + n} #{x}"]
+      break nil
+    end
+  end
+end.first)
+</code></pre>
+
+<p>ダメだと言われたので改修してみた。
+各パターンにおいてマッチするメトリックをハッシュに格納し、マッチ側パターンの行数縦に連続するものをマッチとみなす。
+速度的にも効率的にも悪くない。これで通過</p>
+
+<h3 id="section-3">水着</h3>
+
+<p>Paiza A級。</p>
+
+<p>階乗の、末尾0を除いた末尾9桁を出力せよ、という問題。
+本来はInteger Overflow対策が求められるのだろうが、RubyはBignumがあるため、そこは不要。</p>
+
+<p>しかし、実効速度に伴うタイムアウトという壁が立ちふさがった。</p>
+
+<h4 id="section-4">その1</h4>
+
+<pre><code>def fact(n)
+    if n &lt;= 1
+        n
+    else
+        n * fact(n - 1)
+    end
+end
+
+base_n = gets.chomp.to_i
+ret_n = fact(base_n).to_s
+ret_n =~ (/(.{0,8}[^0])0*$/)
+print $1.sub(/^0*/, "")
+</code></pre>
+
+<p>理論上はOKで、実際テストではOKだったが、Case3でコケる。
+おそらくはコールスタック枯渇。</p>
+
+<h4 id="section-5">その2</h4>
+
+<pre><code>num = (1 .. gets.chomp.to_i).inject {|x, sum| x * sum }
+print num.to_s.sub(/0*$/, "")[-9 .. -1]
+</code></pre>
+
+<p>コールスタックが枯渇しないように、<code>Enumerable#inject</code>を使ったループに変更した。
+だが、Case4で15.00secで失敗する。おそらくはタイムアウト。</p>
+
+<h4 id="section-6">その3の1</h4>
+
+<pre><code>print((1 .. gets.chomp.to_i).inject {|x, sum| (x * sum).to_s.sub(/0*$/, "").to_i % 1000000000 })
+</code></pre>
+
+<p>タイムアウトを避けるため、常に9桁に抑制することにした。</p>
+
+<p>このコード、計算結果が1000000000だった場合に、商余が0になってしまうため失敗するが、事前に0を除いているために起こりえない。</p>
+
+<p>だが、これはあっさり失敗してしまう。
+手元では通過していたため、失敗理由がわからなかった。</p>
+
+<h4 id="section-7">その3の2(通過)</h4>
+
+<pre><code>print((1 .. gets.chomp.to_i).inject {|x, sum| (x * sum).to_s.sub(/0*$/, "").to_i % 1000000000000 } % 1000000000)
+</code></pre>
+
+<p>計算桁を増やして最後に9桁に落とすようにした。
+これで通過したが、計算桁はなんとなく増やしているだけなので、理論的には失敗しうる。</p>
+
+<h4 id="section-8">その3についての検証</h4>
+
+<pre><code>r = (1 .. gets.to_i).inject([1, 1]) do |sum, x|
+  puts "---" + x.to_s
+  puts( a = (( x * sum[0] ).to_s.sub(/0*$/, "").to_i % 1000000000) )
+  puts( b = (( x * sum[1] ).to_s.sub(/0*$/, "").to_i % 100000000000) )
+  sum = [a, b]
+end
+
+puts "**ANSWER"
+puts r[0]
+puts r[1] % 1000000000
+
+puts "*****"
+
+p(137921024 * 50)
+p(83137921024 * 50)
+p((137921024 * 50).to_s.sub(/0*$/, "").to_i)
+p((83137921024 * 50).to_s.sub(/0*$/, "").to_i)
+p((137921024 * 50).to_s.sub(/0*$/, "").to_i % 1000000000)
+p((83137921024 * 50).to_s.sub(/0*$/, "").to_i % 100000000000)
+</code></pre>
+
+<p>なんとなく想像はついたが、検証してみた。</p>
+
+<p>!50の結果が変わってしまう。これは、!49の時点では</p>
+
+<pre><code>137921024
+83137921024
+</code></pre>
+
+<p>と9桁/11桁で正しいが、!50になると</p>
+
+<pre><code>68960512
+41568960512
+</code></pre>
+
+<p>と8桁/11桁になってしまう。0を除く前の時点で</p>
+
+<pre><code>6896051200
+4156896051200
+</code></pre>
+
+<p>1桁増えているが、0が末尾に2つ増えており、0を除くことで2桁減る。結果として1桁減ってしまうことになる。</p>
+
+<p>計算を続けていくと、この誤差は消滅するが（桁上がりすれば良い）、与えられた数によっては失敗することになる。
+これを考慮すると正しくは</p>
+
+<pre><code>print((1 .. gets.chomp.to_i).inject {|x, sum| (x * sum).to_s.sub(/0*$/, "").to_i % (1000000000 * (10 ** ($&amp;.length.zero? ? 1 : $&amp;.length) ) ) } % 1000000000)
+</code></pre>
+
+<p>とすれば良いはず。</p>
+
+<h3 id="paiza">Paizaへの不満</h3>
+
+<h4 id="section-9">条件が予測できない</h4>
+
+<p>条件は一応書かれてはいるが、それ以外の条件が多すぎる。</p>
+
+<p>コールスタックの枯渇は予測できるからいいとしても、タイムアウトという条件は記載されていないし、めがねのその1が失敗する理由もわからない。</p>
+
+<p>これで技術を評価されるというのはとても不満だし、だいたい大した機能もない開発環境で、妥当性検証の方法も単一のサンプル、それもどのような入力かを明確にしないままであり、入力の仕様も（業界では一般的な形式なのかもしれないが）非常にわかりにくい。</p>
+
+<h4 id="section-10">デバッグできない</h4>
+
+<p>失敗した場合でもなぜ失敗したのか分からない。そのためデバッグすることができない。</p>
+
+<p>提出前に失敗した場合でも、全体出力を見ることができず、かつデバッグせずに提出することを前提としているためデバッグはかなり難しい。</p>
+
+<p>私はこうしたことは不毛だと思っている。プログラムはちゃんと磨き上げて動くコードにするものだろう。そして間違いなく動くことが確認されて、はじめてリリースだ。</p>
+
+<p>確認もデバッグもできないままということで、一度しか提出チャンスがないということにも強い違和感を覚える。</p>
+
+<h4 id="section-11">いつからこんなつまらない業界になったのか</h4>
+
+<p>これはPaizaに限った話ではないけれど、IT業界が、まず履歴書、そして業務履歴書なんてつまらない業界になってしまったのはいつからなんだろう。</p>
+
+<p>少なくとも、私がお呼ばれした時には能力さえあればいいという空気があった。その時点でコンピュータを使うこなせる人間なんて変人が多かったし、型なしの掟破りという印象が強い。</p>
+
+<p>だが、近年は、他業界よりもさらに「即戦力」ばかり求められ、経験がなければやらせないというところばかりで、「経験はどこでつめますか？」という状態。
+結局そのために経歴の捏造が横行しているわけだ。</p>
+
+<p>年齢も経歴も関係なしの実力次第の世界だと思うのに、そこまで経歴に固執するのは一体なぜなのだろう。</p>
+
+<p>折角、コードを直接みることができるPaizaであるにも関わらず、そのフォーマットを要求するのはいかがなものか。さらに「趣味/1年未満」というくくりは一体なんなのか。
+そして、定型的な業務におけるカテゴリしか用意していないのもなんなのか。実際はもっと多様で、能力とは直結していないはずなのだが。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

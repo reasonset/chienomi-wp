@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-01-12T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-01-12T00:00:00+09:00" />
+    <title>サイトの大幅手直し - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>サイトの大幅手直し</h1></header>
+        <article id="MainArticle">
+<p>ウェブサイトに直すべき点が大量にあったためにかなり手をいれることになった。</p><h3>CSSグラデーション、デザインの修正</h3><p>まずベンダープレフィクスを用いたCSS3のグラデーションを入れた。</p><code style="display: block;white-space: pre-wrap">/* headline level2 decoration */
+h2 {
+  width: 100%;
+  background: -moz-linear-gradient(left -65deg, #fff, #acf);
+  background: -webkit-gradient(linear, left top, right bottom, from(#fff), to(#acf));
+}
+</code><p>これはAki SI&Eのほうのもの。これを使い、サイトロゴは透過画像として（新規に作成した）、背景にグラデーションを入れた。画像はフォアグラウンドのイメージ</p><code style="display: block;white-space: pre-wrap">/* Header container (Top position of Main container) */
+#Header {
+  background: #fff;
+  padding: 0 1.3em;
+  max-height: 125px;
+}
+
+#SITE_REASONSET #Header img.sitebanner {
+  margin-right : 40%;
+  width: 50%;
+}
+
+#SITE_REASONSET #Header {
+  background: -moz-linear-gradient(left -65deg, #f0f8ff, #acf);
+  background: -webkit-gradient(linear, left top, right bottom, from(#f0f8ff), to(#acf));
+}
+</code><p>SI&Eのほうはメインコンテナが950pxとっているのに切り替えを750pxにしていたのでこれも修正。</p><p>Aki SI&Eのほうはキャプチャのスタイルを変更。</p><code style="display: block;white-space: pre-wrap">h1 {
+  border-top : double 5px;
+  border-bottom: double 5px;
+  color: #39f;
+  margin-left: -1em;
+  margin-right: -1em;
+  margin-top: -0.8em;
+  text-align: center;
+  
+}
+</code><p>マイナスのmarginはあまり見ない気がする。このようなデザインはほとんど見ることはないが、なかなかパッとみてすっきりと見えて目を引く良いデザインだと思う。このために、テキストインデントのマイナスは消した。テキストインデントのマイナスは一行目にのみ適用されるらしい（brで改行すればその都度適用されるのだろうが、折り返しには適用されない）。</p><h2>サイトバーウィジットの変更</h2><p>AKi SI&Eが先行で変更され、それがReasonSetに反映され、さらにReasonSetで追加された機能がAki SI&Eのほうに入った。</p><code style="display: block;white-space: pre-wrap">        &lt;!-- Sub column --&gt;
+        <div id="SubColumn" class="full_width_container">
+
+          &lt;!-- Menu --&gt;
+          <div class="content_box">
+            <div class="box_label">-*- Menu -*-</div>
+            &lt;%= ENV["SUBCOLUMN_CONTENT"] || "" %&gt;
+          </div>
+          
+          &lt;!-- Notes if any --&gt;
+% unless DOC.notes.empty?
+          <div class="content_box">
+            <div class="box_label">-*- Notes -*-</div>
+            <ol>
+% DOC.notes.each do |note|
+              <li>&lt;%= note %&gt;</li> 
+%end
+            </ol>
+          </div>
+% end
+
+          &lt;!-- Navigation links with PureDoc and PureBuilder template --&gt;
+% if DOC.meta["link"] && ( DOC.meta["link"]["next"]  || DOC.meta["link"]["content"]  || DOC.meta["link"]["prev"]  || DOC.meta["link"]["start"] )|| ENV["reasonset_link_content"] || ENV["reasonset_link_start"]
+          <div class="content_box">
+            <div class="box_label">-*- Referrances -*-</div>
+            <ul class="pagenav">
+% if ENV["reasonset_link_start"] || DOC.meta["link"] && DOC.meta["link"]["start"] 
+            <li>&lt;a href="&lt;%= ENV["baseuri"] + "/" + ( ENV["reasonset_link_start"] || DOC.meta["link"]["start"] ).sub(/.pdoc$/, ".html") %&gt;"&gt;First article</a></li>
+% end
+% if ENV["reasonset_link_contents"] || DOC.meta["link"] && DOC.meta["link"]["content"]
+            <li>&lt;a href="&lt;%= ENV["baseuri"] + "/" + ( ENV["reasonset_link_contents"] || DOC.meta["link"]["content"] ) %&gt;"&gt;TOC of articles</a></li>
+% end
+% if DOC.meta["link"] && DOC.meta["link"]["prev"]
+            <li>&lt;a href="&lt;%= ENV["baseuri"] + "/" + ( DOC.meta["link"]["prev"].sub(/.pdoc$/, ".html") ) %&gt;"&gt;Prev</a></li>
+% end
+% if DOC.meta["link"] && DOC.meta["link"]["next"]
+            <li>&lt;a href="&lt;%= ENV["baseuri"] + "/" + DOC.meta["link"]["next"].sub(/.pdoc$/, ".html") %&gt;"&gt;Next</a></li>
+% end
+            </ul>
+          </div>
+% end
+
+
+        </div>
+        &lt;!-- / Sub column --&gt;
+</code><p>このために、これまで<tt class="puredoc_idname">SubCloumn</tt>コンテナ直下にメニューがあったが、それと<tt class="puredoc_idname">content_box</tt>クラスを分離して、同クラスの<tt class="puredoc_idname">div</tt>要素を追加している。</p><code style="display: block;white-space: pre-wrap">/* White background */
+.content_box {
+  background-color: #fff;
+}
+
+/* Padding for continuous content box. */
+.content_box + .content_box {
+  margin-top: 11px;
+}
+</code><p>Aki SI&Eのほうはもう少し手の込んだものになっている。</p><code style="display: block;white-space: pre-wrap">#SideBar .container {
+  padding : 1.28em;
+}
+
+#SideBar .container:last-child {
+  margin: 0;
+}
+</code><p>CSS3の<tt class="puredoc_idname">:last-child</tt>擬似プロパティを使うことで最後が間延びしてしまうことを防ぎながら、要素を分離してチェックをみせるようにしている。</p><p>注釈をサイドバー内にも表示するようにした他、内容的にはこれまでコンテンツ側にあったACCSのserial articleのreferranceをサイドバーに表示するように変更した。</p><h2>レイアウト方法の変更</h2><p>これでサイドバーが長くなったのだが、なぜかこれではメインコンテナが短縮されてしまう。あくまでメインカラムの高さに合わせるのだ。構造としては</p><code style="display: block;white-space: pre-wrap"><div style="position: relative;" id="UnderContainer">
+  <div style="position: relative;" id="SideColumn"></div>
+  <div style="position: relative;" id="MainColumn"></div>
+</div>
+</code><p>なのでこの挙動は謎だが、MozillaでもBlinkでも同様の挙動を示す。</p><p>floatすると一見うまくいくようだが、逆にサイドカラムの高さに合わせてしまい、メインカラムが突き抜けてしまう。また、幅もきちんと規定しなくてはいけない。</p><p>結局、3者全て<tt class="puredoc_idname">inline-block</tt>にしてしまえば高さは正しく確保される。ただし、これでは2つのカラムはmarginがとられないためぴったりくっついてしまう。</p><p>そこでこれをmargin, padding, border-widthが全て0のコンテナとし、paddingは別のブロックで確保する。paddingは設定してもよかったのかもしれないが、このほうが管理しやすい。</p><p>エッセイ用のほうが先行して開発されたので、構造が甘かった。ReasonSetはもう少し安定しているが、やはり作りなおしたほうが良いと思われる。ちなみに、ReasonSetが安定しているのは、高さが規定されているためでもある。</p><p>ここまでしたのだが、<tt class="puredoc_idname">inline-block</tt>で幅を%指定だとGeckoでは見られるが、Blinkでは上下にレイアウトされてしまう。ピクセル指定にすれば大丈夫だが、<tt class="puredoc_idname">relative</tt>にした上でレイアウトし、さらに<tt class="puredoc_idname">float</tt>すれば%指定でもBlinkで正常に表示される。</p><h2>ACCSの修正</h2><p>まず、TOC機能がエラーになるようになっていた。以前はRuby2.0でやっていたが、2.1になったからだろうか？どうも、クラスが違うオブジェクトを持つArrayを比較しようとしている、ということらしい。文字列しか格納しないように思うのだが、一応<tt class="puredoc_idname">to_s</tt></p><code style="display: block;white-space: pre-wrap">      essaies.push [ sortitem.to_s, fp.to_s, meta["title"] ]      
+</code><p>TOCに戻るリンクが間違っていた。これは、設定ファイルが<tt class="puredoc_idname">reasonset_link_contents</tt>としているのに、テンプレートは<tt class="puredoc_idname">reasonset_link_content</tt>としているという単純な理由だった。これは、HTMLの<tt class="puredoc_idname">link</tt>要素に対応するのでcontentsが正しい。ちなみに、Essayにはその機能がそもそも含まれていなかった。</p><p>そして、ACCS記事間のリンクが機能しない。Talkin' About(Aki's Palace)との違いが見つからず、一体…と思ったのだが、grepしてみるとその設定はrbutilに含まれており、chienomiが専用で使っている。chienomiのリンクが機能していたので、当然Talkin' Aboutでも機能しているものと思い込んでいたが、実際はTalkin' Aboutでは機能しないわけだ。単に記事がひとつしかないので気づかなかっただけだ。</p><p>基本的にはACCS記事内でそのスクリプトをロードすれば機能するのだが、ロードすべきスクリプトが存在しない。chienomiのものはパスがハードコーディングされている。そのため、それを修正したバージョンを用意した。</p><p>また、「最初の記事」だが、</p><code style="display: block;white-space: pre-wrap">export reasonset_link_start="si/$wd_element/${artdir:+${$(print $artdir/*.pdoc):r}.html}"</code><p>となっていた。Talkin' Aboutでは機能していたが、これは記事がひとつしかないからだ。つまり、複数のファイルがあると、それが連なった文字列（スペース区切り）の最後だけpdocをhtmlに変えることになってしまう。</p><p>当然、先頭のファイル名のみをとり出さなくてはいけない。<samp>(#q[1])</samp>で機能しなかったので、</p><code style="display: block;white-space: pre-wrap">export reasonset_link_start="si/$wd_element/${artdir:+${$(print -l $artdir/*.pdoc | head -n 1):r}.html}"</code><p>と変更した。単純な方法だが、そこまで繰り返し呼び出すわけではないので、<span style="font_style: italic;">head(1)</span>を呼び出す程度どうということはないだろう。</p><h2>ノートインデックスの作成</h2><p>ノートのインデックスを作るため、まずPureDoc側を修正。その機能をスーパークラスに追加。</p><code style="display: block;white-space: pre-wrap">  ### Notes ###
+  # Add note text to an array
+  def addnote(note)
+    @notes.push note
+  end
+  
+  attr :notes
+
+</code><p>サブクラスで呼び出し</p><code style="display: block;white-space: pre-wrap">  # Note
+  def n(text, &note)
+    puredoc_element(:n) do
+      note = note.call
+      addnote note
+      '<span class="pure_note" title="%s">%s&lt;/pure:note&gt;' % [esc!(note), esc(text) ]
+    end
+  end
+</code><p>ちなみに、HTMLクラスタイプだけノートとテキストが逆になっていた。どちらが正しいのかよくわからなくなっている。仕様を規定すべきだろう。</p><p>そして今修正した。</p><code style="display: block;white-space: pre-wrap">  def n(note, &text)
+    puredoc_element(:n) do
+      addnote esc!(note)
+      '<span class="pure_note" title="%s">%s&lt;/pure:note&gt;' % [esc!(note), esc(text.call) ]
+    end
+  end
+</code><p>これでノートインデックスの作成が可能になった。だが、これに対応した表示が本文に必要だ。これはCSSに任せる。</p><code style="display: block;white-space: pre-wrap">body {
+  counter-reset : notes;
+}
+
+/* Note element */
+.puredoc_note:after /*, puredoc|note:after */ {
+  vertical-align: super;
+  font-size: 80%;
+  content : "\002020" counter(notes);
+  counter-increment: notes;
+  text-decoration: none;
+}
+</code><p>content中の文字参照はどうするのだろう、と思ったら、16進数にした上でクォート内で<samp>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

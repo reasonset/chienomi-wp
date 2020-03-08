@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-09-04T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-09-04T00:00:00+09:00" />
+    <title>btrfsのsnapshot/send/receiveの挙動を検証する - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>btrfsのsnapshot/send/receiveの挙動を検証する</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#スナップショットと容量とリネーム(mv)" id="markdown-toc-スナップショットと容量とリネーム(mv)">スナップショットと容量とリネーム(mv)</a></li>
+  <li><a href="#send/receive" id="markdown-toc-send/receive">send/receive</a></li>
+  <li><a href="#サブボリューム名とシンボリックリンク" id="markdown-toc-サブボリューム名とシンボリックリンク">サブボリューム名とシンボリックリンク</a></li>
+</ul>
+
+<h3 id="スナップショットと容量とリネーム(mv)">スナップショットと容量とリネーム(mv)</h3>
+
+<p>最初の状態。スナップショットはsharedとされている</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  96.00KiB       0.00B           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+ 192.00KiB       0.00B    96.00KiB  .
+</code></pre>
+
+<p>ファイルを追加。追加した分以外がsharedで、サイズが増えているのはsnapshotではなくワーキングボリューム。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB    68.00KiB           -  ./test1/fileC
+ 164.00KiB    68.00KiB           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+ 260.00KiB    68.00KiB    96.00KiB  .
+</code></pre>
+
+<p>新規にスナップショットを取ると増えたファイルもsharedに入った。合計で3ファイル分の容量で無駄がない</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+ 164.00KiB       0.00B           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+ 424.00KiB       0.00B   164.00KiB  .
+</code></pre>
+
+<p>もう一度ファイルを増やす。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB    20.00KiB           -  ./test1/fileD
+ 184.00KiB    20.00KiB           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+ 444.00KiB    20.00KiB   164.00KiB  .
+</code></pre>
+
+<p>そしてスナップショット。これは準備段階。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB       0.00B           -  ./test1/fileD
+ 184.00KiB       0.00B           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+  40.00KiB       0.00B           -  ./snap3/fileA
+  56.00KiB       0.00B           -  ./snap3/fileB
+  68.00KiB       0.00B           -  ./snap3/fileC
+  20.00KiB       0.00B           -  ./snap3/fileD
+ 184.00KiB       0.00B           -  ./snap3
+ 628.00KiB       0.00B   184.00KiB  .
+</code></pre>
+
+<p>mvしてみると、ファイル名は異なっているが、sharedの量は増えていない。
+mvは理解してくれるらしい。ファイル名ではなく実体の問題。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB       0.00B           -  ./test1/fileE
+ 184.00KiB       0.00B           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+  40.00KiB       0.00B           -  ./snap3/fileA
+  56.00KiB       0.00B           -  ./snap3/fileB
+  68.00KiB       0.00B           -  ./snap3/fileC
+  20.00KiB       0.00B           -  ./snap3/fileD
+ 184.00KiB       0.00B           -  ./snap3
+ 628.00KiB       0.00B   184.00KiB  .
+</code></pre>
+
+<p><code>rsync fileE fileF; rm fileE</code>としてみた。
+やはり、別ファイルとして扱われ、sharedの量が減っている。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB    20.00KiB           -  ./test1/fileF
+ 184.00KiB    20.00KiB           -  ./test1
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+  40.00KiB       0.00B           -  ./snap3/fileA
+  56.00KiB       0.00B           -  ./snap3/fileB
+  68.00KiB       0.00B           -  ./snap3/fileC
+  20.00KiB    20.00KiB           -  ./snap3/fileD
+ 184.00KiB    20.00KiB           -  ./snap3
+ 628.00KiB    40.00KiB   164.00KiB  .
+</code></pre>
+
+<p>ちょっと手直し。3つ目のスナップショットを取る前の状態に。</p>
+
+<pre><code># btrfs subvol delete test1
+# mv snap3 test1
+# btrfs property set -ts test1 ro false
+</code></pre>
+
+<p>mvして、ファイルを追加した。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB       0.00B           -  ./test1/fileE
+ 112.00KiB   112.00KiB           -  ./test1/fileF
+ 296.00KiB   112.00KiB           -  ./test1
+  40.00KiB       0.00B           -  ./snap3/fileA
+  56.00KiB       0.00B           -  ./snap3/fileB
+  68.00KiB       0.00B           -  ./snap3/fileC
+  20.00KiB       0.00B           -  ./snap3/fileD
+ 184.00KiB       0.00B           -  ./snap3
+ 740.00KiB   112.00KiB   184.00KiB  .
+</code></pre>
+
+<p>shareされていないのは追加されたfileFだけ。ここでスナップショットを取っておく。</p>
+
+<pre><code>     Total   Exclusive  Set shared  Filename
+  40.00KiB       0.00B           -  ./snap1/fileA
+  56.00KiB       0.00B           -  ./snap1/fileB
+  96.00KiB       0.00B           -  ./snap1
+  40.00KiB       0.00B           -  ./snap2/fileA
+  56.00KiB       0.00B           -  ./snap2/fileB
+  68.00KiB       0.00B           -  ./snap2/fileC
+ 164.00KiB       0.00B           -  ./snap2
+  40.00KiB       0.00B           -  ./test1/fileA
+  56.00KiB       0.00B           -  ./test1/fileB
+  68.00KiB       0.00B           -  ./test1/fileC
+  20.00KiB       0.00B           -  ./test1/fileE
+ 112.00KiB       0.00B           -  ./test1/fileF
+ 296.00KiB       0.00B           -  ./test1
+  40.00KiB       0.00B           -  ./snap3/fileA
+  56.00KiB       0.00B           -  ./snap3/fileB
+  68.00KiB       0.00B           -  ./snap3/fileC
+  20.00KiB       0.00B           -  ./snap3/fileD
+ 184.00KiB       0.00B           -  ./snap3
+  40.00KiB       0.00B           -  ./sendsnap-latest/fileA
+  56.00KiB       0.00B           -  ./sendsnap-latest/fileB
+  68.00KiB       0.00B           -  ./sendsnap-latest/fileC
+  20.00KiB       0.00B           -  ./sendsnap-latest/fileE
+ 112.00KiB       0.00B           -  ./sendsnap-latest/fileF
+ 296.00KiB       0.00B           -  ./sendsnap-latest
+   1.01MiB       0.00B   296.00KiB  .
+</code></pre>
+
+<h3 id="send/receive">send/receive</h3>
+
+<p>さて、ここからsend/receiveを試してみる。まずはsnapshot-latestの単純な送信</p>
+
+<pre><code># btrfs send sendsnap-latest &gt; ~/send1
+At subvol sendsnap-latest
+
+# ls -l send1
+-rw-r--r-- 1 root root 294193  8月 31 12:42 send1
+</code></pre>
+
+<p>使用量通りと考えていいだろう。
+次にsnap3に基づいて作ってみる。容量は差分容量通りといった感じ。</p>
+
+<pre><code># btrfs send -p snap3 sendsnap-latest &gt; ~/send2
+At subvol sendsnap-latest
+
+# ls -l send*
+-rw-r--r-- 1 root root 294193  8月 31 12:42 send1
+-rw-r--r-- 1 root root 114925  8月 31 12:44 send2
+</code></pre>
+
+<p>それぞれの差分を作る。</p>
+
+<pre><code># btrfs send snap1 &gt; ~/sendsnap1
+At subvol snap1
+# btrfs send -p snap1 snap2 &gt; ~/sendsnap1-2
+At subvol snap2
+# btrfs send -p snap2 snap3 &gt; ~/sendsnap2-3
+At subvol snap3
+
+# ls -l send*
+-rw-r--r-- 1 root root 294193  8月 31 12:42 send1
+-rw-r--r-- 1 root root 114925  8月 31 12:44 send2
+-rw-r--r-- 1 root root  94926  8月 31 12:45 sendsnap1
+-rw-r--r-- 1 root root  66551  8月 31 12:45 sendsnap1-2
+-rw-r--r-- 1 root root  18576  8月 31 12:45 sendsnap2-3
+</code></pre>
+
+<p>全サブボリュームを削除してみる。</p>
+
+<pre><code># for i in *; do btrfs subvol delete $i; done
+Delete subvolume (no-commit): '/mnt/1/sendsnap-latest'
+Delete subvolume (no-commit): '/mnt/1/snap1'
+Delete subvolume (no-commit): '/mnt/1/snap2'
+Delete subvolume (no-commit): '/mnt/1/snap3'
+Delete subvolume (no-commit): '/mnt/1/test1'
+</code></pre>
+
+<p>最新ボリュームのsend2をreceiveしてみる。</p>
+
+<pre><code># btrfs receive . &lt; ~/send2
+At snapshot sendsnap-latest
+ERROR: cannot find parent subvolume
+</code></pre>
+
+<p>元になるサブボリュームがないとだめらしい。
+順に戻してみる。</p>
+
+<pre><code># btrfs receive . &lt; ~/sendsnap1
+At subvol snap1
+# btrfs receive . &lt; ~/sendsnap1-2
+At snapshot snap2
+# btrfs receive . &lt; ~/sendsnap2-3
+At snapshot snap3
+# btrfs receive . &lt; ~/send2
+At snapshot sendsnap-latest
+</code></pre>
+
+<p>順当に行える。では、名前が変わったらどうだろう？
+sendsnap-latestを削除して、ベースになるsend3をリネームしてみる。</p>
+
+<pre><code># btrfs subvol delete sendsnap-latest/
+Delete subvolume (no-commit): '/mnt/1/sendsnap-latest'
+# mv snap3 sendsnap-base
+# btrfs receive . &lt; ~/send2
+At snapshot sendsnap-latest
+# ls
+sendsnap-base  sendsnap-latest  snap1  snap2
+</code></pre>
+
+<p>sendsnap-latestはsnap3というサブボリュームに基づいて作られていたが、snap3という名前のサブボリュームは、sendsnap-baseという名前に変更されてしまったため、もうない。
+だが、一致する名前はなくても正しく書き戻すことができた。</p>
+
+<pre><code>ls -l sendsnap-latest/
+合計 296
+-rw------- 1 yek yek  40005  8月 31 12:11 fileA
+-rw------- 1 yek yek  54006  8月 31 12:20 fileB
+-rw------- 1 yek yek  66006  8月 31 12:22 fileC
+-rw------- 1 yek yek  18066  8月 31 12:24 fileE
+-rw------- 1 yek yek 114066  8月 31 12:35 fileF
+</code></pre>
+
+<p>ということは名前ではなく、IDなどで判断しているのだろう。元になったサブボリュームが存在していればOKだ。
+では中間がなくなったらどうだろう？</p>
+
+<p>元snap3、元sendsnap-baseだけを残してみる</p>
+
+<pre><code># btrfs subvol delete sendsnap-latest/
+Delete subvolume (no-commit): '/mnt/1/sendsnap-latest'
+[mint 1]# btrfs subvol delete snap2
+Delete subvolume (no-commit): '/mnt/1/snap2'
+[mint 1]# btrfs subvol delete snap1
+Delete subvolume (no-commit): '/mnt/1/snap1'
+# btrfs fi du .
+     Total   Exclusive  Set shared  Filename
+  40.00KiB    40.00KiB           -  ./sendsnap-base/fileA
+  56.00KiB    56.00KiB           -  ./sendsnap-base/fileB
+  68.00KiB    68.00KiB           -  ./sendsnap-base/fileC
+  20.00KiB    20.00KiB           -  ./sendsnap-base/fileD
+ 184.00KiB   184.00KiB           -  ./sendsnap-base
+ 184.00KiB   184.00KiB       0.00B  .
+</code></pre>
+
+<p>全くシェアはされていないが、シェアフラグを削除し、データは消していないようだ。
+ハードリンクのような仕組みだろうか。</p>
+
+<h3 id="サブボリューム名とシンボリックリンク">サブボリューム名とシンボリックリンク</h3>
+
+<p>では、名前においてsubvol名はシンボリックリンクでも良いのだろうか？
+send2を戻してリンクしてみる。</p>
+
+<pre><code># btrfs receive . &lt; ~/send2
+At snapshot sendsnap-latest
+# ln -s sendsnap-latest/ current
+# mount -o subvol=current /dev/mapper/hymaster_1 /mnt/3
+# ls /mnt/3
+fileA  fileB  fileC  fileE  fileF
+</code></pre>
+
+<p>こうなった。</p>
+
+<p>マウントするサブボリュームの切り替えは、set-defualtでも良いが、シンボリックリンクを論理的な名前にすることも可能なようだ。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-03-02T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-03-02T00:00:00+09:00" />
+    <title>メインシステムをEncFS on BtrfsからBtrfs on dm-cryptに変更 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>メインシステムをEncFS on BtrfsからBtrfs on dm-cryptに変更</h1></header>
+        <article id="MainArticle">
+<!--
+
+##-----
+# last-update : 2015-03-02 20:58:02 +09:00
+# since : 2015-03-02 20:58:30 +09:00
+# title : メインシステムをEncFS on BtrfsからBtrfs on dm-cryptに変更
+# tags : [ btrfs, encfs, cryptsetup, dm-crypt, systemd, rc.local, localscript ]
+# cats : [ linux ]
+##-----
+
+-->
+<h3 id="概要">概要</h3>
+<p>散々やるよといっていた構成変更だが、ついに実行した。</p>
+<p>作業はかなり面倒で、1時間半ほどかかってしまった。</p>
+<p>今までは次のようになっていた。</p>
+<ul>
+<li>4ディスクによるBtrfsを編成</li>
+<li>Btrfsはサブボリュームを持つ</li>
+<li>ひとつのサブボリュームを丸々EncFSとする</li>
+<li>.zshrcで<code>encfs</code>コマンドを呼び、マウントする</li>
+</ul>
+<p>この方法のメリットは次のようなものだ</p>
+<ul>
+<li>強力で柔軟な暗号化</li>
+<li>ファイル単位でのバックアップが、暗号化したまま可能</li>
+<li>手軽</li>
+<li>rootでもユーザーデータにアクセスできないので、かなり安全</li>
+</ul>
+<p>一方デメリットは次のようなもの</p>
+<ul>
+<li>rootでユーザーデータにアクセスできないとKVMが暗号化されたディスクにイメージを置けないなど結構不便</li>
+<li>特にバックアップで困る</li>
+<li>ファイルアクセスは常にEncFSがトップ。どのプロセスがIO負荷になっているのかわからない</li>
+</ul>
+<h3 id="下準備">下準備</h3>
+<p>先日のrsoftmirrorとrsyncを使ってデータをすべてスレーブにバックアップ</p>
+<h3 id="dm-crypt">dm-crypt</h3>
+<p>4kBのurandomデータをめちゃくちゃに暗号しまくって、その中から512Bを切り出す方法で鍵ファイルを作成。これを使う。</p>
+<pre><code>cryptsetup --hash=sha512 --key-size=512 --ciper=&quot;twofish-xts-plain&quot; --offset=0 key-file=/etc/worldencmount/keyfile --type=plain open device name</code></pre>
+<p>単にopen。LUKSでは<code>luksFormat</code>という専用のアクションがあるが、プレーンだとない。 ちなみに、<code>twofish-xts-plain</code>は<em>結構遅い</em>。</p>
+<p>これをしただけだとBtrfsの存在は<code>blkid</code>では残っているように見えてしまう。 そこでrebootするのだが、その前に<code>/etc/fstab</code>を編集してbtrfsをマウントしないようにしておかないと痛い目を見る。</p>
+<h3 id="btrfs">Btrfs</h3>
+<p>リブートしたら暗号化を行うのと同じ手順でデバイスをオープンする。 Btrfsはそのオープンしたデバイスに対して行う。</p>
+<pre><code># mkfs.btrfs -m raid1 -d raid1 -l WorldBtrfs /dev/mapper/world_enc_*</code></pre>
+<p>ちなみに、ストライプで高速化するのではなく、ミラーで分散してもらうことにした。 ミラーするかどうかは悩んだのだが、やはり安全をとってミラー。つまり、2ミラー、1バックアップになる。</p>
+<p>サブボリュームを作ることを忘れていて若干ハマった。</p>
+<pre><code># mount /dev/mapper/world_enc_1 /mnt/1
+# cd /mnt/1
+# btrfs subvolume create shared-world</code></pre>
+<p>設定ファイルにblkidでdm-cryptのPARTUUIDを送り込んでおく。 また、btrfsのUUIDを/etc/fstabに送り込んでおく。</p>
+<pre><code># blkid | grep -F /dev/mapper/world_enc_* | tail -n 1 &gt;&gt; /etc/fstab</code></pre>
+<p>そしてvim</p>
+<pre><code># vim /etc/fstab</code></pre>
+<p>コピペしてUUIDを書き換え、ゴミを消去し、コメントアウトを外し、<code>noauto</code>オプションを追加する。</p>
+<h3 id="修正">修正</h3>
+<p>そういえばこの方法はdiskのパーティションを暗号化している。 これは推奨される方法だが、やはりできればwhole diskの暗号化をしたい。 LUKSも含め3TB以上のwhole diskの暗号化には対応している。</p>
+<p>だが、そうするとかなり重大な問題が生じる。 PARTUUIDやPARTLABELが使えなくなるのだ。</p>
+<p>これは結構困ったことで、どうしたものかと思ったが、<code>/dev/disk/by-id</code>を使うことにした。 これはWWIDと呼ばれる、システムに依存しないデバイスに対して永続的なIDであるという。 若干手間だが、確実だ。</p>
+<p>ちなみにこの修正、同期がかなり進んだ段階でリセットする形で行った。 この修正に30分くらいかかってしまった。</p>
+<h3 id="セットアップスクリプト">セットアップスクリプト</h3>
+<pre><code>#!/usr/bin/zsh
+
+#read config file.
+. /etc/worldencmount/worldrc || exit 1
+
+#decryption
+for disk in &quot;${disks[@]}&quot;
+do
+  cryptsetup --hash=sha512 --key-size=512 --cipher=&quot;twofish-xts-plain&quot; --offset=0 --key-file=${keyfile:-/etc/worldencmount/seedfile} --type=plain open &quot;$disk&quot; dmcw_${disk:t}
+done</code></pre>
+<h3 id="zshrc">.zshrc</h3>
+<pre><code>#Check shared zshrc file.
+
+if [[ -e $HOME/share/.zshrc ]]
+then
+  # Enable shared zshrc
+  . $HOME/share/.zshrc
+else
+  # Disabled shared zshrc.
+  
+  print ~/share/.zshrc &quot;is not exist.&quot; &gt;&amp;2
+  print &quot;Probably encrypted filesystem don&#39;t mount yet.&quot; &gt;&amp;2
+  print &quot;Let&#39;s mount it!&quot; &gt;&amp;2
+  print &gt;&amp;2
+  
+  ## Decryption ##
+  if sudo btrfs filesystem show | grep -F -q HydrangeaMasterBtr
+  then
+    print &quot;Btrfs filesystem already active.&quot; &gt;&amp;2
+  else
+    if sudo /usr/local/sbin/worldencmount
+    then
+      print &quot;Okay, succeed to decrypt.&quot; &gt;&amp;2
+    else
+      print &quot;Oh, failed to decrypt disks.&quot; &gt;&amp;2
+      print &quot;Aborting...&quot; &gt;&amp;2
+      exit 2
+    fi
+  fi
+  
+  ## Mount ##
+  if sudo mount ~/share
+  then
+    print &quot;Okay, succeed to mount the filesystem.&quot; &gt;&amp;2
+    print &quot;You can use the World.&quot; &gt;&amp;2
+    exit 0
+  else
+    print &quot;Gosh! failed to mount. I don&#39;t know why.&quot; &gt;&amp;2
+    print &quot;Please fix it.&quot; &gt;&amp;2
+    exit 3
+  fi
+fi</code></pre>
+<p>いままでよりだいぶ複雑になった。 結局、自動マウントではなく.zshrcで処理するようにした。 このほうが合理的だ。</p>
+<h3 id="slave側の自動マウント">slave側の自動マウント</h3>
+<p>逆にslave側は常にマウントされているべきなので、systemdユニットを書く。</p>
+<pre><code>[Unit]
+Description=Mount World filesystem.
+After=network.service
+
+[Service]
+ExecStart=/usr/local/sbin/worldmount
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+<p>そして自動起動</p>
+<pre><code># systemctl enable worldmount</code></pre>
+<p>ものすごく手抜きで、実はまだテストしていないが、動くはずだ。 ちなみにCentOS7である。</p>
+<h3 id="同期">同期</h3>
+<p>rsyncで新たに作られた<code>~/share</code>に同期する。 これは復旧作業なので通常とは逆方向のsyncとなる。 結果的には約14時間かかった。gzipのためか時間はかかったが、容量は2.02TiBと約2/3に抑えられた。</p>
+<h3 id="鍵のバックアップ">鍵のバックアップ</h3>
+<p>鍵ファイルがなくなると困るのでバックアップ。 しかしそれだけでは暗号化している意味がないので、鍵ファイルも暗号化した上でCD-Rに焼く。 暗号化はopensslのencを使うのが手っ取り早く、確実。 復号化用のスクリプトも同梱した。</p>
+<h3 id="総論">総論</h3>
+<p>今回の作業はそれなりにしんどかったが、それでも同期を別とすれば1時間半ほどで終了した。 （ただしそれは最初にしたようにパーティションベースで行った場合のみの話）</p>
+<p>元々EncFSにしたのは暫定的な措置だったし、スレーブサーバー設置に伴ってこういった作業をすることは想定していた。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-19T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-19T00:00:00+09:00" />
+    <title>AMD APU (A10-7870K Godavari) * Radeon VCE * AMDGPU * VA-API * ffmpeg - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>AMD APU (A10-7870K Godavari) * Radeon VCE * AMDGPU * VA-API * ffmpeg</h1></header>
+        <article id="MainArticle">
+<p>理屈としては解説してきたものの、実際にVA-APIでVCEを叩いたことがなかったのでやってみた。 ついでなので、qsvやnvenc、あるいはlibx264などでも応用できるウェブカメラとスクリーンキャスティングの話もしておく。</p>
+<p>基本的な手順は単純で、AMDGPU(事実上現在唯一となったAMDビデオドライバ)を選択した上で、 VA-APIを有効にし、VA-API経由でエンコーディングを行う。</p>
+<p>注意点としては古くなったプロプライエタリドライバ(Catalyst)ではなく、AMDGPUドライバーを使用することと、 <em>MESA VAドライバを使用すること</em>である。</p>
+<p>RadeonはVA-API/VDPAUの両方をサポートしており、NvidiaのようにVDPAUドライバをインストールし、VA VDPAUアダプタを使用するという方法(<code>libva-dvpau-driver</code>)も成立してしまう。 しかし、この場合は動作しなくなるので、必ずMESA VAドライバ(<code>libva-mesa-driver</code>)を使用する必要がある。</p>
+<p>その上で基本はこんな感じ。 (Arch/ManjaroのffmpegはVA-APIを含んでいるのでffmpeg云々の話はない)</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -i source.avi -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -qp 24 -c:a copy outfile.mp4</code></pre>
+<p><a href="https://trac.ffmpeg.org/wiki/Hardware/VAAPI">ffmpeg上でのVA-APIは公式にドキュメントがある</a></p>
+<p>ソースファイルがビデオアクセラレーションが効くのであればUVDをVA-API経由で叩いてデコードすることもできる。</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -i source.avi -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -qp 24 -c:a copy outfile.mp4</code></pre>
+<p>ところがこれではうまくいかなかった。 一件成功しているように見えるのだが、フレームの全くないビデオファイルが出来上がってしまい再生できない。</p>
+<p>多分、新しいRadeonだとそんなことはないのだろうと思うけれども、Godavari(2015年)のR7グラフィックスでは問題があったため、<code>-profile 578</code>を指定すると解決した。</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -i source.avi -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -bf 0 -qp 24 -c:a copy outfile.mp4</code></pre>
+<p>ウェブカムからキャプチャする場合はエンコードのみ、入力はv4l2:</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -f v4l2 -i /dev/video0 -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -qp 24 outfile.mp4</code></pre>
+<p>さらにマイクをPulseAudio経由で拾う場合。音声は192k AAC:</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -f v4l2 -i /dev/video0 -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -qp 24 -f alsa -i pulse -c:a aac -b:a 192k outfile.mp4</code></pre>
+<p>X11のスクリーンキャスティング 音声つき。 A10-7870Kだとh264_vaapiは34fpsくらいなので、60fpsはフレーム落ちばかりになる。30fpsも無理で24fpsがドロップしない限界。 <code>ultrafast</code>にした場合は30fpsは可能だけれど60fpsは無理。</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -f x11grab -framerate 24 -video_size 1920x1080 -i $DISPLAY -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -qp 24 -f alsa -i pulse -c:a aac -b:a 192k outfile.mp4</code></pre>
+<p>ultrafastで30fps:</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -f x11grab -framerate 30 -video_size 1920x1080 -i $DISPLAY -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -preset ultrafast -qp 24 -f alsa -i pulse -c:a aac -b:a 192k outfile.mp4</code></pre>
+<p>なお、<code>-video_size</code>は<code>-i</code>よりも先に指定することが必須である。基本的にffmpegはオプションは順番に厳しい。</p>
+<p>300x300のウィンドウを左上から200x200のオフセットで録画する場合</p>
+<pre><code>$ ffmpeg -vaapi_device /dev/dri/renderD128 -f x11grab -framerate 30 -video_size 300x300 -i $DISPLAY+200,200 -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -preset ultrafast -qp 24 -f alsa -i pulse -c:a aac -b:a 192k outfile.mp4</code></pre>
+<p><a href="http://ffmpeg.org/ffmpeg-utils.html#Video-size"><code>-video_size</code>の指定方法は色々あって、公式ドキュメントで解説されている。</a> なので、<code>-video_size 1920x1080</code>ならば<code>-video_size hd1080</code>とも書ける。</p>
+<p>録画領域を表示するには<code>-show_region 1</code></p>
+<pre><code>$ ffmpeg -show_region 1 -vaapi_device /dev/dri/renderD128 -f x11grab -framerate 30 -video_size hd1080 -i $DISPLAY -vf &#39;format=nv12,hwupload&#39; -c:v h264_vaapi -profile 578 -preset ultrafast -qp 24 -f alsa -i pulse -c:a aac -b:a 192k outfile.mp4</code></pre>
+<p>NVENCだとmkvにもできるので音声はFLACやOpusで撮ることもできるのだけど、<em>AMDGPU VA-APIはmp4だけ</em>。</p>
+<p>使ってみた感想としては、QSVと違ってCPUがあくのは良いけれど、R7の速度自体がCPUと大差ない(libx264でやったのと同程度)であるため、ちょっと微妙かもしれない。 A10でもスクリーンキャスティングしながら配信みたいなことができるというメリットはあるけれども。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

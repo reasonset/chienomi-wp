@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-12-06T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-12-06T00:00:00+09:00" />
+    <title>ConoHaとArch LinuxではじめるLinux - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ConoHaとArch LinuxではじめるLinux</h1></header>
+        <article id="MainArticle">
+<h2 id="ごあいさつ">ごあいさつ</h2>
+<p>Hi, there! はるかみです。</p>
+<p>この記事はConoha Advent Calendar 2018の7日目として書かれたものだよ。 いままでChienomiを見たことある人もない人も楽しんでいってね。</p>
+<p>基本的にChienomiはedgeな記事を書くことが多いけれど、Advent Calendarのときだけは初心者向けの記事を書いたりしているんだ。 Chienomiでは最近で最もアツかったのは高EQ AIに関する記事だよ!</p>
+<p>本当はConoHa WINGに関する記事を書こうかと思ったけど、Advent Calendarで書くようなものじゃないと思ったんだ。 考えていたものは検証に5, 6日必要だとわかったから協賛でもしてもらわないと無理だとわかったんだよ。</p>
+<p>それにConoHa WINGでConoHa Advent Calendarのハードルも下がって、今年はWINGに関する記事がたくさん載るだろうからね。え？毒が少ないって？さすがに同じAdvent Calendarの記事に毒を吐くのは来年にとっておくよ。</p>
+<h2 id="序">序</h2>
+<p>あなたはLinuxを使っているだろうか。</p>
+<p>最近はLinuxというとドヤりツールになっていたり、あるいはミーハーなものになっていたりもする。 あとは、仕事のための箔付けだろうか。</p>
+<p>それはLinuxのなんたるかがわかっていない…と思うのだが、ここではそんな話はおいて、とりあえずLinuxを触ってみたいという人のお手伝いをしよう。</p>
+<p>この記事にかかれていることはかなりの部分、過去の記事や他で書いたことと重複してしまうのだが、Advent Calendarの記事ということでご容赦願いたい。</p>
+<p>今回はLinuxを全く使ったことのないWindowser向けにエクスプレスで進めていく。 スキル不足が直接に迷惑になるサーバー構築ではなく、またデスクトップ用途でもない。</p>
+<p>なお、Linuxそのものを体験して評したいのならばメインマシンにLinuxをインストールするよりない。 LinuxのUXはWindowsのそれよりはるかに優れているが、それはさすがにVPSでわかるようなものではない。</p>
+<p>また、副次的に性能の低いコンピュータを使っている人の場合、月1000円から2000円程度で強力なコンピュータにオフロードできる、という面でも話していこうと思う。</p>
+<h2 id="sshを用意する">SSHを用意する</h2>
+<p>Windows 10では2017 Fall Creator UpdateからOpenSSHが標準採用になっている。ちなみに、2018 Aprilではサーバーも入っている。 とりあえずまだWindows 10ですらない、という人のことはあまり考えたくないので、そこから話を進めよう。</p>
+<p>まずは<code>cmd</code>を検索、あるいは“プログラムを指定して実行”から<code>cmd</code></p>
+<figure><a href="/wp-content/uploads/2018/11/cmd.png"><img src="/wp-content/uploads/2018/11/cmd.png" alt="" width="591" height="895" class="size-full wp-image-1856" /></a><figcaption> Windowsでcmd.exeを探す</figcaption></figure>
+<p><code>ssh -V</code>でOpenSSHを確認。</p>
+<pre><code>C:\Users\Harukamy&gt;ssh -V
+OpenSSH_for_Windows_7.6p1, LibreSSL 2.6.4</code></pre>
+<p><code>ssh-keygen</code>で鍵を作成する。 Microsoftが提供するWindowsアプリでありながらUnixスタイルとWindowsスタイルが混在してとてもわかりづらいことになる。 OpenSSHが使うディレクトリは相変わらず<code>%HOME%\.ssh</code>なのだが、Explorerでドットファイルが作れないのでコマンドライン上で行う。</p>
+<pre><code>&gt;mkdir .ssh</code></pre>
+<p>その上でSSH鍵を生成する。</p>
+<pre><code>&gt;ssh-keygen -f .ssh/conoha_rsa
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in .ssh/conoha_rsa.
+Your public key has been saved on .ssh/conoha_rsa.pub.
+The key fingerprint is
+SGA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX harukamy@HACKMAN
+the key&#39;s randomart image is:
++---[RSA 2048]----+
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
++---[RSA 2048]----+</code></pre>
+<p>このパスフレーズは秘密鍵を暗号化しておき、使用するときに解除して使用するためのパスフレーズである。 システムが十分に安全かつ強固に保護され、運用されているのであれば(物理的に盗まれることも、ネットワークごしに盗まれることも、ディスクをコピーされたとしても使われることも)ないのであればパスフレーズはなくても構わないし、まず考えられない程度に強固なのであればほどほどに強固なパスフレーズでも構わないだろう。</p>
+<p>これでホームディレクトリ以下<code>.ssh/conoha_rsa</code>(秘密鍵)と<code>.ssh/conoha_rsa.pub</code>(公開鍵)のペアが作成される。</p>
+<p>Explorerではとてもホームディレクトリにアクセスしづらいので、そこをなんとかしておこう。 Explorerで<code>C:\Users\ユーザー名</code>に移動し、“クイックアクセス”を右クリックして“現在のフォルダーをクイック アクセスにピン留め”を選択する。</p>
+<p>あと、適切なエディタがないのも困るので、インストールしておくといい。 無難なのはみんな大好きNotepad++。</p>
+<h2 id="conohaでサーバーを立てる">ConoHaでサーバーを立てる</h2>
+<p>ConoHaでの契約については<a href="https://www.conoha.jp/vps/flow/">公式のページ</a>をみてほしい。</p>
+<p>それではConoHaにログインし、“サーバー追加”からサーバーを追加しよう。 練習用なら512MBで良いだろうし、パフォーマンスオフロードを期待するなら1GB以上にしよう。 OSは<strong>もちろん</strong>、Arch Linuxである。</p>
+<figure><a href="/wp-content/uploads/2018/11/conoha-newinstance1.jpg"><img src="/wp-content/uploads/2018/11/conoha-newinstance1.jpg" alt="" width="1896" height="1055" class="size-full wp-image-1859" /></a><figcaption> ConohaでArch Linuxインスタンスを立てる</figcaption></figure>
+<p>Rootパスワードは本当に強固なものにすること。 ここはあまり心配のない部分だが、それでも24文字以上くらいにはして欲しいところだ。</p>
+<p>オプションを開き、接続許可ポートを設定する。 IPv4/IPv6ともSSHのみを許可するように設定する。 IPv6のない環境からアクセスするのであればIPv4のみでも構わないし、IPv6でのアクセスが確実な接続形式をとっているのならIPv6のみのほうが良い。</p>
+<figure><a href="/wp-content/uploads/2018/11/conoha-newinstance2.jpg"><img src="/wp-content/uploads/2018/11/conoha-newinstance2.jpg" alt="" width="1896" height="1055" class="size-full wp-image-1860" /></a><figcaption> ConohaでポートとSSHキーの設定</figcaption></figure>
+<p>そしてSSH Keyセクションは “キーを新規作成” を選択し、“登録方法”に“インポート”を選択する。 そして“パブリックキー”のところに、作成した<code>~/.ssh/conoha_rsa.pub</code> (<strong>.pubファイル!!!</strong>)の内容をコピペする。</p>
+<p>この時点で鍵登録しておくとSSHのパスワード認証が無効化された状態でインスタンスが立つので安全な状態になる。</p>
+<p>インスタンスを作成し、起動したら、ConoHaのサーバー一覧からサーバーを開くと“VPS設定”からI逆引きホスト名を知ることができる。</p>
+<p>それでは例えばここが<code>v0-0-0-0.a00a.tyo0.static.cnode.io</code>だと仮定しよう。</p>
+<h2 id="sshでログインする">SSHでログインする</h2>
+<p>ではいよいよWindowsに戻ってログインしよう。 OpenSSHの<code>-i</code>オプションに秘密鍵を指定する。引数はSSHのホストだが、その前にユーザーが必要だ。</p>
+<pre><code>&gt;ssh -i .ssh/conoha_rsa root@v0-0-0-0.a00a.tyo0.static.cnode.io</code></pre>
+<p>ログインできたら<code>exit</code>して一旦SSHを抜ける</p>
+<pre><code># exit</code></pre>
+<p>もう少し楽にログインできるように設定をしておこう。 <code>.ssh</code>ディレクトリに<code>config</code>というテキストファイルを作成する。拡張子はない。 UTF-8+LFで編集してくれるエディタを使うのが良いかもしれない。</p>
+<p>このファイルは次のような感じだ。</p>
+<pre><code>Host conoha-root
+  HostName v0-0-0-0.a00a.tyo0.static.cnode.io
+  Port 22
+  User root
+  IdentityFile .ssh\conoha_rsa</code></pre>
+<p>これで</p>
+<pre><code>&gt;ssh conoha-root</code></pre>
+<p>とするだけでログインできるようになる。</p>
+<h2 id="opensshが使えない場合">OpenSSHが使えない場合</h2>
+<p>TeraTermを使う方法が公式で紹介されている。</p>
+<p><a href="https://support.conoha.jp/v/vps_ssh_teraterm/">TeraTermの使い方</a>と<a href="https://support.conoha.jp/v/vps_sshkey/">公開鍵の使い方</a>が紹介されている。</p>
+<h2 id="ユーザーを作成する">ユーザーを作成する</h2>
+<p>Windowsでは歴史的経緯から曖昧だが、rootユーザーというのは全権を持つ「神」であり、普段使うべきではない。 それどころか、rootのシェルプロセスがあるだけでも望ましくないくらいだ。</p>
+<p>Archはインストール時にユーザーを作成しない。自ら作成する必要がある。</p>
+<p>ではログインして作業しよう。 ユーザー作成コマンドは<code>useradd</code>だが、オプションとしては<code>-U</code>(ユーザープライマリグループを作成する), <code>-G</code>(グループを指定する), <code>-m</code>(ホームディレクトリを作成する)を使用する。 このユーザーは管理ユーザーとなるので<code>wheel</code>グループに加えておこう。</p>
+<pre><code># useradd -U -G users,wheel -m conohachan</code></pre>
+<p>ユーザーのパスワードを設定する。とても強固なものが良い。</p>
+<pre><code># passwd conohachan</code></pre>
+<p>ユーザー用の鍵を登録しよう。ここではOpenSSHを前提に進める。 Windowsでもうひとつ<code>cmd</code>を立ち上げ、先程と同じ要領でキーを作る。</p>
+<pre><code>&gt;ssh-keygen -f .ssh/conoha-user_rsa</code></pre>
+<p>configを追加する。今度は鍵とユーザーが異なる。</p>
+<pre><code>Host conoha
+  HostName v0-0-0-0.a00a.tyo0.static.cnode.io
+  Port 22
+  User conohachan
+  IdentityFile .ssh\conoha-user_rsa</code></pre>
+<p>鍵をアップロードする。まだrootでしかログインできないので、rootで送る。</p>
+<pre><code>&gt;scp .ssh/conoha-user_rsa.pub conoha-root:.</code></pre>
+<p>これでConoHaのrootホームディレクトリにコピーされるので、これをSSHに戻ってセットアップする。 まずはユーザーの<code>.ssh</code>ディレクトリを作る</p>
+<pre><code># mkdir ~conohachan/.ssh</code></pre>
+<p>そして、<code>authorized_keys</code>というファイルとして配置する。</p>
+<pre><code># mv conoha-user_rsa.pub ~conohachan/.ssh/authorized_keys</code></pre>
+<p>このままだとrootユーザー所有ファイルになってしまうので、直しておく。</p>
+<pre><code># chown -R conohachan:conohachan ~conohachan</code></pre>
+<p><code>.ssh</code>ディレクトリはオーナーのみアクセス可能であることが求められるため、パーミッションを修正する。</p>
+<pre><code># chmod 700 ~conohachan/.ssh</code></pre>
+<p>これでユーザーとしてログイン可能になったはずだ。</p>
+<pre><code>&gt;ssh conoha</code></pre>
+<h2 id="初期設定">初期設定</h2>
+<p>まだrootのセッションも閉じないでおこう。 この状態では管理作業ができるのはrootだけなので、conohachanにも許すようにしたいところだ。</p>
+<p><code>/etc/sudoers</code>というファイルを編集するのだが、これは直接編集してはならない。 <code>visudo</code>というコマンドを使う。エディタにVIが入っていないのでエディタも指定してあげる必要がある。</p>
+<pre><code># EDITOR=nano visudo</code></pre>
+<p>下の方にこんな行がある。</p>
+<pre class="sudoer"><code># %wheel ALL=(ALL) ALL</code></pre>
+<p>このコメントアウトを外しておく。次のように。</p>
+<pre class="sudoer"><code>%wheel ALL=(ALL) ALL</code></pre>
+<p>オーケー。Ctrl+Oして保存し、Ctrl+Xで終了しよう。</p>
+<p>ConoHaでは最近、script側でアップデートするようなので不要に思えるけど、一応アップデートしよう。この作業は定期的にしなければならない。</p>
+<pre><code># pacman -Syu</code></pre>
+<p>カーネルパッケージ(<code>linux</code>というパッケージ)が更新対象に含まれていた場合は再起動する。SSHのセッションは切られる。</p>
+<pre><code># reboot</code></pre>
+<h2 id="もう少し使いやすく">もう少し使いやすく…</h2>
+<p>とりあえずここからはLinuxを長年使っている身として「それなりに使いやすい環境を整える」ところをやっておきたいと思う。 特にArch Linuxはミニマルなので足りないと感じるものは色々あるだろう。</p>
+<h3 id="パッケージを揃える">パッケージを揃える</h3>
+<p>まずはユーザーログインする。</p>
+<pre><code>&gt;ssh conoha
+Enter passphrase for key &#39;C:\Users\harukamy\.ssh\conoha-user_rsa&#39;:
+
+$</code></pre>
+<p>ちょっとrootでの作業が続くのでrootになる。</p>
+<pre><code>$ sudo bash -l
+[sudo] password for conohachan: 
+# </code></pre>
+<p>サーバーなら必要ないのだけど、まずはユーザーで電源切ったり再起動したりできるようにしておこう。<code>pacman</code>はArch Linuxのパッケージ管理ソフトウェアであり、ソフトウェアをインストールしたりアンインストールしたりアップグレードしたりできる。</p>
+<pre><code># pacman -S polkit</code></pre>
+<p>これで<code>systemctl poweroff</code>や<code>systemctl reboot</code>がユーザーでできるようになる。</p>
+<p>VI, vim, Zshはなくてはならないソフトウェアだ。あと、ターミナルデュプレクサも欲しいのでtmuxも入れておこう。 Zshは<code>grml-zsh-config</code>パッケージをインストールするとすごく使いやすくなる。 あと、このあとyayを入れる関係でgoとgitも入れておく。</p>
+<pre><code># pacman -S vi vim vim-plugins zsh grml-zsh-config tmux go git</code></pre>
+<p>いい感じになってきた。ここで一旦rootを抜け、tmuxを起動する。</p>
+<pre><code># exit
+$ tmux</code></pre>
+<p>tmuxはプレフィックスキーを押したあとになにかキーを押すとtmuxに対する指示になるようになっている。 デフォルトのプレフィックスキーはCtrl+bで、<code>?</code>を入力することによりキーバインドの一覧が表示される。</p>
+<p>とりあえず<code>c</code>が新しいウィンドウを作成するコマンドなので、Ctrl+b Ctrl+cと入力しよう。</p>
+<p>これでわかりにくいがふたつのウィンドウができた。<code>n</code>コマンドによりこのウィンドウを行き来できる。</p>
+<p>pacmanが扱うことができるのはArch Linuxの公式パッケージだけだ。 AURという、非公式の(しかし、運営自体は公式に行われている)パッケージも扱いたいので、yayというソフトウェアをインストールする。 手順は</p>
+<ol type="1">
+<li>Gitを使ってyayのリポジトリをコピー</li>
+<li>yayディレクトリに移動</li>
+<li>makepkgでパッケージを作成</li>
+<li>pacmanで作成したパッケージをインストール</li>
+</ol>
+<pre><code>$ git clone &#39;https://aur.archlinux.org/yay.git&#39;
+$ cd yay
+$ makepkg
+$ sudo pacman -U *.pkg.tar.xz</code></pre>
+<p>これでAURのパッケージもインストールすることができる。 もし、yayに不満ならばついでにもうひとつのAURヘルパーであるtrizenもインストールしておこう。pacmanと違い、AURヘルパーはユーザーとして実行する。</p>
+<pre><code>$ yay -S trizen</code></pre>
+<p>yayやTrizenは公式のパッケージも扱うことができる。</p>
+<h3 id="見やすく使いやすく">見やすく、使いやすく</h3>
+<p>まずはすごく簡単な話として、Bashなど投げ捨ててZshにしよう。 Bashなんてゴミだ。</p>
+<p>まずは<code>.zshrc</code>を作っておく。</p>
+<pre><code>$ touch .zshrc</code></pre>
+<p>オーケー。Zshにしよう。</p>
+<pre><code>$ chsh
+Changing shell for conohachan.
+Password: 
+New shell [/bin/bash]
+&gt; /bin/zsh</code></pre>
+<p>chshはログインシェルを変更するだけなので、今のシェルは変更されない。 一刻も早くBashやZshに変えたいので、Zshでログインしよう。</p>
+<pre><code>$ zsh -l
+%</code></pre>
+<p>Poifect! <code>grml-zsh-config</code>をインストールしているのでとても快適に仕上がっているはずだ。 とりあえず途中でわからなくなったら、わかるところまで打ってからTAB連打で切り抜けられる。オプションやオプション引数なんかもだ。 あと、<code>f/b/b&lt;TAB&gt;</code>で<code>foo/bar/baz</code>に展開する、なんてこともできるようになる。</p>
+<p>さらにZshを強化して、Zshから離れられない体にしてやろう。</p>
+<pre><code>$ yay -S zsh-completions zsh-syntax-highlighting</code></pre>
+<p>Syntax Highlightを使用するため、<code>.zshrc</code>に次のような記述を行う。 vimが使えるならvimを使えばいいし、ダメならnanoでもいい。</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">if [[</span> <span class="ot">-f</span> /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh<span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb34-2" title="2"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb34-3" title="3">  <span class="kw">source</span> /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh</a>
+<a class="sourceLine" id="cb34-4" title="4"><span class="kw">fi</span></a></code></pre></div>
+<p>grml-zsh-configはヒストリを辿ったときに「既に第一ワードを入力している場合は第一ワードを確定として、途中の場合は第一ワードの検索開始時カーソル位置までを確定として辿り、カーソルは末尾に移動する」という挙動になっているのだが、「常にカーソル位置までを確定として履歴を辿る」という機能も欲しいのではないだろうか。 というわけで、PgUp/PgDownでそのような検索ができるように<code>.zshrc</code>を追記する。</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb35-1" title="1"><span class="kw">autoload</span> -U history-search</a>
+<a class="sourceLine" id="cb35-2" title="2"><span class="kw">bindkey</span> -M emacs <span class="st">&quot;\e[5~&quot;</span> history-beginning-search-backward</a>
+<a class="sourceLine" id="cb35-3" title="3"><span class="kw">bindkey</span> -M emacs <span class="st">&quot;\e[6~&quot;</span> history-beginning-search-forward</a></code></pre></div>
+<p>うーん、beautiful!</p>
+<p>さて、ここからはちょっと複雑なことをする。 わかりやすく美しいZshプロンプトのPowerlevel9kを使いたいと思うのだが、これはWindowsだとひと手間ふた手間ある感じだ。</p>
+<p>とりあえずインストールだけはしておこう。</p>
+<pre><code>$ sudo pacman -S zsh-theme-powerlevel9k</code></pre>
+<p>ここからは一旦ログアウトして(各シェルのログアウトしたあとSSHからログアウトするのを忘れずに)Windowsだ。まずは<a href="https://gitforwindows.org" rel="external">Git for Windows</a>をインストールする。</p>
+<p>これで様々な問題を解消できるようになる。別にMSYS2を入れてもらっても構わないのだが、Git Bashが各種設定を済ませてあるので話が早い。</p>
+<p>そして、次に<a href="https://github.com/miiton/Cica" rel="external">Cicaフォント</a>をインストールする。 完全なPowerlineグリフを持っているので話が一番てっとりばやい。このフォント、グリフが豊富で見やすく、制限された状況で本当に便利だ。</p>
+<p>で、Git Bashを起動して、右クリックからのOptionsで、フォントをCicaにする。ここまでやっておかないと後で困る。 それではGit Bashからログインしてみよう。</p>
+<pre><code>$ ssh conoha</code></pre>
+<p>通常Git Bashでも<code>.exe</code>は省略できないのだが、sshはGit Bash側で定義されており、省略できる。</p>
+<p>minttyになったことでだいぶ見やすくなったのではないだろうか。Cicaフォントだし。 で、powerlevel9kなのだけど、とりあえず私がサーバーで使っている設定を晒そう。</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb38-1" title="1">prompt off</a>
+<a class="sourceLine" id="cb38-2" title="2"><span class="ot">POWERLEVEL9K_MODE=</span>awesome-fontconfig</a>
+<a class="sourceLine" id="cb38-3" title="3"><span class="kw">source</span> /usr/share/zsh-theme-powerlevel9k/powerlevel9k.zsh-theme</a>
+<a class="sourceLine" id="cb38-4" title="4"><span class="fu">zle-keymap-select()</span> <span class="kw">{</span></a>
+<a class="sourceLine" id="cb38-5" title="5">  <span class="kw">zle</span> reset-prompt</a>
+<a class="sourceLine" id="cb38-6" title="6">  <span class="kw">zle</span> -R</a>
+<a class="sourceLine" id="cb38-7" title="7"><span class="kw">}</span></a>
+<a class="sourceLine" id="cb38-8" title="8"><span class="kw">zle</span> -N zle-keymap-select</a>
+<a class="sourceLine" id="cb38-9" title="9"><span class="ot">POWERLEVEL9K_SHORTEN_STRATEGY=</span>truncate_from_right</a>
+<a class="sourceLine" id="cb38-10" title="10"><span class="ot">POWERLEVEL9K_SHORTEN_DIR_LENGTH=</span>5</a>
+<a class="sourceLine" id="cb38-11" title="11"><span class="ot">POWERLEVEL9K_SHORTEN_DELIMITER=</span><span class="st">&quot;..&quot;</span></a>
+<a class="sourceLine" id="cb38-12" title="12"></a>
+<a class="sourceLine" id="cb38-13" title="13"><span class="co"># Colorize</span></a>
+<a class="sourceLine" id="cb38-14" title="14"><span class="ot">POWERLEVEL9K_OS_ICON_BACKGROUND=</span><span class="st">&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb38-15" title="15"><span class="ot">POWERLEVEL9K_OS_ICON_FOREGROUND=</span><span class="st">&quot;blue&quot;</span></a>
+<a class="sourceLine" id="cb38-16" title="16"><span class="co">#POWERLEVEL9K_DIR_HOME_FOREGROUND=&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb38-17" title="17"><span class="co">#POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND=&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb38-18" title="18"><span class="co">#POWERLEVEL9K_DIR_DEFAULT_FOREGROUND=&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb38-19" title="19"><span class="ot">POWERLEVEL9K_USER_DEFAULT_BACKGROUND=</span>white</a>
+<a class="sourceLine" id="cb38-20" title="20"><span class="ot">POWERLEVEL9K_USER_DEFAULT_FOREGROUND=</span>111</a>
+<a class="sourceLine" id="cb38-21" title="21"><span class="ot">POWERLEVEL9K_USER_ROOT_BACKGROUND=</span>red</a>
+<a class="sourceLine" id="cb38-22" title="22"><span class="ot">POWERLEVEL9K_USER_ROOT_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb38-23" title="23"><span class="ot">POWERLEVEL9K_USER_SUDO_BACKGROUND=</span>051</a>
+<a class="sourceLine" id="cb38-24" title="24"><span class="ot">POWERLEVEL9K_USER_SUDO_FOREGROUND=</span>052</a>
+<a class="sourceLine" id="cb38-25" title="25"><span class="ot">POWERLEVEL9K_USER_ICON=</span><span class="st">&quot;\uF415&quot;</span></a>
+<a class="sourceLine" id="cb38-26" title="26"><span class="ot">POWERLEVEL9K_ROOT_ICON=</span><span class="st">&quot;#&quot;</span></a>
+<a class="sourceLine" id="cb38-27" title="27"><span class="ot">POWERLEVEL9K_SUDO_ICON=</span><span class="st">&quot;\uF09C&quot;</span></a>
+<a class="sourceLine" id="cb38-28" title="28"><span class="ot">POWERLEVEL9K_VI_MODE_NORMAL_FOREGROUND=</span>051</a>
+<a class="sourceLine" id="cb38-29" title="29"><span class="ot">POWERLEVEL9K_VI_MODE_INSERT_FOREGROUND=</span>168</a>
+<a class="sourceLine" id="cb38-30" title="30"><span class="ot">POWERLEVEL9K_VCS_CLEAN_BACKGROUND=</span>147</a>
+<a class="sourceLine" id="cb38-31" title="31"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND=</span>174</a>
+<a class="sourceLine" id="cb38-32" title="32"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_BACKGROUND=</span>139</a>
+<a class="sourceLine" id="cb38-33" title="33"><span class="ot">POWERLEVEL9K_VCS_CLEAN_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb38-34" title="34"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb38-35" title="35"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb38-36" title="36"><span class="ot">POWERLEVEL9K_HOST_REMOTE_FOREGROUND=</span>162</a>
+<a class="sourceLine" id="cb38-37" title="37"><span class="ot">POWERLEVEL9K_HOST_REMOTE_BACKGROUND=</span>223</a>
+<a class="sourceLine" id="cb38-38" title="38"></a>
+<a class="sourceLine" id="cb38-39" title="39"><span class="ot">POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(</span>os_icon vi_mode user host dir newline<span class="ot">)</span></a>
+<a class="sourceLine" id="cb38-40" title="40"><span class="ot">POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(</span>status background_jobs command_execution_time vcs<span class="ot">)</span></a></code></pre></div>
+<p>これはVIモードで使うことを前提にしているので、一般化すると次のような感じか。</p>
+<p>で、powerlevel9kなのだけど、とりあえず私がサーバーで使っている設定を晒そう。</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb39-1" title="1">prompt off</a>
+<a class="sourceLine" id="cb39-2" title="2"><span class="ot">POWERLEVEL9K_MODE=</span>awesome-fontconfig</a>
+<a class="sourceLine" id="cb39-3" title="3"><span class="kw">source</span> /usr/share/zsh-theme-powerlevel9k/powerlevel9k.zsh-theme</a>
+<a class="sourceLine" id="cb39-4" title="4"></a>
+<a class="sourceLine" id="cb39-5" title="5"><span class="ot">POWERLEVEL9K_SHORTEN_STRATEGY=</span>truncate_from_right</a>
+<a class="sourceLine" id="cb39-6" title="6"><span class="ot">POWERLEVEL9K_SHORTEN_DIR_LENGTH=</span>8</a>
+<a class="sourceLine" id="cb39-7" title="7"><span class="ot">POWERLEVEL9K_SHORTEN_DELIMITER=</span><span class="st">&quot;..&quot;</span></a>
+<a class="sourceLine" id="cb39-8" title="8"></a>
+<a class="sourceLine" id="cb39-9" title="9"><span class="co"># Colorize</span></a>
+<a class="sourceLine" id="cb39-10" title="10"><span class="ot">POWERLEVEL9K_OS_ICON_BACKGROUND=</span><span class="st">&quot;white&quot;</span></a>
+<a class="sourceLine" id="cb39-11" title="11"><span class="ot">POWERLEVEL9K_OS_ICON_FOREGROUND=</span><span class="st">&quot;blue&quot;</span></a>
+<a class="sourceLine" id="cb39-12" title="12"><span class="ot">POWERLEVEL9K_USER_DEFAULT_BACKGROUND=</span>white</a>
+<a class="sourceLine" id="cb39-13" title="13"><span class="ot">POWERLEVEL9K_USER_DEFAULT_FOREGROUND=</span>111</a>
+<a class="sourceLine" id="cb39-14" title="14"><span class="ot">POWERLEVEL9K_USER_ROOT_BACKGROUND=</span>red</a>
+<a class="sourceLine" id="cb39-15" title="15"><span class="ot">POWERLEVEL9K_USER_ROOT_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb39-16" title="16"><span class="ot">POWERLEVEL9K_USER_SUDO_BACKGROUND=</span>051</a>
+<a class="sourceLine" id="cb39-17" title="17"><span class="ot">POWERLEVEL9K_USER_SUDO_FOREGROUND=</span>052</a>
+<a class="sourceLine" id="cb39-18" title="18"><span class="ot">POWERLEVEL9K_USER_ICON=</span><span class="st">&quot;\uF415&quot;</span></a>
+<a class="sourceLine" id="cb39-19" title="19"><span class="ot">POWERLEVEL9K_ROOT_ICON=</span><span class="st">&quot;#&quot;</span></a>
+<a class="sourceLine" id="cb39-20" title="20"><span class="ot">POWERLEVEL9K_SUDO_ICON=</span><span class="st">&quot;\uF09C&quot;</span></a>
+<a class="sourceLine" id="cb39-21" title="21"><span class="ot">POWERLEVEL9K_VCS_CLEAN_BACKGROUND=</span>147</a>
+<a class="sourceLine" id="cb39-22" title="22"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND=</span>174</a>
+<a class="sourceLine" id="cb39-23" title="23"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_BACKGROUND=</span>139</a>
+<a class="sourceLine" id="cb39-24" title="24"><span class="ot">POWERLEVEL9K_VCS_CLEAN_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb39-25" title="25"><span class="ot">POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb39-26" title="26"><span class="ot">POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=</span>black</a>
+<a class="sourceLine" id="cb39-27" title="27"><span class="ot">POWERLEVEL9K_HOST_REMOTE_FOREGROUND=</span>162</a>
+<a class="sourceLine" id="cb39-28" title="28"><span class="ot">POWERLEVEL9K_HOST_REMOTE_BACKGROUND=</span>223</a>
+<a class="sourceLine" id="cb39-29" title="29"></a>
+<a class="sourceLine" id="cb39-30" title="30"><span class="ot">POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(</span>os_icon user host dir newline<span class="ot">)</span></a>
+<a class="sourceLine" id="cb39-31" title="31"><span class="ot">POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(</span>status background_jobs command_execution_time vcs<span class="ot">)</span></a></code></pre></div>
+<p>grml-zsh-configを使っている関係で先に<code>prompt off</code>するのは必須。 FOREGROUNDとBACKGROUNDの色はお好みで、という感じだ。 Zsh上で(つまり、ログインしたConoha上で)</p>
+<pre><code>% for i in {000..255}; do print -P &quot;$i %K{$i}     %k&quot;; done</code></pre>
+<p>とやれば、番号ごとにどんな色か把握できる。 もちろん、もっと好みに設定を変更しても構わないだろう。</p>
+<p>これも<code>.zshrc</code>に記述する。</p>
+<p>この設定は作業中のミスをなくすために行っているもので、実のところ私は普段はPowerlevel9kを使っていない。 だが、SSHから入ったときだけPowerlevel9kになるようにしており、ホストごとに色を変えてある。このことにより、「ローカルホストかリモートホストかを間違える」事故を防止している。</p>
+<p>実際、普段はgrmlデフォルト</p>
+<a href="/wp-content/uploads/2018/12/zshprompt-grml.png"><img src="/wp-content/uploads/2018/12/zshprompt-grml.png" alt="" width="1042" height="662" class="aligncenter size-full wp-image-1874" /></a>
+<p>このホストにSSHで入るとこうなる。</p>
+<a href="/wp-content/uploads/2018/12/zshprompt-9k.png"><img src="/wp-content/uploads/2018/12/zshprompt-9k.png" alt="" width="826" height="590" class="aligncenter size-full wp-image-1871" /></a>
+<p>フォントが設定されていない<code>cmd.exe</code>から入ると表示が乱れている。右側のウィジットが次行に表示されているので使えないこともないが…</p>
+<a href="/wp-content/uploads/2018/12/zshprompt-cmd.png"><img src="/wp-content/uploads/2018/12/zshprompt-cmd.png" alt="" width="1348" height="676" class="aligncenter size-full wp-image-1872" /></a>
+<p>Git Bashなら正しく表示される。</p>
+<a href="/wp-content/uploads/2018/12/zshprompt-gitbash.png"><img src="/wp-content/uploads/2018/12/zshprompt-gitbash.png" alt="" width="750" height="504" class="aligncenter size-full wp-image-1873" /></a>
+<p>Powerlevel9kの利用は好みの問題だと思うけれど、Git Bash + Cicaという組み合わせはやって損がないのではないだろうか。</p>
+<p>Powerlevel9kの利用は好みの問題だと思うけれど、Git Bash + Cicaという組み合わせはやって損がないのではないだろうか。</p>
+<h3 id="自動アップグレード">自動アップグレード</h3>
+<p>とりあえず毎日朝6時にアップグレードするようにしてみよう。 Arch LinuxのinitであるSystemdというものを利用する。SystemdにはSystemdタイマーというジョブスケジューラがあるので、これを使うのだが、説明はとても難しいのでとりあえず例示にとどめよう。</p>
+<p>rootとして<code>/etc/systemd/update.service</code>を作成する。</p>
+<pre><code>% sudo nano /etc/systemd/update.service</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb42-1" title="1"><span class="kw">[Unit]</span></a>
+<a class="sourceLine" id="cb42-2" title="2"><span class="dt">Description</span><span class="ot">=</span><span class="st">update package</span></a>
+<a class="sourceLine" id="cb42-3" title="3"><span class="dt">RefuseManualStart</span><span class="ot">=</span><span class="kw">no</span></a>
+<a class="sourceLine" id="cb42-4" title="4"><span class="dt">RefuseManualStop</span><span class="ot">=</span><span class="kw">yes</span></a>
+<a class="sourceLine" id="cb42-5" title="5"></a>
+<a class="sourceLine" id="cb42-6" title="6"><span class="kw">[Service]</span></a>
+<a class="sourceLine" id="cb42-7" title="7"><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></a>
+<a class="sourceLine" id="cb42-8" title="8"><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/bin/pacman -Syu --noconfirm</span></a>
+<a class="sourceLine" id="cb42-9" title="9"><span class="dt">ExecStartPost</span><span class="ot">=</span><span class="st">/bin/reboot</span></a></code></pre></div>
+<p>続いて<code>/etc/systemd/update.timer</code>を作成する。</p>
+<pre><code>% sudo nano /etc/systemd/update.timer</code></pre>
+<div class="sourceCode" id="cb44"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb44-1" title="1"><span class="kw">[Unit]</span></a>
+<a class="sourceLine" id="cb44-2" title="2"><span class="dt">Description</span><span class="ot">=</span><span class="st">Automatic update packages</span></a>
+<a class="sourceLine" id="cb44-3" title="3"></a>
+<a class="sourceLine" id="cb44-4" title="4"><span class="kw">[Timer]</span></a>
+<a class="sourceLine" id="cb44-5" title="5"><span class="dt">OnCalendar</span><span class="ot">=</span><span class="st">*-*-* </span><span class="dv">06</span><span class="st">:</span><span class="dv">00</span><span class="st">:</span><span class="dv">00</span></a>
+<a class="sourceLine" id="cb44-6" title="6"><span class="dt">Persistent</span><span class="ot">=</span><span class="kw">true</span></a>
+<a class="sourceLine" id="cb44-7" title="7"></a>
+<a class="sourceLine" id="cb44-8" title="8"><span class="kw">[Install]</span></a>
+<a class="sourceLine" id="cb44-9" title="9"><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">timers.target</span></a></code></pre></div>
+<h2 id="時は来たれり">時は来たれり</h2>
+<p>バッチリだ。ここまで来れば、 <em>サービスや他者に迷惑をかけない範囲であれば</em> 君が学んだことを存分に発揮できる場が出来上がったはずだ。</p>
+<p>例えばvimを練習したいのなら</p>
+<pre><code>% vim vim-training-file</code></pre>
+<p>とかやればいいし、Pythonでプログラムを書きたいなら</p>
+<pre><code>% vim myfirst.py</code></pre>
+<p>とかやればいい。</p>
+<p>Linuxについて教えると話は無限に長くなるし、そもそもここまでの一連の作業でそれなりにLinuxに慣れる要素もあったので、Advent Calendarの記事としてはこれくらいで良いではないかと思っている。 この記事のソースファイルはこの行が606行目だし。</p>
+<p>というわけで、世の中の人がちょっとでもLinuxに、そしてコンピュータに関心を持ってくれれば幸いだ。 ついでに、こんなふうに簡単にサーバーを立てて、練習やアウトソースにも使えるConoHaは素晴らしいサービスです!(おべっか)</p>
+<p>Linuxについての突っ込んだ話はこのChienomiでしているから、関心がある人はぜひチェックして欲しい。 コンピュータやLinuxについて学びたい、教えて欲しいという人はぜひ<a href="https://mimir.yokohama/">Mimir Yokohama</a>へどうぞ。</p>
+<p>それでは今年もこのへんで。はるかみ☆でした♪</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

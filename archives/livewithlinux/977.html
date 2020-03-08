@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-07-27T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-07-27T00:00:00+09:00" />
+    <title>ThinkPad e440 * Manjaro Linux x86_64 XFce 16.06 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ThinkPad e440 * Manjaro Linux x86_64 XFce 16.06</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#概要" id="markdown-toc-概要">概要</a></li>
+  <li><a href="#Manjaro Linux KDEとXFceの違い" id="markdown-toc-Manjaro Linux KDEとXFceの違い">Manjaro Linux KDEとXFceの違い</a>    <ul>
+      <li><a href="#XFceの設定" id="markdown-toc-XFceの設定">XFceの設定</a></li>
+      <li><a href="#LXQtとWiFi" id="markdown-toc-LXQtとWiFi">LXQtとWiFi</a></li>
+      <li><a href="#XDM" id="markdown-toc-XDM">XDM</a></li>
+      <li><a href="#KDEアプリの動作" id="markdown-toc-KDEアプリの動作">KDEアプリの動作</a></li>
+      <li><a href="#Wi-Fiの挙動" id="markdown-toc-Wi-Fiの挙動">Wi-Fiの挙動</a></li>
+      <li><a href="#アップデートアプレット" id="markdown-toc-アップデートアプレット">アップデートアプレット</a></li>
+    </ul>
+  </li>
+  <li><a href="#ファーストインプレッション" id="markdown-toc-ファーストインプレッション">ファーストインプレッション</a></li>
+  <li><a href="#RT8168" id="markdown-toc-RT8168">RT8168</a></li>
+  <li><a href="#およその作業記録" id="markdown-toc-およその作業記録">およその作業記録</a></li>
+</ul>
+
+<h3 id="概要">概要</h3>
+
+<p>これまでManjaro Linux KDEを使用してきたThinkPad e440だが、Manjaro Linux XFceに変更した。</p>
+
+<p>e440のOSは安定せず、かなり変更を重ねている。これまで</p>
+
+<ul>
+  <li>openSUSE</li>
+  <li>Mageia</li>
+  <li>Manjaro XFce</li>
+  <li>PCLinuxOS FullMonty</li>
+  <li>Linux Mint</li>
+  <li>Manjaro LXQt</li>
+  <li>PCLinuxOS KDE</li>
+  <li>Manjaro KDE</li>
+  <li>Manjaro XFce</li>
+</ul>
+
+<p>という流れだ。求められる条件は</p>
+
+<ul>
+  <li>BIOSでWindowsとのデュアルブートが可能</li>
+  <li>/の暗号化が可能</li>
+  <li>ローリング・リリースあるいは長期運用が可能</li>
+  <li>先進的</li>
+  <li>RealTek RT8168 無線LANが利用可能</li>
+</ul>
+
+<p>これがなかなか難しい。
+ちなみに、Manjaro Linuxも現状、GUIインストーラでWindowsのデュアルブートとLUKSを両立させる場合、MBRの書き換えを防ぐことはできない。</p>
+
+<h3 id="Manjaro Linux KDEとXFceの違い">Manjaro Linux KDEとXFceの違い</h3>
+
+<p>違わないようで、実は結構違う。</p>
+
+<h4 id="XFceの設定">XFceの設定</h4>
+
+<p>Manjaroのパッケージ内にXFceに関する設定が不足している。特にKDEでインストールした場合は、XFceに関する設定は全くない。</p>
+
+<p>XFceから新規ユーザーを作った場合は、おおよそ反映されるし、そのためパネルやアプレットが大きく異なるが、Mnajaroのメニューは階層化されていない状態になる。</p>
+
+<h4 id="LXQtとWiFi">LXQtとWiFi</h4>
+
+<p>KDEでインストールした場合、LXQtはconnmanを使おうとnm-appletを使おうと、D-BusエラーになりWi-Fiを使うことができない。XFceでインストールした場合はnm-appletが問題なく動作する</p>
+
+<h4 id="XDM">XDM</h4>
+
+<p>KDEはKDM、XFceはLightDMを使う。</p>
+
+<h4 id="KDEアプリの動作">KDEアプリの動作</h4>
+
+<p>XFceでインストールした場合、Akonadiが正常動作せず、KDEコンポーネントが完全には動かない。</p>
+
+<p>KDEコンポーネントをフルに活用しとたKDE環境を望む場合は素直にKDEでインストールのが良い。</p>
+
+<h4 id="Wi-Fiの挙動">Wi-Fiの挙動</h4>
+
+<p>KDEの場合、Wi-Fiがおかしくなり、やがて接続は確立しているのに通信しなくなる。(チップはRT8168)
+頻繁に発生し、再接続すれば復帰する場合が多いが、あまり放置しすぎると切断自体不可能になる。</p>
+
+<p>XFceの場合は、その状態が発生しない。</p>
+
+<p>また、<code>mkwd-kernel</code>を使うと、XFceの場合だけrt8168パッケージをインストールするようになっている。KDEの場合はndiswrapperパッケージをインストールする。これは、15.12と16.06の違いもあるのかもしれない。</p>
+
+<h4 id="アップデートアプレット">アップデートアプレット</h4>
+
+<p>KDEの場合はOctopiを使うし、アプレットもOctopiのものになっている。</p>
+
+<h3 id="ファーストインプレッション">ファーストインプレッション</h3>
+
+<p>もちろん、Manjaroということで同じものなのだが、実際には結構な違いがある。</p>
+
+<p>Plasma Workspaceが結構不安定で(ハードウェア的な問題だろう。Manjaroに限らない)、よくKWinが再起動するのだが、安定しており、最初からWi-Fiを利用することができる(速度的には有線のほうが良いが)といったメリットがある。</p>
+
+<p>機能的にはXFceはかなりそろっていて、非常に使いやすい。ただし、Thunarなど一部のXFceアプリはパスを問答模様で補完するため、普通に打っていると勝手に補完されてパスが違っているということがあったりする点はマイナス。
+ただ、機能的な不足はないはずだが、実感としてはやはりCinnamonのほうが使い心地は良い。</p>
+
+<p>XFceでインストールすると、KDEコンポーネントを使わない設定となるため(これを変更するのはなかなか大変)、全体に動作が軽く、安定している。e440程度の性能であればこのほうが良いかもしれない。</p>
+
+<h3 id="RT8168">RT8168</h3>
+
+<p>ThinkPad e440に搭載されているのはLinuxでの扱いの難しいRealTek製WiFiチップRT8168だ。</p>
+
+<p>XFceの場合は<code>mhwd-kernel</code>で自動的にこのドライバを含み、適切に動作するが、RT8168にはRT8169ドライバをロードしてしまう、という問題があり、<code>mhwd-kernel</code>による新カーネルインストール時にもその回避を勧められる。</p>
+
+<pre><code># echo "blacklist r8169" &gt; /etc/modprobe.d/r8169_blacklist.conf
+</code></pre>
+
+<h3 id="およその作業記録">およその作業記録</h3>
+
+<pre><code># pacman-mirrors -g #ミラーを並び替える
+# yaourt -Syuu --noconfirm # アップグレード
+# mhwd-kernel -i linux46 # Linux 4.6カーネルのインストール(現在の最新)
+# echo "blacklist r8169" &gt; /etc/modprobe.d/r8169_blacklist.conf # RT8169モジュールの無効化
+# reboot
+$ yaourt -S gvim vi #viがないため、visudoなどが使えない
+$ sudo visudo # パスワードタイムアウトの無効化
+$ sudo vim /etc/yaourtrc #ビルドディレクトリ、エクスポートディレクトリなどの変更のため
+$ yaourt -S medit geany geany-plusings ruby ruby-docs zsh mate-gtk3 qterminal lxqt leafpad #エディタ及び諸環境のインストール
+$ yaourt -S mate-extra-gtk3 #一部conflictがあるため、全コンポーネントはインストールできない
+$ yaourt -S adobe-source-han-sans-jp-fonts ttf-ohruri ttf-komatuna ttf-meguri ttf-migu ttf-ricty ttf-vlgothic tth-vlkoruri #フォント周り
+$ mkdir ~/.config/fontconfig
+$ medit !!$/fonts.conf #フォント設定
+$ yaourt -S sshfs
+$ yaourt -S xf86-input-synaptics #Touchpad Synaptics
+$ sudo cp /usr/share/X11/xorg.conf.d/70-synaptics.conf /etc/X11/xorg.conf.d #設定ファイルのコピー
+$ sudo vim !!$/70-synaptics.conf # Synapticsの設定
+$ yaourt -S vivaldi-snapshot opera-developer chromium google-chrome chromium-widevine #ウェブブラウザ
+$ yaourt -S atom-editor-git #Atom。時間がかかる
+$ yaourt -S --noconfirm fcitx fcitx-anthy fcitx-mozc-neologd-ut fcitx-kkc fcitx-gtk{2,3} fcitx-qt{4,5} fcitx-m17n fcitx-configtool # IM関連
+$ yaourt -S w3m lv #日本語環境向け
+$ yaourt -S xorg-server-xephyr # XDMCPリモートログイン
+$ yaourt -S claws-mail # メールクライアント
+$ chsh #シェルをzshに
+$ vim ~/.config/user-dirs.dirs # XDGディレクトリの変更
+$ vim ~/.xprofile
+$ mkdir bin lib mnt #個人的に必要とするディレクトリ
+</code></pre>
+
+<p>MDNSの設定などは最初からされている。</p>
+
+<p>Synapticsの設定。2本指スクロールの有効化とナチュラルスクロール化、サーキュラースクローリング(左下起点)の有効化を設定してある。</p>
+
+<pre><code># Example xorg.conf.d snippet that assigns the touchpad driver
+# to all touchpads. See xorg.conf.d(5) for more information on
+# InputClass.
+# DO NOT EDIT THIS FILE, your distribution will likely overwrite
+# it when updating. Copy (and rename) this file into
+# /etc/X11/xorg.conf.d first.
+# Additional options may be added in the form of
+#   Option "OptionName" "value"
+#
+Section "InputClass"
+        Identifier "touchpad catchall"
+        Driver "synaptics"
+        MatchIsTouchpad "on"
+# This option is recommend on all Linux systems using evdev, but cannot be
+# enabled by default. See the following link for details:
+# http://who-t.blogspot.com/2010/11/how-to-ignore-configuration-errors.html
+#       MatchDevicePath "/dev/input/event*"
+            Option "VertTwoFingerScroll" "on"
+            Option "HorizTwoFingerScroll" "on"
+            Option "CircularScrolling" "on"
+            Option "CircScrollTrigger" "6"
+            Option "VertScrollDelta" "-111"
+            Option "HorizScrollDelta" "-111"
+EndSection
+
+Section "InputClass"
+        Identifier "touchpad ignore duplicates"
+        MatchIsTouchpad "on"
+        MatchOS "Linux"
+        MatchDevicePath "/dev/input/mouse*"
+        Option "Ignore" "on"
+EndSection
+
+# This option enables the bottom right corner to be a right button on clickpads
+# and the right and middle top areas to be right / middle buttons on clickpads
+# with a top button area.
+# This option is only interpreted by clickpads.
+Section "InputClass"
+        Identifier "Default clickpad buttons"
+        MatchDriver "synaptics"
+        Option "SoftButtonAreas" "50% 0 82% 0 0 0 0 0"
+        Option "SecondarySoftButtonAreas" "58% 0 0 15% 42% 58% 0 15%"
+EndSection
+
+# This option disables software buttons on Apple touchpads.
+# This option is only interpreted by clickpads.
+Section "InputClass"
+        Identifier "Disable clickpad buttons on Apple touchpads"
+        MatchProduct "Apple|bcm5974"
+        MatchDriver "synaptics"
+        Option "SoftButtonAreas" "0 0 0 0 0 0 0 0"
+EndSection
+</code></pre>
+
+<p><code>fonts.conf</code>の設定。</p>
+
+<pre><code>&lt;?xml version='1.0'?&gt;
+&lt;!DOCTYPE fontconfig SYSTEM 'fonts.dtd'&gt;
+&lt;fontconfig&gt;
+  &lt;match target="pattern"&gt;
+    &lt;edit name="dpi" mode="assign"&gt;&lt;double&gt;103&lt;/double&gt;&lt;/edit&gt;
+  &lt;/match&gt;
+  &lt;match target="font"&gt;
+    &lt;edit name="hinting" mode="assign"&gt;
+      &lt;bool&gt;true&lt;/bool&gt;
+    &lt;/edit&gt;
+  &lt;/match&gt;
+  &lt;match target="font"&gt;
+    &lt;edit name="autohint" mode="assign"&gt;
+      &lt;bool&gt;true&lt;/bool&gt;
+    &lt;/edit&gt;
+  &lt;/match&gt;
+  &lt;match target="font"&gt;
+    &lt;edit name="hintstyle" mode="assign"&gt;
+      &lt;const&gt;hintfull&lt;/const&gt;
+    &lt;/edit&gt;
+  &lt;/match&gt;
+  &lt;match target="font"&gt;
+    &lt;edit name="rgba" mode="assign"&gt;
+      &lt;const&gt;rgb&lt;/const&gt;
+    &lt;/edit&gt;
+  &lt;/match&gt;
+ &lt;match target="font"&gt;
+  &lt;edit name="lcdfilter" mode="assign"&gt;
+   &lt;const&gt;lcddefault&lt;/const&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;match target="pattern"&gt;
+  &lt;test qual="any" name="family"&gt;
+   &lt;string&gt;serif&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;edit binding="strong" name="family" mode="assign"&gt;
+   &lt;string&gt;Ohruri&lt;/string&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;match target="pattern"&gt;
+  &lt;test qual="any" name="family"&gt;
+   &lt;string&gt;sans-serif&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;edit binding="strong" name="family" mode="assign"&gt;
+   &lt;string&gt;VlKoruri&lt;/string&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;match target="pattern"&gt;
+  &lt;test qual="any" name="family"&gt;
+   &lt;string&gt;sans&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;edit binding="strong" name="family" mode="assign"&gt;
+   &lt;string&gt;VlKoruri&lt;/string&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;match target="pattern"&gt;
+  &lt;test qual="any" name="family"&gt;
+   &lt;string&gt;monospace&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;edit binding="strong" name="family" mode="assign"&gt;
+   &lt;string&gt;Migu 1M&lt;/string&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;match target="pattern"&gt;
+  &lt;test qual="all" compare="not_eq" name="family"&gt;
+   &lt;string&gt;sans-serif&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;test qual="all" compare="not_eq" name="family"&gt;
+   &lt;string&gt;serif&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;test qual="all" compare="not_eq" name="family"&gt;
+   &lt;string&gt;monospace&lt;/string&gt;
+  &lt;/test&gt;
+  &lt;edit name="family" mode="append_last"&gt;
+   &lt;string&gt;Migu 1C&lt;/string&gt;
+  &lt;/edit&gt;
+ &lt;/match&gt;
+ &lt;dir&gt;~/.fonts&lt;/dir&gt;
+&lt;/fontconfig&gt;
+</code></pre>
+
+<p><code>.xprofile</code>。日本語入力関係ほか</p>
+
+<pre><code>#
+# ~/.xprofile
+#
+# sourced by /etc/lxdm/Xsession
+#
+
+if which dbus-launch &gt;/dev/null &amp;&amp; test -z "$DBUS_SESSION_BUS_ADDRESS"; then
+    eval "$(dbus-launch --sh-syntax --exit-with-session)"
+fi
+
+# Environment variables
+#
+export GTK2_RC_FILES="$HOME/.gtkrc-2.0"
+export GTK_IM_MODULE=fcitx
+export GTK2_IM_MODULE=fcitx
+export GTK3_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS="@im=fcitx"
+export DefaultIMModule=fcitx
+export PATH=$HOME/bin:$PATH
+setxkbmap -model jp106 -layout jp
+</code></pre>
+
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

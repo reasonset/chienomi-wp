@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-05-28T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-05-28T00:00:00+09:00" />
+    <title>今更だけど、mpvがビデオ再生に便利 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>今更だけど、mpvがビデオ再生に便利</h1></header>
+        <article id="MainArticle">
+<p>mpv、ほんとになんでもできるようになってきていて笑いが止まらない。</p>
+<h2 id="mpvで自由自在にビデオを見る">mpvで自由自在にビデオを見る</h2>
+<p>mpvの定番の設定になっているようだけれども</p>
+<p>ビデオを回転させる:</p>
+<pre><code>Alt+RIGHT add video-rotate 90
+Alt+LEFT add video-rotate -90</code></pre>
+<p>ビデオをズーム/パンする。 これは既にデフォルトの設定として採用されている。</p>
+<pre><code>Alt+- add video-zoom -0.25
+Alt+= add video-zoom 0.25</code></pre>
+<p>ズームしたビデオを移動する。</p>
+<pre><code>Alt+j add video-pan-x -0.05
+Alt+l add video-pan-x 0.05
+Alt+i add video-pan-y 0.05
+Alt+k add video-pan-y -0.05</code></pre>
+<p>ズーム/パンの設定をリセットする。</p>
+<pre><code>Alt+BS set video-zoom 0; set video-pan-x 0; set video-pan-y 0</code></pre>
+<p>もちろん、こんなのはほんの一部で様々なことができる。</p>
+<p><code>1</code>と<code>2</code>はコントラストに割り当てられている。 全体的に画面が暗く、もやもやしてよく見えないときにはコントラストを上げると良い。 逆に色彩鮮やかすぎて目が痛い画面ではコントラストを下げると見やすくなる。 くらい室内の動画や夜間撮影の動画ではコントラスト上げが、明暗差がきつい晴天時のオンボード動画などではコントラスト下げが活躍する。</p>
+<p><code>Ctrl++</code>と<code>Ctrl+-</code>はオーディオディレイに対応している。 定量的な音ズレを簡単に補正できる。</p>
+<p><code>*</code>と<code>/</code>あるいは<code>9</code>, <code>0</code>はボリュームコントロールに対応している。 複数のビデオを並行で再生するような環境では<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>音量を揃えるために活躍してくれる。セッションを越えて保存されないので、一時的な変更には最も手軽だ。</p>
+<p><code>s</code>でスナップショットを取る。非常に手軽だ。</p>
+<p><code>3</code>, <code>4</code>でブライトネス、<code>5</code>, <code>6</code>でガンマ、<code>7</code>, <code>8</code>でサチュレーションを補正する。 私はあまり使わないが画質的に見づらい動画を補正できる。</p>
+<p><code>i</code>でビデオの詳細な情報を表示する。 詳細な上にみやすく、ビデオソースについて知る必要があるときには活躍する。</p>
+<p><code>l</code>でA-Bループになる。<code>l</code>を押すだけの簡単操作で正確なタイミングをつかみやすい。 <code>L</code>でそのビデオをループする。</p>
+<p><code>a</code>はアスペクト比の強制を行う。 アスペクト比の間違ったビデオを再エンコードせずに視聴できる。</p>
+<p>字幕も表示/非表示、タイミングの補正、位置の補正も可能だ。</p>
+<p><code>m</code>で一発ミュート。</p>
+<p><code>[</code>と<code>]</code>は再生速度のコントロールになっている。 音楽の練習ではとても重宝する。</p>
+<p><code>Ctrl+LEFT</code>と<code>Ctrl+RIGHT</code>はちょっとめずらしい、字幕の早送り/巻き戻しに対応している。密度の高い字幕がある場合には結構便利だ。</p>
+<p><code>PgUp</code>と<code>PgDown</code>がチャプターに対応しているが、<code>Shift+PgUp</code>と<code>ShiftPgDown</code>が10分巻に対応しているのも数時間あるようなビデオではポイント高い。</p>
+<p>そして、実はXF86メディアキーでの操作も可能。</p>
+<p>ほんとなんでもできる。ありとあらゆるビデオを快適に再生し、活用できるようになっている。</p>
+<h2 id="mpvについて">mpvについて</h2>
+<p>mpvはもとはMPlayer2と呼ばれていて、MPlayerからフォークしたものだ。 MPlayer2はあまり人気がなかった気がするけれども、mpvになってからはMPlayerに対する明らかなアドバンテージの数々(例えばVA-API/VDPAUのサポートなど)を武器に今や標準ツールとなりつつある。</p>
+<p>MPlayerもそうなのだけど、GUIのないビデオプレイヤーの魅力って、ちょっと理解しにくい。 実際、私も昔はGMPlayer<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>ばかり使っていた。</p>
+<p>ないよりはあったほうがいいじゃないか、と思うかもしれない。 だが、そうではないのだ。</p>
+<p>ビデオの場合、視覚的なものである。 コントロールを表示すればその分表示領域が必要になる。 画面の外に表示すればビデオは小さくなるし、重ねれば邪魔になる。必ずしもフルスクリーンで見るわけでもない。フルスクリーンではないけれど取れる範囲で最大限のスペースを使いたいという希望は普通にあるだろう。</p>
+<p>また、VLCやSMPlayerだとビデオを開くたびにセッションを開く。 再生が重いというのもあるが、ものすごく単純なこととして、「ファイルを開いたら単純にそのファイルを開いてほしい、それ以外にはなにもしないでほしい」というのがあったりする。</p>
+<p>mpvは再生によって何かを保存したり記憶したりしない。 余計なものを開いたりもしない。ファイルブラウザでビデオを開くアプリケーションをmpvにしていれば、ただ単純にダブルクリックするとビデオが再生される。</p>
+<p>だが、その場合でもちゃんと視聴に必要な機能は備わっていてほしいはずだ。 mpvには他のプレイヤーにはないような機能まできっちり備わっている。 何かにプレイヤーを内包するような機能はない<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>が、プレイヤーとしての機能はパーフェクトなはずだ。</p>
+<p>写真で考えてみよう。</p>
+<p>アルバムアプリを立ち上げ、写真フォルダを探しながら写真をみるときと、ファイルブラウザから写真をダブルクリックするときでは意識に大きな違いがあるはずだ。 そして、ファイルブラウザでダブルクリックしたとき、アルバムアプリが立ち上がり、写真フォルダ一覧が表示されるのはあなたが望むことではないだろう。ファイルブラウザで写真をダブルクリックしたら写真を表示してほしいはずだ。それ以外の余計なものは表示せずに。</p>
+<p>mpvはそういうアプリケーションだ。 コントロールはキーボードで行う。一見複雑なようだが、考えてみてほしい。 複雑に様々なコントロールができるとしたら、専用のリモコン、あるいはコントローラがあったほうが便利だろう。</p>
+<p>だが、GUIがあったほうが便利なこともある。 例えば全体がどれくらいで、今どれくらいの位置を再生しているのか知りたいときなどだ。 mpvはpseudo-gui/OSDと呼ばれる機能により、<code>o</code>キーと、マウスオーバーによってそれらの情報を表示できる。 しかも表示できるだけではない。なんて操作できる。ビデオスキャンのほか、タイトルクリックでのフルタイトル表示、プレイリストコントロールなどが可能だ。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>多分そんなことをする人はあまりいないのだけれど、私は多用する。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>ソフトウェアとしてはMPlayerなのだけれど、<code>gmplayer</code>というコマンドを使用するとGUIつきで起動する。Arch LinuxではMPlayerはgmplayerなしでビルドされている。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>いや、実はyoutube-dlを介してURL再生できたりするのだが<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

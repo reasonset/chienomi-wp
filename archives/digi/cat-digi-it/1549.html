@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-30T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-30T00:00:00+09:00" />
+    <title>Arial/Helveticaを置換え 読みやすい欧文をウェブに - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Arial/Helveticaを置換え 読みやすい欧文をウェブに</h1></header>
+        <article id="MainArticle">
+<h2 id="本当にarialが見やすいと思うのかい">本当にArialが見やすいと思うのかい?</h2>
+<p>さて、突然だがあなたに質問だ。</p>
+<p>次の画像を見てあなたが読みやすいと思うのはどれだろう。 「見やすい」ではない。ちゃんと英文を読んで、読むのが楽だ、このあと延々百何十ページとこの英文を読むのも苦にならないと思うのはどれか、ということである。</p>
+<figure><a href="/wp-content/uploads/2018/07/sample-sansserif-1.png"><img src="/wp-content/uploads/2018/07/sample-sansserif-1.png" alt="" width="960" height="1080" class="size-full wp-image-1532" /></a><figcaption> 比較1</figcaption></figure>
+<figure><a href="/wp-content/uploads/2018/07/sample-sansserif-2.png"><img src="/wp-content/uploads/2018/07/sample-sansserif-2.png" alt="" width="960" height="1080" class="size-full wp-image-1533" /></a><figcaption> 比較2</figcaption></figure>
+<figure><a href="/wp-content/uploads/2018/07/sample-sansserif-3.png"><img src="/wp-content/uploads/2018/07/sample-sansserif-3.png" alt="" width="960" height="1080" class="size-full wp-image-1534" /></a><figcaption> 比較3</figcaption></figure>
+<figure><a href="/wp-content/uploads/2018/07/sample-sansserif-4.png"><img src="/wp-content/uploads/2018/07/sample-sansserif-4.png" alt="" width="960" height="1080" class="size-full wp-image-1535" /></a><figcaption> 比較4</figcaption></figure>
+<p>あなたの心は決まっただろうか?</p>
+<h2 id="webでなぜarialを指定したがるのか">webでなぜArialを指定したがるのか</h2>
+<h3 id="arialが指定されている現実の確認">Arialが指定されている現実の確認</h3>
+<p>まずはTwitterのフォント指定を見てみよう。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" data-line-number="1">body<span class="fu">.ja</span> {</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    <span class="kw">font-family</span>: Arial, <span class="st">&quot;ヒラギノ角ゴ Pro W3&quot;</span>, <span class="st">&quot;Hiragino Kaku Gothic Pro&quot;</span>, Osaka, メイリオ, Meiryo, <span class="st">&quot;ＭＳ Ｐゴシック&quot;</span>, <span class="st">&quot;MS PGothic&quot;</span>, <span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">}</a></code></pre></div>
+<p>次にGoogle</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">.g</span>, body, html, input, <span class="fu">.std</span>, h1 {</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="kw">font-size</span>: <span class="dv">small</span>;</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">    <span class="kw">font-family</span>: arial,<span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">}</a></code></pre></div>
+<p>Yahoo! Japan。Arialは指定するがHelveticaは指定しない。 MS PGothicが先に指定されているので、かなりArialを指定している意味は恐らく全くない。ヒラギノより先にしている理由もわからず、 これはさすがに技術力が疑わしい。</p>
+<p>さらにいえば、フォントファミリーにクォートなしでスペースが入るのも無効なはずなので、技術力完全に駄目なやつでは…?</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb3-1" data-line-number="1">body {</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="kw">font-family</span>: MS PGothic,Arial,Hiragino Kaku Gothic ProN,Osaka,<span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">}</a></code></pre></div>
+<p>Mozilla。Zilla Slabはウェブフォントになっている。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb4-1" data-line-number="1">body {</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="kw">font-family</span>: <span class="st">&quot;Zilla Slab&quot;</span>,<span class="st">&quot;Open Sans&quot;</span>,X-LocaleSpecific,<span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">}</a></code></pre></div>
+<p>Facebook。Helvetica優先でヒラギノ優先なあたり、Facebookはりんご党らしい。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb5-1" data-line-number="1">body, button, input, label, select, td, textarea {</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">    <span class="kw">font-family</span>: Helvetica, Arial, <span class="st">&quot;hiragino kaku gothic pro&quot;</span>,meiryo,<span class="st">&quot;ms pgothic&quot;</span>,<span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    <span class="kw">font-size</span>: <span class="dv">12px</span>;</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">}</a></code></pre></div>
+<p>Microsoftコミュニティは日本版でも欧文フォントのみの指定。 それもWindowsデフォルトフォント優先だが、MacデフォルトのHelvetica Neueを優先的に指定する謎のこだわり。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb6-1" data-line-number="1">body {</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">    <span class="kw">font-size</span>: <span class="dv">15px</span>;</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">    <span class="kw">font-family</span>: Segoe UI,SegoeUI,<span class="st">&quot;Helvetica Neue&quot;</span>,Helvetica,Arial,<span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">}</a></code></pre></div>
+<p>震源地となったMSNは現在は指定なし。私が指摘してから変えた…?</p>
+<h3 id="理由と経緯">理由と経緯</h3>
+<p>ArialというフォントそのものはHelveticaの代替フォントである。</p>
+<p>Helveticaは1950年代からあるフォントで、すごく使われてきた。PanasonicのコーポレートロゴもHelveticaだ。</p>
+<p>Helveticaは現在はライノタイプのフォントで、Macに入っている。 MacはHelveticaを改変したGenevaもあって、割と重用しているようだ。しかもArialもある。</p>
+<p>Arialのほうは1982年にRobin Nicholas, Particia Saundersがモノタイプに依頼して制作したもので、Hervetica互換フォントで形は少し異なるものの文字幅は同じ。</p>
+<p>ArialはAlternativeを含めればWindowsに古くから収録されていて、Helvetiva互換フォントとして使われてきた。 WindowsのArialはフォント名にHelveticaを含んでいるので、Helveticaと指定してもArialが使われる。</p>
+<p>そして代替フォントであったはずが、Arialのほうが美しいとか、WinとMac両方にインストールされているとか<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>いう理由でArialが主流になっていく。 Arialもポストスクリプトフォントとしてはかなり初期に誕生しているし、当時はあまりポストスクリプトフォントはなかった(し、高額だった)。 指定しなければビットマップフォントが使用される可能性が高く、すごく雑なビットマップフォントが多かったから、Arialの指定は高品位フォントの指定だったといっていい。今の日本の感覚で言うと、モリサワのフォントを指定するような感じだ。特にヒラギノ。</p>
+<p>Arialが使える前提に立っていると、UIに使いやすかった。 ボタンはピクセル数を指定しなければならないけれど、その上に載せるフォントに合わせていい感じに調整する機能はなかったから、 「ボタンの上にこの文字を載せるか指定するためにはこの文字がどれだけの幅を取るか特定できなければならない」だったのだ。 当時はDPIも固定だったから、これは表示してしまえば確実に制御できたし、そこでArialが使える前提に立てば簡単に作ることができた。</p>
+<p>あと、ワープロ文書でも文字数と改ページの関係でボックスサイズが変わると困ることがある。 ここでもArial前提にしとけばワープロ文書のままで受け渡しができる、というわけだ。 これは今ＭＳ Ｐゴシックの状態でワード文書を送りつける愚か者<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>と同じような心理である。</p>
+<p>ところがだ。HelveticaにせよArialにせよフリーなフォントではない。 そこでサイズが同じ「メトリック互換フォント」がArial以外にも作られることとなる。 これはもう、Helvetica互換というよりはArial互換である。</p>
+<ul>
+<li>Nimbus Sans (URW)</li>
+<li>TeX Gyre Heros (Ghostscript)</li>
+<li>FreeSans (GNU)</li>
+<li>MS Sans Serif (Windows)</li>
+<li>Arial (Microsoft)</li>
+<li>Liberation Sans (Liberation Font Project)</li>
+<li>Arimo (Chrome OS)</li>
+<li>Albany (StarOffice)</li>
+</ul>
+<p>これでArialに対する互換性をクリアしたわけだ。</p>
+<p>和文フォントでも若干そういうものはある。 AAフォントと呼ばれるもの(IPAモナーフォントやMonapoなど)は5ちゃんねる(当時の2ちゃんねる)上でアスキーアートを表示するためのものだが、 梅フォントファミリーがＭＳフォントメトリック互換であるのは恐らくワープロ文書やメールにおけるレイアウトの都合だろう。</p>
+<h3 id="webでの指定の話">webでの指定の話</h3>
+<p>CSS登場以前はUI部品のサイズを柔軟かつ明瞭に指定する方法がそもそもなかった。</p>
+<p>そのためUI部品にテキストを載せる場合(画像にすると当時は重かった)、レイアウト上「横にいくつボタンを並べる」という都合があり、 これをぴったりに載せる方法がWindowsでもMacでも使えるArialを使う、という方法だった。</p>
+<p>これが「WindowsとMacにインストールされているフォントを考慮する」という誤った理解となり、思考停止したままWindowsとMacのフォントをそのまま指定するようになったのが「システムデフォルトの日本語フォントを指定する」問題だ。</p>
+<p>挙げ句、ＭＳ Ｐゴシックはまだしもヒラギノとは全くデザインが合わない、単に美しくない状態となるだけの「欧文フォント指定があるから、それを消さずにその後ろに日本語フォントをWindowsとMacで並べればいいよね」という最高に頭の悪いアクションが生まれる、というわけだ。</p>
+<p>だが、和文フォントをシステムデフォルトのものを指定するのが <em>全く意味がない</em> のに対して、Arialを指定することは前述のように多少意味がある。 ただし、現在はCSSを使ってUIサイズを文字サイズ基準で指定できるため、まともなデザインセンスがあるのであれば問題にはならない。 そう、デザインについて数字でしか理解できないエンジニアが解決方法としてフォント指定に走るのはまだわからなくはないが、デザイナーがそれをやったら完全にデザインを投げ捨てているということになる。</p>
+<p>基本的に「なり」のデザインになっていれば特に指定する必要はないのだが、UI上(好ましいことではないが)ボックスの中に入っていないテキストなどを書く必要がある場合はArialを指定するのは意味のあることである。 もちろん、その場合でもGoogleがしているように</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb6-1" data-line-number="1">font-family<span class="in">:</span> &quot;Arial&quot;, sans-serif;</a></code></pre></div>
+<p>とするのが適切。</p>
+<p>ただし、google検索においてArialの指定が必要かどうかは疑わしい。 ただし、英語で検索するとGoogle検索の結果はArialの場合は2行であるため、2行に内容を詰め込むためには詰め詰めのフォントを使わせたい、というのがあるのかもしれない。そうでないフォントを使うと3行になったりするからだ。 その意味では「ゆるやかに意図を使える指定」ということで、ある意味妥当である。</p>
+<figure><a href="/wp-content/uploads/2018/07/google-search-en.png"><img src="/wp-content/uploads/2018/07/google-search-en.png" alt="" width="633" height="115" class="size-full wp-image-1531" /></a><figcaption> Google検索の英語での結果 (Raleway)</figcaption></figure>
+<p>このArialと汎用のサンセリフを指定する方法は日本語であっても有効である。 日本語はユーザーが設定したサンセリフ体が使われるだろうし、設定していなくても適切な日本語フォントが選択されるため、全く問題ない。</p>
+<p>だが、そんなことを理解せず、思考停止してArial &gt; Helvetica &gt; ＭＳＰゴシ &gt; ヒラギノにしているサイトが <em>あんまりにもあんまりにもあんまりにも多い</em> ので、<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>現実的に美しく読みやすく表示させようと思ったら、 「ArialとHelveticaとＭＳ Ｐゴシックを置き換える」必要がある。</p>
+<p>FontConfigに関してはウェブブラウザは当該フォントがFontConfigのエントリ上存在する(物理的にはなくてもいい)場合にその第一候補だけを取得するので、Arialに複数のフォントを設定しても駄目。 そのためArial+ＭＳ Ｐゴシックで合成されることを前提とした設定を行う、ということになりそうだ。</p>
+<p>せめて日本語サイトで欧文フォントを指定していなければArialを英語専用で考えることができるのに、<code>lang</code>も使わずまぜおって…</p>
+<p>UI部品がArialでないと困るという場合でも、それはUI部品をクラス指定して、あるいはUI部品のタグで指定してフォントを指定すべきで、<code>body</code>に指定すべきではない。</p>
+<p>デザイン的に指定したい (今の時代にデザイン的にデフォルトフォント、かつArialを指定したいとかセンスが死んでるけど<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>) 場合も「共通で入っている」とかじゃなくウェブフォントにすべき話だ。 和文フォントは大きすぎるため非常に迷惑になるが、欧文フォントは小さいので結構平気なもの。 Roboto, Open Sans, PT Sansあたりはキャッシュされている可能性が高いので、自前ではなくGoogle Fontsあたりを指定するのが良い。</p>
+<h3 id="なおwindows">なおWindows</h3>
+<p>Windowsでは標準でSerifやSans-serifを置換えることができないけれど、 Google ChromeもFirefoxもフォントの設定ができるし、している人は多い、少なくともユーザーにはその自由があるのでやはり強制はすべきでない。</p>
+<h2 id="arialは本当に見やすいか">Arialは本当に見やすいか?</h2>
+<p>冒頭の画像は</p>
+<ol type="1">
+<li>Oxygen-Sans</li>
+<li>Arial</li>
+<li>Sen</li>
+<li>Input Sans Narrow</li>
+</ol>
+<p>である。 私はInputが圧倒的に読みやすい。</p>
+<p>見て気づくかと思うが、Arialはボックスに対して黒い「太めフォント」であり、極めて文字間を詰めた「詰め詰めフォント」である。 ある意味ではＭＳ Ｐゴシックと類似の特性と言っていい。</p>
+<p>Arialは「詰め詰めのフォント」であるため、代替は意外と難しい。 実際にArialは日本語フォントと比べpx数の決まったUI上に載せることが多く、サイズが違うフォントはUIからはみ出すケースが少なくないのだ。</p>
+<p>そこでSans-Serifフォントから適当に見繕って表示させてみた。 Arialはとってもプロポーショナルなので文によって長さは大きく変わるが、おおよそこんな感じになった。 なお、試したフォントは200弱ほどあった。</p>
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-1.png"><img src="/wp-content/uploads/2018/07/sans-serif-1.png" alt="" width="1919" height="1079" class="size-full wp-image-1536" /></a><figcaption> サンセリフフォントの比較 (1)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-2.png"><img src="/wp-content/uploads/2018/07/sans-serif-2.png" alt="" width="640" height="360" class="size-large wp-image-1537" /></a><figcaption> サンセリフフォントの比較 (2)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-3.png"><img src="/wp-content/uploads/2018/07/sans-serif-3.png" alt="" width="640" height="360" class="size-large wp-image-1538" /></a><figcaption> サンセリフフォントの比較 (3)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-4.png"><img src="/wp-content/uploads/2018/07/sans-serif-4.png" alt="" width="640" height="360" class="size-large wp-image-1539" /></a><figcaption> サンセリフフォントの比較 (4)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-5.png"><img src="/wp-content/uploads/2018/07/sans-serif-5.png" alt="" width="640" height="360" class="size-large wp-image-1540" /></a><figcaption> サンセリフフォントの比較 (5)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-6.png"><img src="/wp-content/uploads/2018/07/sans-serif-6.png" alt="" width="640" height="360" class="size-large wp-image-1541" /></a><figcaption> サンセリフフォントの比較 (6)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-7.png"><img src="/wp-content/uploads/2018/07/sans-serif-7.png" alt="" width="640" height="360" class="size-large wp-image-1542" /></a><figcaption> サンセリフフォントの比較 (7)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-8.png"><img src="/wp-content/uploads/2018/07/sans-serif-8.png" alt="" width="640" height="360" class="size-large wp-image-1543" /></a><figcaption> サンセリフフォントの比較 (8)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-9.png"><img src="/wp-content/uploads/2018/07/sans-serif-9.png" alt="" width="640" height="360" class="size-large wp-image-1544" /></a><figcaption> サンセリフフォントの比較 (9)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-10.png"><img src="/wp-content/uploads/2018/07/sans-serif-10.png" alt="" width="640" height="360" class="size-large wp-image-1545" /></a><figcaption> サンセリフフォントの比較 (10)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-11.png"><img src="/wp-content/uploads/2018/07/sans-serif-11.png" alt="" width="640" height="360" class="size-large wp-image-1546" /></a><figcaption> サンセリフフォントの比較 (11)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-12.png"><img src="/wp-content/uploads/2018/07/sans-serif-12.png" alt="" width="640" height="360" class="size-large wp-image-1547" /></a><figcaption> サンセリフフォントの比較 (12)</figcaption></figure>
+
+<figure><a href="/wp-content/uploads/2018/07/sans-serif-13.png"><img src="/wp-content/uploads/2018/07/sans-serif-13.png" alt="" width="1919" height="1079" class="size-full wp-image-1548" /></a><figcaption> サンセリフフォントの比較 (13)</figcaption></figure>
+<p>この中からArialの代替になりそうなフォントを比較してみる。</p>
+<figure><a href="/wp-content/uploads/2018/07/arial-compare.png"><img src="/wp-content/uploads/2018/07/arial-compare.png" alt="" width="1871" height="1171" class="size-full wp-image-1528" /></a><figcaption> Arialと代替フォントの比較</figcaption></figure>
+<p>割と小さなところにも使われたりする(例えばTwitterのスクリーンネームとか)ので、グリフが小さいフォントは割とツライ。 UIフォントとして人気の高いUbuntuとOxygen-Sansは幅も似たようなもので優秀に見える。</p>
+<p>私はlやtの字形がカーブしてくれているほうが見やすいように感じる。ここにはabilityみたいな縦棒いっぱいの単語がないが、 ぱっと見に字形を区別しやすいフォントが日本人には望ましいのではないか。日本語にはあまり「ぱっと見に字形を区別できない字が並ぶ」ということがないし、単語を字形で判断しようとするので、スペースで区切られた単語単位で識別して字は見ないという習慣があまりないためだ。</p>
+<p>そう、日本人は日本語に慣れているが、日本語と英語では性質が違う。 日本語では一文字あたりの意味価値が高く、文字の識別が重視される。対して英語は単語感覚なので、どちらかといえば「単語の形」で見ていて一文字ずつはあまり見ていない。</p>
+<p>Arialは詰め詰め黒々であり、単語の形で見るのであればなんとなく見やすいかもしれないが、ちゃんと文字がどう並んでいるかを識別しようとするとコストが高い。もうちょっと離すか、細くするかしてほしいし、字形も区別しやすいようにしてほしい、と感じるわけだ。 しかし字を離すと幅が増えてしまう。 TwitterのスクリーンネームなどでもArialが使われてしまうため、グリフ自体を小さくするとそれはそれで見づらい状況になる。</p>
+<p>普通のCondenbcedでも厳しいくらい幅が狭く、代替を考えるのも難しい。</p>
+<p>なお、字形の差については実はあまり問題がない。読みやすいフォントに代替するのであれば問題になるのは幅であり、例えばSans-serifではなくSerifを選択しても構わない。 ただし、それはデザイン的にArialが選択されている場合には違和感があるかもしれない。</p>
+<h2 id="arialの代わりを探せ">Arialの代わりを探せ</h2>
+<p>もう少し長文で比較する。Arialがちょうど3行になっている。</p>
+<figure><a href="/wp-content/uploads/2018/07/arial-compare-long1.png"><img src="/wp-content/uploads/2018/07/arial-compare-long1.png" alt="" width="1871" height="1328" class="size-full wp-image-1529" /></a><figcaption> Arialと代替フォントの比較 詳細(1)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2018/07/arial-compare-long2.png"><img src="/wp-content/uploads/2018/07/arial-compare-long2.png" alt="" width="1871" height="1423" class="size-full wp-image-1530" /></a><figcaption> Arialと代替フォントの比較 詳細(2)</figcaption></figure>
+<p>デザイン的にも幅的にも差を小さくしたいのであればUbuntu、またはOxygen-Sansが有力候補だ。 Ubuntuは若干幅広、Oxygen-Sansは細字で詰めているため幅は逆に詰まる傾向がある。</p>
+<p>また、リストに入れ忘れてしまったがSource Sans Proはかなり優秀な候補だ。 Source Han Sans Proの日本語部分でもあるため、かなり使いやすい。合成フォントとして人気の高いOpen Sansはやや幅が増えるが、こちらも優秀。</p>
+<p>字形が違うものはどうだろうか。 Overlockは英文なら読みやすいのだが、日本語の中に混じっていると結構読みづらい。 Ralewayあたりだと変化が激しく若干の違和感があるが、不自由はない感じになる。</p>
+<p>個人的に良いと思えたのはFira Sansだった。SenやAmikoもなかなか魅力的だが、幅の差がちょっと大きい。 今のところFira SansとRalewayとSenで迷っている感じだが、どうも私にはRalewayが良さそうである。</p>
+<p>あとはもう好みの問題だ。だが少なくとも、Arialが他のなにより素晴らしいとは私には思えない。</p>
+<h2 id="設定例">設定例</h2>
+<h3 id="メトリック互換">メトリック互換</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb7-1" data-line-number="1">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">            <span class="kw">&lt;string&gt;</span>ＭＳ Ｐゴシック<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">            <span class="kw">&lt;string&gt;</span>Ume P Gothic C4<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">            <span class="kw">&lt;string&gt;</span>MS PGothic<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">            <span class="kw">&lt;string&gt;</span>Ume P Gothic C4<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">            <span class="kw">&lt;string&gt;</span>Helvetica<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-20" data-line-number="20">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb7-21" data-line-number="21">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">            <span class="kw">&lt;string&gt;</span>Liberation Sans<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb7-24" data-line-number="24">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-27" data-line-number="27">            <span class="kw">&lt;string&gt;</span>Arial<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-28" data-line-number="28">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb7-29" data-line-number="29">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-30" data-line-number="30">            <span class="kw">&lt;string&gt;</span>Liberation Sans<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-31" data-line-number="31">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb7-32" data-line-number="32">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb7-33" data-line-number="33">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-34" data-line-number="34">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-35" data-line-number="35">            <span class="kw">&lt;string&gt;</span>Segoe UI<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-36" data-line-number="36">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb7-37" data-line-number="37">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-38" data-line-number="38">            <span class="kw">&lt;string&gt;</span>Selawik<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb7-39" data-line-number="39">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb7-40" data-line-number="40">    <span class="kw">&lt;/match&gt;</span></a></code></pre></div>
+<p>メトリック互換フォントに何を使うかはお好みではあるけども。</p>
+<h3 id="いい感じに表示する">いい感じに表示する</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb8-1" data-line-number="1">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">            <span class="kw">&lt;string&gt;</span>ＭＳ Ｐゴシック<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">            <span class="kw">&lt;string&gt;</span>Sawarabi Gothic<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb8-9" data-line-number="9">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-10" data-line-number="10">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">            <span class="kw">&lt;string&gt;</span>MS PGothic<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-12" data-line-number="12">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb8-13" data-line-number="13">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;assign&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">            <span class="kw">&lt;string&gt;</span>Sawarabi Gothic<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb8-16" data-line-number="16">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb8-17" data-line-number="17">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-18" data-line-number="18">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">            <span class="kw">&lt;string&gt;</span>Helvetica<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-20" data-line-number="20">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb8-21" data-line-number="21">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-22" data-line-number="22">            <span class="kw">&lt;string&gt;</span>Fira Sans<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-23" data-line-number="23">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb8-24" data-line-number="24">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb8-25" data-line-number="25">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-26" data-line-number="26">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-27" data-line-number="27">            <span class="kw">&lt;string&gt;</span>Arial<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-28" data-line-number="28">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb8-29" data-line-number="29">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-30" data-line-number="30">            <span class="kw">&lt;string&gt;</span>Fira Sans<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-31" data-line-number="31">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb8-32" data-line-number="32">    <span class="kw">&lt;/match&gt;</span></a>
+<a class="sourceLine" id="cb8-33" data-line-number="33">    <span class="kw">&lt;match</span><span class="ot"> target=</span><span class="st">&quot;pattern&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-34" data-line-number="34">        <span class="kw">&lt;test</span><span class="ot"> qual=</span><span class="st">&quot;any&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-35" data-line-number="35">            <span class="kw">&lt;string&gt;</span>Segoe UI<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-36" data-line-number="36">        <span class="kw">&lt;/test&gt;</span></a>
+<a class="sourceLine" id="cb8-37" data-line-number="37">        <span class="kw">&lt;edit</span><span class="ot"> binding=</span><span class="st">&quot;same&quot;</span><span class="ot"> name=</span><span class="st">&quot;family&quot;</span><span class="ot"> mode=</span><span class="st">&quot;prepend&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-38" data-line-number="38">            <span class="kw">&lt;string&gt;</span>Ubuntu<span class="kw">&lt;/string&gt;</span></a>
+<a class="sourceLine" id="cb8-39" data-line-number="39">        <span class="kw">&lt;/edit&gt;</span></a>
+<a class="sourceLine" id="cb8-40" data-line-number="40">    <span class="kw">&lt;/match&gt;</span></a></code></pre></div>
+<p>和文はDPI100程度ならばさわらびゴシック、DPI150程度ならばMMCederがいい感じだった。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>もちろん、Helveticaで指定しても両方で使えるのだから、これを言う人は知恵が足りない。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>相手がWindowsでない可能性、相手がＭＳ Ｐゴシックを持っていない可能性についてわずかでも考えたのだろうか? 相手のことについて思索を巡らせず、自分に問題がないから構わないと考えるのはこの上なく愚かである。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>そんなこと言ってこのサイトも…と思っているみなさん。 あんまりCSSいじりたくなかったけど、直しました。アップデートでまた直すことになるのかなぁ。一応追加CSS側で上書きするようにしてはいる。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn4"><p>「英語のオーソドックスでキレイなフォントを指定したい」場合、RobotoあるいはOpen Sansが現代の主流。 現代は選択肢も豊富で、改良も続けられてきたので、Arialはさすがに古い。<a href="#fnref4" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

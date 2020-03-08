@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-20T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-20T00:00:00+09:00" />
+    <title>メッセージフォームのサポート (Nginx + FastCGI + spawn-fcgi + Rack + Ruby) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>メッセージフォームのサポート (Nginx + FastCGI + spawn-fcgi + Rack + Ruby)</h1></header>
+        <article id="MainArticle">
+<h2 id="あらまし">あらまし</h2>
+<p><a href="https://www.mimir.yokohama">Mimir Yokohama</a>でついにお問い合わせ方法として「メッセージフォーム」が追加された。</p>
+<p>なにがついになのか、なにをドヤっているのかと思うかもしれない。 まぁ、ドヤってはいないのだが。</p>
+<p>実は私はかなり長い間ウェブアプリケーションをほとんど作っていない。 そして、今まで私が作ったウェブアプリケーションは、専用サーバーを持つサーブレットタイプか、もしくはCGIだった。</p>
+<p>馬鹿にされがちなCGIだが、利便性は高く、頻繁にアクセスする性質を持たないアプリケーションには適している。</p>
+<p>そして、そもそもウェブアプリケーションを作っていなかったのは、私が「事前生成戦略」の研究と実験に注力していたからで、 どちらかといえばウェブアプリケーションからは離れる方向にあった。 そして、ウェブアプリケーションを必要とするとしても大部分は静的ページとして提供できる方式を目指していたため、CGIで十分事足りたのである。</p>
+<p>ちなみに、これまでウェブサーバーは</p>
+<ul>
+<li>Apache</li>
+<li>lighttpd</li>
+<li>delegate</li>
+<li>Nginx</li>
+</ul>
+<p>という経過をたどっている。 Apacheは言うに及ばずlighttpdとdelegateはApacheよりもCGIが簡単だったので、「ほぼCGI」だった。</p>
+<p>だが、時代は変わった。NginxはCGIをそもそもサポートしない。 私も新しい時代に対応する必要がある。</p>
+<p>ちなみに、この作業は次の仕事のための実戦テストという意味合いもあった。</p>
+<h2 id="方針を考える">方針を考える</h2>
+<p>最も話が速いのはFastCGI Wrapである。</p>
+<p>NginxはFastCGIをサポートしている。 FastCGIはプログラムをデーモンのように起動しっぱなしにする。</p>
+<p>だが、通しで実行するプログラムとデーモンではそもそもの前提が違う。 そのためCGIプログラムをFastCGIとして動かすのはそれなりにハードルが高い。</p>
+<p>そこでFastCGI Wrapの登場である。 FastCGIとして利用されるプログラムをFastCGI Wrapにする方式だ。 このラッパープログラムは要求に合わせて都度CGIプログラムをCGIインターフェイス経由で起動する。 結果的にFastCGIの意図は無視して従来型CGIを動作させるようにするというものだ。</p>
+<p>この方法は結構出てくるのだが、基本的には既存のCGIプログラムを動作させる話である。</p>
+<p>個人的な感覚としては、無駄なプロキシを噛ませるような方法を使ってまでCGIに固執したくない…というか、実はfcgi-wrapってそれなりにめんどくさい。</p>
+<p>だったらFastCGI直というのもありかなぁ、と考えるわけだ。</p>
+<p>ところが、やっぱりFastCGIはデーモン状のプログラムを想定しているわけで、やはり前提が違う。 要求として割と複雑なのか、デーモン化に関してはspawn-fcgiに担ってもらって、さらにRackを使う、というのがどうやら主流らしい。</p>
+<p>だいぶ話が複雑になってきた。</p>
+<p>サーバーはNginxである。NginxはFastCGIインターフェイスを経由してFastCGIプログラムにパラメータを渡し、応答を受け取る。</p>
+<p>FastCGIプログラムはデーモンである。 Rubyでは次のようにしてFastCGIプログラムを書くことができる。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">require <span class="st">&quot;fcgi&quot;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="dt">FCGI</span>.each {|request|</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">  out = request.out</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">  out.print <span class="st">&quot;Content-Type: text/plain\r\n&quot;</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">  out.print <span class="st">&quot;\r\n&quot;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">  out.print <span class="dt">Time</span>.now.to_s</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">  request.finish</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">}</a></code></pre></div>
+<p>あるいは、CGIライブラリ互換インターフェイスを使うことで、<code>#each_cgi</code>の中身はまるっきりCGIと同じにすることもできる。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">require <span class="st">&quot;fcgi&quot;</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="dt">FCGI</span>.each_cgi {|cgi|</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  name = cgi[<span class="st">&#39;name&#39;</span>][<span class="dv">0</span>]</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">  puts cgi.header</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">  puts <span class="st">&quot;You are </span><span class="ot">#{</span>name<span class="ot">}</span><span class="st"> &quot;</span> <span class="kw">if</span> name</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">  puts <span class="st">&quot;Connecting from </span><span class="ot">#{</span>cgi.remote_addr<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">}</a></code></pre></div>
+<p>spawn-fcgiはこのデーモン部分を担う。 つまり<code>each</code>してる部分を担ってくれるわけだ。</p>
+<p>プロセスとしてCGIインターフェイスで起動するわけではないので、fcgiwrapほどの互換性はない。 感覚はCGIに近いが、インターフェイスは意識する必要がある。</p>
+<p>Rackはミドルウェアと呼ばれている。これはまずFastCGI抜きで話そう。</p>
+<p>Rackはインターフェイスを担っている。 今までプログラムはCGIなり、あるいはFCGIなり、さらには各種フレームワークやサーブレットの様式(例えばSinatraとか)で書いていた。</p>
+<p>Rackはこれらの違いを吸収するモジュール設計のものだ。 Rackに準拠したプログラムを書いておけば、たとえ愛用のフレームワークがディスコンになっても、サーバーが変わっても安心、というわけだ。</p>
+<p>だが、Rack自身はサーバーではないからサーバーがいるのだが、Rack組み込みのサーバーというのはもう完全にRuby世界の住人だ。 だってRackはRubyのWebアプリケーションインターフェイスだから。</p>
+<p>Passengerというソフトウェアがあって、これはwebサーバーのモジュールとしてRackに対応する。 Apacheでは比較的簡単だけれど、Nginxだと結構きつい。</p>
+<p>そこでRackに対応したサーバーを立ててサーバーとサーバーでやりとりさせる、という方式がすごく現代的。 直接にRack経由でプログラムとやりとりするのはRackに対応したサーバーだけれど、Rackに対応したサーバーにwebサーバーとしての機能を持たせると大変なので、「本物のwebサーバーに矢面に立ってもらって、RackサーバーはあくまでRack対応に特化」というわけである。</p>
+<p>Rackに特化したサーバーとしては(別にRackだけではないんだけど)、Webrick, Mongrel, Puma, Thin, Unicornあたりがある。</p>
+<p>しかしRackでやりとりする方法があればいいので、FastCGI + Rackという方法もある。 それはRack側でFastCGI経由で受け取って、応答するためのハンドラが用意されている。</p>
+<p>つまり、Unicornのようなサーバーを立てる代わりの手段としてFastCGIが使える。 FastCGIもデーモンを必要とするので別にFastCGIにすることで間に挟まってるものを減らす効果はない。 ただ話が楽になるだけである。</p>
+<p>Unicornはむちゃくちゃ速いので、UnicornでUnixドメインソケットを使えば形式とししてはspawn-fcgiでUnixドメインソケットを使っているのと一緒だし、やっていることははるかに高度になる。 これが超モダンなやり方である。</p>
+<p>が、あえてのFastCGI。 理由は管理する要素数を減らすためである。必要がないのにいかついものを使うことはしない。 これはサーバー運用のコツでもある。</p>
+<p>なお、Rackに関してはかなり情報が少ない。 なんらかのフレームワーク…というか、ほぼRailsのバックエンドとしてのRackの話だけで、Rack単独の話ってない。 そして、FastCGIを使う話もない。これもだいたいなんらかのアプリケーションが「使ってる」あるいは「使わせる」話になる。</p>
+<p>なんというか、みんなそんなに自分でプログラム作るってことをしてないのか… 世の中エンジニアたくさんいるのに、WordPressとRailsだけで満足なのか…</p>
+<p>そんなわけで情報が猛烈に足りていない中、FastCGIとRackについて勉強することになったわけだ。</p>
+<p>なお、Nginxでアプリケーションとやりとりする方法に関してはDiscourceで散々やったので経験済みだ。</p>
+<h2 id="なぜrackなのか">なぜRackなのか</h2>
+<p>もちろんこのことからもわかるようにRackはなくても構わない。 spawn-cgiも使用せず単独のFastCGIアプリケーションを開発するのは容易である。</p>
+<p>私が気にしたのは<a href="https://rubygems.org/gems/fcgi/versions/0.9.2.1">Rubyのfcgiライブラリは2013年から更新が止まっている</a>とい点だ。 また、Arch LinuxではfcgiライブラリはAURにもなく</p>
+<pre><code># gem install --no-user-install fcgi</code></pre>
+<p>とするよりない。</p>
+<p>ベーシックな機構であるFastCGIそのものが廃止になるようなことは考えにくいが、NginxのCGIの扱いのように消極的なサポートへと変遷する可能性はある。 その場合にアプリケーションの書き直しが発生してしまう。</p>
+<p>Rackは現在主流であり、新規採用例も多い。 Rackが廃止になると影響を受ける範囲も非常に広いので今後10年は安泰だと思われる。</p>
+<p>そこでFastCGI+Rackという構成にしたわけだ。 この場合でもRackはFastCGIをネイティブサポートしているわけではく、fcgiライブラリを使ったハンドラを同梱しているだけなのでfcgiライブラリは必要となる。実はこれを回避したかったのだが、結局はできなかった形だ。</p>
+<p>とはいえ、この状態であればFastCGIを捨ててUnicornに移行するのも難しくはない。</p>
+<h2 id="とりあえずやってみる">とりあえずやってみる</h2>
+<h3 id="nginx">Nginx</h3>
+<pre class="nginx"><code>location / {
+    root /var/www/testapp;
+    fastcgi_pass /var/run/fcgi-testapp.sock
+    fastcgi_index testapp.rb;
+    include fastcgi_params;
+}</code></pre>
+<h3 id="rack-application">Rack Application</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">#!/usr/bin/ruby</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">require <span class="st">&#39;rubygems&#39;</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">require <span class="st">&#39;rack&#39;</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">app = -&gt;(env) {</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    req = <span class="dt">Rack</span>::<span class="dt">Request</span>.new(env)</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">    res = <span class="dt">Rack</span>::<span class="dt">Response</span>.new</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">    res[<span class="st">&quot;Content-Type&quot;</span>] = <span class="st">&quot;text/plain; cahrset=UTF-8&quot;</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">    res.status = <span class="dv">200</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">    res.write <span class="st">&quot;Hello, World!&quot;</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">    res.write req.params.inspect</a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">    res.finish</a>
+<a class="sourceLine" id="cb5-15" data-line-number="15">}</a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"><span class="dt">Rack</span>::<span class="dt">Handler</span>::<span class="dt">FastCGI</span>.run app</a></code></pre></div>
+<p><code>Request</code>のほうはインターフェイスに絡むけれど、 <code>Response</code>は単純に<code>#finish</code>でRackに沿った配列を返すための便利クラス。なくてもいい。</p>
+<h3 id="spawn-fcgi">spawn-fcgi</h3>
+<pre><code># spawn-fcgi -U http -s /var/run/fcgi-testapp.sock /var/www/testapp/testapp.rb -n</code></pre>
+<p>試してるうちは<code>-n</code>つきにしてフォアグラウンドで実行するのが楽</p>
+<h2 id="実用的にする">実用的にする</h2>
+<h3 id="起動スクリプト">起動スクリプト</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co">#!/bin/bash</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="bu">exec</span> spawn-fcgi -U http -s /var/run/fcgi-testapp.sock -P /var/run/fcgi-testapp.pid /var/www/testapp/testapp.rb</a></code></pre></div>
+<p>forkingなので停止・再起動の制御のためPIDファイルを作る。</p>
+<h3 id="systemd-unit">Systemd Unit</h3>
+<pre class="systemd"><code>[Unit]
+Description = FastCGI Rack Test Application
+After = nginx.service
+
+[Service]
+Type = forking
+PIDFile = /var/run/fcgi-testapp.pid
+ExecStart = /usr/local/sbin/fcgi-testapp.bash
+ExecStop = kill $MAINPID
+
+[Install]
+WantedBy = multi-user.target</code></pre>
+<p>forkingなので<code>$MAINPID</code>がそのままでは使えないため、<code>PIDFile</code>で指定しておく。 Nginxのあとに起動しておいたほうがいいような気がしたけど、なくても構わない。 アクセスが激しい場合は逆にNginxの前に起動したほうがいいだろう</p>
+<p>spawn-fcgi自体にはアプリをリロード、再起動するような機能はない。</p>
+<h2 id="おまけ">おまけ</h2>
+<p>S-NailがSubjectも本文も、UTF-8をちゃんとエンコードしてくれるのですごくびっくりした。</p>
+<p>「mailxとは違うのだよ!!!」ってことか。 さすがSMTPやPOPやIMAPにも対応しているだけのことはある。</p>
+<p>ここの部分(MIMEエンコーディング)も自分でやるつもりだったので、かなり省力化された形。</p>
+<p>今回の構築は他にも色々やったのだけれど、共有して意味のある部分はこれくらいのものだろう。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

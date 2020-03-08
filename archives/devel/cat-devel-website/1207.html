@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-01-28T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-01-28T00:00:00+09:00" />
+    <title>ハイアクセシブルウェブサイトとウェブデザイン (フォント関連) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ハイアクセシブルウェブサイトとウェブデザイン (フォント関連)</h1></header>
+        <article id="MainArticle">
+<h2 id="font-familyの指定">font-familyの指定</h2>
+<p>font-familyにシステムデフォルトのフォントを並べているのを非常によく見る。 例えばYahoo! Japan</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" data-line-number="1">font-family<span class="in">:</span> MS PGothic,Arial,Hiragino Kaku Gothic ProN,Osaka,sans-serif;</a></code></pre></div>
+<p>MSN Japan</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb2-1" data-line-number="1">font-family<span class="in">:</span> &quot;segoe ui&quot;,meiryo,&quot;yu gothic&quot;,&quot;hiragino kaku gothic pron&quot;,sans-serif;</a></code></pre></div>
+<p>Google (google.co.jp)</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb3-1" data-line-number="1">font-family<span class="in">:</span> arial,sans-serif;</a></code></pre></div>
+<p>まず先に言うならば、<code>Arial</code>は欧文書体であり、フォント解釈を厳密に行う環境の場合、<code>Arial</code>が指定されることで文字化けが発生する。 ここでは<code>Arial</code>がないというケースを除外して次のように処理される。</p>
+<ul>
+<li><code>Arial</code>にグリフがないフォントを置き換える</li>
+<li><code>Arial</code>にグリフがないためフォント自体を置き換える</li>
+<li><code>font-family</code>自体を解釈せず既定のフォントで表示する</li>
+<li><code>Arial</code>のみで表示しようとする (グリフのない文字は文字化ける)</li>
+</ul>
+<p>このうち最も困るのは最後のケースだが(<code>Arial</code>を指定したがために文字化ける)、実際は欧文を<code>Arial</code>で表示し、和文を他のフォントで表示して「美しい」と感じるのは難しい<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>。それよりは全部和文書体の方がバランス的にもマシである可能性のほうが高いのだ。そのため、最初のケースも明らかに意図的でない限りはまずい動作をする。<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p>昔、ごく限られた条件下では、フォントが指定されないことに起因して文字化けるということがあった。 これは、ブラウザがデフォルトフォントを欧文フォントに決め打ちしており、フォントレンダラーによる文字選択は可能なので、指定しなければフォントレンダラーに選択を任せないために文字化けるという状況であった。</p>
+<p>しかし、現状で考えると</p>
+<ul>
+<li>日本語版のWindows/Macであれば和文フォントがあり、メジャーなブラウザは和文フォントを選択する</li>
+<li>非日本語版でデフォルトの和文フォントがないのであれば、指定したところでそのフォントはないので使えない</li>
+<li>日本語環境を無視しているようなブラウザをわざわざ使用するユーザーは文字化けすれば設定すると思われる</li>
+</ul>
+<p>ということから、システムデフォルトのフォントを指定することは <em>現実的に意味がない</em> 。</p>
+<p>強いて言えば、ヒラギノを優先して指定することで、Windowsユーザーでもモリサワ書体を購入しているユーザーにはヒラギノを優先して使わせる、ということも可能だが、それは「ヒラギノが他のどんな書体よりも美しい」というMaccerの思い込みに過ぎない。<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>Mimir Yokohamaでは次のように指定している。<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb4-1" data-line-number="1">body {</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="kw">font-family</span>: <span class="st">&quot;TBChibiRGothicPlusK Pro&quot;</span>, <span class="st">&quot;TBChibiRGothicPlusK&quot;</span>, <span class="st">&quot;Soft Gothic Medium&quot;</span>, <span class="st">&quot;Hiragino Maru Gothic W4 JIS2004&quot;</span>, <span class="st">&quot;TBUDRGothic STD&quot;</span>, <span class="st">&quot;NtMotoyaMaru W4&quot;</span>, <span class="st">&quot;MotoyaMaru W4&quot;</span>, <span class="dv">sans-serif</span>;</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">}</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">p, article ul {</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">    <span class="kw">font-family</span>: <span class="st">&quot;HonMinSKok-Book JIS2004&quot;</span>, <span class="st">&quot;HonMinSKok-L&quot;</span>, <span class="st">&quot;HonMincho-Book&quot;</span>, <span class="st">&quot;A1 Mincho&quot;</span>, <span class="st">&quot;Hiragino Mincho W3 JIS2004&quot;</span>, <span class="st">&quot;Source Han Serif JP&quot;</span>, <span class="dv">serif</span>;</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">    <span class="kw">letter-spacing</span>: <span class="dv">0.05em</span>;</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">}</a></code></pre></div>
+<p>通常フォントをサンセリフ体、本文フォントはセリフ体を指定している。 セリフ体の<code>Source Han Serif JP</code>を除くと全て商用フォントである。 これは、もしユーザーが商用フォントを持っているのであればそれを使ってもらおうということである。 本来の<code>font-family</code>の使い方であると言える。</p>
+<p>適当に選択しているわけではなく、本文フォントとなるセリフ体には流れるようなグリフで、十分に収録グリフがあり、長文を読むのに疲れないフォントであることを選択基準にしている。 サンセリフ体についてはいわゆる「丸ゴシック」である。「丸ゴシック」という抽象フォントがないため、イメージとしてより好ましいフォントを並べる、という方式をとっている。もしあるのであれば<code>sans-serif</code>ではなく<code>rounded-sans</code>や<code>cjk-rounded-gothic</code>のような指定がしたいところである。</p>
+<p><code>font-family</code>指定がシステムデフォルトフォントを指定するというのは、「システムデフォルトフォントが嫌いで、わざわざ商用フォントを入れて設定しているユーザーに対してシステムデフォルトフォントを強制する」ということでもある。 これはユーザービリティを高めているのではなく損ねている。 そんなことに貴重な数十バイトを使用するべきではないのではないか。</p>
+<h2 id="webfontについて">webfontについて</h2>
+<p>webfontはCSS 3.0で追加された、ウェブリソース上に配置されたフォントをダウンロードして使用するものである。 <code>font-family</code>がシステムフォントしか指定できないために、結局システムデフォルトフォントばかり指定するという無意味に近い状況がこれによって改善された。</p>
+<p>なんでこんなものが追加されたかというと、従来デザイン上特定のフォントを使用したい場合にどうしても「画像を使う」という状況であったが、W3Cとしては常に文字情報であればテキストとCSSを使うべしという思想である。 これを実現するためにCSSにテキストを重ねたり傾けたりして配置する機能と共に、特定のフォントを使わせる方法を提供したものである。</p>
+<p>「デザイナーの意図するフォントを指定できるようにした」と解釈される場合も多いが、実のところそれは副次的なものであり、W3Cがこの仕様を制定した意図としては「テキスト画像を撲滅したい」ということであり、既にテキストとして表示されている情報がどのように表示されようが(W3Cにとっては)どうでも良いのだ。</p>
+<p>だが、実際のところW3Cの意図に反して画像撲滅よりは従来からテキストで表示されていた部分のデザイナーの意図反映に使用されている<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>。</p>
+<p>このために「確実に好きなフォントが使える」程度の理由でwebfontが指定される傾向があるのだが、それはデザイナーの完全なエゴである。</p>
+<p>欧文フォントであれば(W3Cが考えたように)ロゴ画像をダウンロードするのとさして差のないデータ量であり、それほど躊躇われるものではないのだが、和文フォントであると常用漢字のみ収録のものですら2MB程度ある。画像などよりもはるかに大きく、通信料金で考えると2円ほどかかる。 これを表示ごとに要求することになるのだ。<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></p>
+<p>しかも、そもそもフォントレンダラーは一種のバイトコードインタープリタであり、潜在的にはフォントファイルはウィルスとして機能しうる<a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a>。</p>
+<p>また、そうでなくてもテキストと異なるグリフを持つフォントをダウンロードさせることにより、コンピュータ(例えばGoogleやSymantecのチェック)を欺いてユーザーに嘘の情報を見せるサイトを作ることもできる。 これは詐欺などにおいて有効な手法である。</p>
+<p>にも関わらず、現状主だったモバイルウェブブラウザにおいてはwebfontを無効化する機能というのはない。 私も仕事にしていたこともあるくらいだからフォントは大好きなのだが、それでも自分の望むデザインのためならユーザーに負担を強いたり、不快な思いをさせても構わないというデザイナーのエゴには賛同できない。</p>
+<h2 id="長文のための工夫">長文のための工夫</h2>
+<p>私が書くコンテンツは(この文章を含めて)往々にして長文である。</p>
+<p>これは、意味ある情報を提供してこそ意味があるという思想に基づくもので、内容空疎なイメージ戦略や思考停止で選ばれるものを提供しようとは思っていないから…なのだが、長文を含めて読むのが得意な人は比較的少数だし、やはり長文を読むのはどうしても負担になりやすい。</p>
+<p>そこで、可能な限り長文を読みやすいように心がけている。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb5-1" data-line-number="1">p, article ul {</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">    <span class="kw">font-family</span>: <span class="st">&quot;HonMinSKok-Book JIS2004&quot;</span>, <span class="st">&quot;HonMinSKok-L&quot;</span>, <span class="st">&quot;HonMincho-Book&quot;</span>, <span class="st">&quot;A1 Mincho&quot;</span>, <span class="st">&quot;Hiragino Mincho W3 JIS2004&quot;</span>, <span class="st">&quot;Source Han Serif JP&quot;</span>, <span class="dv">serif</span>;</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    <span class="kw">letter-spacing</span>: <span class="dv">0.05em</span>;</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">}</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">p {</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">    <span class="kw">margin</span>:<span class="dv">1em</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">    <span class="kw">line-height</span>:<span class="dv">1.5em</span>;</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">    <span class="kw">font-feature-settings</span>: <span class="st">&quot;palt&quot;</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">}</a></code></pre></div>
+<p>本文に対する設定としては</p>
+<ul>
+<li>フォントは細めで、流れるような(連続した文字を少ないコストで読める)明朝体</li>
+<li>自動カーニングで行間を詰める(長文の流し読みが楽になる)</li>
+<li>これだけでは「文字量が多く黒い」と感じてしまうため、少しだけ文字間を空ける</li>
+<li>黒さを軽減するため、行間を少し空ける</li>
+<li>結果として段落間の行間が詰まってみえるため、段落間に空白をもたせる</li>
+</ul>
+<p>このほか、リズム感のある句読点や、かぎかっこの使い方、言い回しの選択などの技法と組み合わせてできる限り「楽しく読める長文」を心がけている。</p>
+<p>ウェブサイトは内容であって見てくれではない、ということを忘れてはいけない。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>この指定は「欧文のみの要素に対して欧文フォントを適用する」指定ではない。和文フォントが適用される条件でも<code>Arial</code>のグリフがあるものは<code>Arial</code>が使われるのだ。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>もちろん、欧文書体を和文書体に含まれていない特定のフォントを選択してほしいという理由で意図的にこのようなことをすることもできるが、その場合は和文書体よりも先に欧文書体を書くべきで、<code>MS PGothic</code>よりも<code>Arial</code>が後、というのは<code>Arial</code>の欧文より<code>MS PGothic</code>の欧文のほうが好ましく、けれど和文書体にある欧文ではなく<code>Arial</code>を使ってほしい、というよくわからない美的センスである。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>モリサワ書体を含め、商用フォントを選択肢とするのであれば、無条件に「ヒラギノが最高」ではなく、数多のフォントからそのサイト、その文章に適切なフォントを選択できるはずだ。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn4"><p>Chienomiでは既存のWordPressテーマを使用しているため、私は関知していない。<a href="#fnref4" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn5"><p>これは当然の帰結と言える。デザインされた画像を作成するのと比べて、CSSでそれを実現するのは難しいし、同じフォントであってもレンダリングで見た目に差が出ることから望むほどデザインを再現してもらえない。記述量も多く、しんどい。<a href="#fnref5" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn6"><p>キャッシュがあるから、というのは傲慢である。特にモバイル環境ではキャッシュを取り直す状況は非常に多く、セッションごとに取得すると考えて間違いない。<a href="#fnref6" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn7"><p>このために以前のWindowsではフォントインストールにセキュリティリスクがあるという警告が出されていた。<a href="#fnref7" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

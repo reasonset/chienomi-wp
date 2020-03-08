@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-15T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-15T00:00:00+09:00" />
+    <title>「LinuxにはIntel*Nvidia」は終わり、時代はAMDに - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>「LinuxにはIntel*Nvidia」は終わり、時代はAMDに</h1></header>
+        <article id="MainArticle">
+<h2 id="安定してきたamd-linux">安定してきたAMD Linux</h2>
+<p>LinuxにおいてはCPUもビデオカードもAMDは非常に安定性がなく、「LinuxではAMDはリスキー、IntelとNvidiaが鉄板」という時代が非常に長かった。</p>
+<p>これはWindowsにおいてもそんなものだとは言えるが、どちらかといえば性能とか好みとか思想の問題であり、AMDだと困るという要素は少なかったのだが、Linuxにおいては動作安定性という意味でもAMDは避けたい、という状況があった。</p>
+<p>大きな問題としてはCatalystドライバのデキの悪さがあった。プロプライエタリドライバーとしてもNvidiaよりも後にサポートされてきたCatalyst(flgrx)ドライバーだが、様々な問題が発生していた。私が利用している限りでもXサーバーのフリーズ、マウスカーソルの文字化け、ティアリング、画面化け、X再起動の失敗、などなど枚挙に暇がない。</p>
+<p>AMDがLinuxに力を入れるという選言をしたのは、Linux 4.6の頃であったと思う。 そしてAMDGPUドライバーが誕生したわけだが、実際安定性は高いものの性能はいまひとつであった。</p>
+<p>そこから3年ほどが経過している。 Linux 4.18ではAMDGPUの改善が進んだ。Vega 20や、Intel Kabylake-Gプロセッサ(IntelのプロセッサにAMDのビデオカードが内蔵されている!!)といったデバイスサポートが主だが、AMDGPUドライバーそのものの改善も結構手を入れていた印象だ。 その結果AMDGPUドライバーは4.18の初期には性能が従来よりも低下していた(!)</p>
+<p>AMD APU(Godavari)マシンに4.18を導入してみて驚いた。 アップデートごとにどんどんよくなっていたAMD環境だが、4.18は明らかに描画がスムーズになった。 ビデオ性能に関していえばNvidiaのほうが(私の手持ちでは)良いのだが、結局のところLinux利用の上での快適性は画面のちらつきや、フリーズの有無、あるいはビデオ再生に支障があるか…といったことに左右される。</p>
+<p>結果的に性能は圧倒的に低いのだが、そうしたエラーが少ないAMDGPU環境が非常に快適に感じられてしまうのだ。 実際、ビデオ再生に関してもLinux 3.17あたりの再生と比べて明らかに快適になった。</p>
+<p>現状、ビデオドライバーから見れば「AMDGPU &gt; Intel &gt; nouveau &gt; nvidia」という状況になっている。 本当に力を入れてきたAMDドライバーの成果が、「とりあえずIntel安牌」という状況を靴替えしている。Nouveauもそれなりに安定しているのだが、基本的にはメーカー協力のない、リバースエンジニアリングの成果物であること、またNvidiaはLinuxドライバーにあまり力を入れていないことからこの滋養今日が生まれているのだろう。</p>
+<p>実際に<a href="https://www.phoronix.com/scan.php?page=article&amp;item=tomb-raider-20" rel="external">Phoronixのベンチマーク</a>を見るとRX580がGTX1060よりも良い結果を出していたりする。 (まぁ、一方でVega56がGTX1070に全然勝てていなかったりするのでドライバーの優劣を反映しているようにも見えないが)</p>
+<p>現状、Nvidiaドライバーでの問題と言えば</p>
+<ul>
+<li>Google Chromeはウィンドウ移動時にマルチディスプレイでは座標がずれる</li>
+<li>画面が激しく点滅することがある</li>
+<li>ffmpegでの録画時にちらつく。Allow Flippingを無効にしてもまだちらつく</li>
+<li>Wineが条件によって問題を起こす (nouveauでも)</li>
+</ul>
+<p>あたりである。このほか、Xサーバーのrespawnの失敗、Blink系ブラウザにおいてコンソールと行き来したり状況によってはフリーズする、デスクトップエフェクトの反応が悪い、などがある。</p>
+<p>そしてCPUもしっかりとパフォーマンスを発揮するようになっていて、4.18においてはXeon Silver 4114のpowersave governorよりもA10-7870KのほうがChromiumで高速に描画できる(シングルスレッド性能の差だ)。</p>
+<h2 id="性能と選択肢の改善">性能と選択肢の改善</h2>
+<h3 id="ryzenによって向上した選択価値">Ryzenによって向上した選択価値</h3>
+<p>A10-7870Kシステムを組んだときには随分と後悔したものだが、Linux側の改善によって随分と快適なシステムに進化してきた。 従来のAMD APUは使い勝手は良いもののその性能は悲しいほどしょうもなかった。</p>
+<p>A10はAMD APUでも上級グレードだが、その性能はIntel Core i3に及ばない。 PentiumやCeleronよりは良いのだが、現在はPentium Goldに抜かれてしまっているほどだ。</p>
+<p>AMDはAシリーズの上はゲーム向けとしてビデオカードを内蔵しないFXシリーズをラインナップしていた。 だかいくらなんでも「Aシリーズの上はゲーム用」というのはちょっと乱暴である。一般用途で確実に十分であるほどにはA10は性能はよくない(ただし、恐らく十分である程度には高い)。</p>
+<p>ところが、現在はRyzen Gシリーズがある。 これは従来のAPU (Aシリーズ)を置き換える新しいAPUである。</p>
+<p>少し複雑なので説明すると、第二世代Ryzenには、第一世代Ryzenと同じくビデオカードを持たないモデル、 つまり従来のFXと同じ「ゲーマー向け高性能プロセッサ」という位置づけだった。</p>
+<p>しかし、Ryzen3/5/7というネーミングの通り、Core i3/5/7の直接的なライバルとなるラインナップであり、 Core i3をゲーマー向けプロセッサとするのは無理がある通り、AMDも考えを改めた。 さらにいえば、Aシリーズの不評っぷり(性能がとても低く、そのくせ消費電力は大きい)とRyzenの好評っぷり(いままでのAMDが嘘のようだ)を踏まえてもAシリーズを継続させていくよりさっさと仕舞にしたほうが良いと考えたのだろう。 結果RyzenシリーズはAMDの主力プロセッサシリーズへと転身した。</p>
+<p>しかし、それはそれでややこしいことになった。 AMDの場合、Ryzenにはビデオカードを内蔵するGシリーズと、そうでないSTD/Xシリーズの2系統がある。 さすがにゲーマーはRyzen3を使わないと悟ったのか、Ryzen3はGのみ、一方ゲーマーでもなければRyzen7は使わないだろうと考えているらしくRyzen7はSTD/Xのみ、一方Ryzen5は両方ある。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>単にビデオカードの有無かというとそんなことはなく、Passmarkで見てみると</p>
+<table>
+<thead>
+<tr class="header">
+<th>CPU</th>
+<th>Score</th>
+<th>Intel rival</th>
+<th>Rival score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ryzen 7 2700X</td>
+<td>16882</td>
+<td>Core i7-8700K</td>
+<td>15975</td>
+</tr>
+<tr class="even">
+<td>Ryzen 7 2700</td>
+<td>15087</td>
+<td>Core i7-8700</td>
+<td>15217</td>
+</tr>
+<tr class="odd">
+<td>Ryzen 5 2600X</td>
+<td>14448</td>
+<td>Core i5-8600K</td>
+<td>12805</td>
+</tr>
+<tr class="even">
+<td>Ryzen 5 2600</td>
+<td>13523</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>Ryzen 5 2400G</td>
+<td>9264</td>
+<td>Core i5-8500</td>
+<td>12060</td>
+</tr>
+<tr class="even">
+<td>Ryzen 5 2400GE</td>
+<td>8513</td>
+<td>Core i5-8400T</td>
+<td>9672</td>
+</tr>
+<tr class="odd">
+<td>Ryzen 3 2200G</td>
+<td>7331</td>
+<td>Core i3-8100</td>
+<td>8086</td>
+</tr>
+<tr class="even">
+<td>Ryzen 3 2200GE</td>
+<td>7229</td>
+<td>Core i3-8100T</td>
+<td>7532</td>
+</tr>
+<tr class="odd">
+<td>Ryzen 3 2300U</td>
+<td>7172</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>RyzenのGEやU、またIntelのH/T/Uについては後述する。</p>
+<p>また、Ryzen Proというのはセキュリティの追加機能があるものである。</p>
+<p>このようにRyzen5 2400GはRyzen5 2600よりも下位グレードという扱いになっていて、Core i5と勝負できるのはビデオカードなしモデル、ということになっている。お値段的にもちょこっと2400Gのほうが安い。</p>
+<p>この中でRyzen5 2400G及びRyzen3 2200Gは非常に魅力的である。</p>
+<p>そもそもAPUという発想は悪くなかった。「別にそんなにCPUパワーはいらないだろうけど、動画見たり、たまにはゲームもするだろうし、ビデオ性能はそれなりに高いほうがいいだろう?」という考え方にはとても同意できたのだ。だが、Aシリーズは「そんなにない」というか「あまりにもない」というのが現実であって机上の空論に終わっていたのだ。</p>
+<p>ざっくり、RyzenになってAPUは「2倍のパワーになった」と考えれば良い。さすがに2倍も速いと話は変わってくる。 HEVCのエンコードにも対応した最新ビデオカード(後述するvegaである)を搭載しながら、2倍速くなったAPUは普通の人にとって本当にいいバランスになっている。</p>
+<p>普通の作業にはRyzen5 2400Gのパワーは十分だし、軽作業ならRyzen3 2200Gは悪くない。そしてビデオ性能のほうはIntelはいささか不足気味だ。 大きなポイントとしては、IntelのQSVはCPUパワーをかなり使う。これは動画見ながら作業することは考えにくいラップトップではあまり気にならないが、デスクトップの場合、特にマルチディスプレイ環境では足かせになる。 また、コンシュマークラスのIntel CPUの場合依然として「動画エンコード中は他の作業が難しい」という状況が発生する。 人によっては些細な違いに思えるかもしれないが、実際は使い心地に影響を及ぼす可能性がある。</p>
+<p>また、自作する場合はAMDのマザーボードは非常に高機能なものや安価なものが揃うという点も見逃せない。 実際、私のA10システムは豊富なUSBサポート、8つのSATA、S/SPIF端子を持つオーディオなど豊富な機能によってデスクトップユースで一線級ではなくなったとしても様々な使い途が残る。</p>
+<h3 id="強力なシステムも組めるようになった">強力なシステムも組めるようになった</h3>
+<p>Core iと比べたとき必ずしもRyzenは魅力的なわけではないが、AMDのプロセッサの性能が大幅に上がったために、高性能が求められる局面でもAMDという選択肢が加わった、という点が大きい。</p>
+<p>さらにThreadripperに至っては文句なしに強力である。</p>
+<p>だが、CPUに関してはあからさまにLinuxにおける利があるわけではない。 ビデオカードの話をしよう。</p>
+<p>現在のAMDのビデオカードラインナップはちょっと複雑で、やや古いRX 400シリーズはPolaris10, メインストリームのRX500シリーズはPolaris20、ハイクラスのRX VegaはVegaと設計が異なる。 さらにメインストリームはVegaにならずPolaris30になり、ゲーム用はVega20になってからメインストリームがNaviに、ハイクラスはNavi20になる、と噂されている。 (つまり、Navi登場までの間をメインストリームはPolaris、ハイクラスはVegaのままプロセス微細化されたものでつなぐらしい)</p>
+<p>ところがAPUに搭載されているのはVega。Vegaのほうが新しい。取り残されているRX500がすごくいまいちに思えてしまう。</p>
+<p>しかしここには罠があって、Linuxでは(Windowsと比べても)性能的にVegaがいまいち振るわず、Polarisのほうが良い結果を残している。 AMDGPUドライバが新しいVegaの性能を発揮できていないのかもしれない。</p>
+<p>ともかく、Ryzen 7 2700X + Radeon RX580, Ryzen Threadripper 2950X + Radeon RX Vega 56, Ryzen Threadripper 2990WX + Radeon Pro WX 8200のような強力なシステムを組めるようになったわけだ。</p>
+<p>Radeonの重大な欠点だったHEVCエンコードも対応しており、NVENCほどではないもののVCE/VA-APIでかなり高速にエンコードができる。</p>
+<p>APUによる省コストなシステムだけでなく、パワーを必要とするシステムにおいてRadeonを使う、ということが現実的になったのだ。 もちろん、これはIntelプロセッサと組み合わせても構わない。</p>
+<h3 id="省電力システム">省電力システム</h3>
+<p>AMDはいつの時代も電気を食うものだった。 さすがにそれが終わりを告げた、とまでは言わないが、Intelの高性能プロセッサがTDPを越える電気を使ってしまう中、 Threadripperは実質的なワットパフォーマンスでの逆転を見せた。</p>
+<p>そんな新時代のAMDとして推したいのがRyzen 5 2400GEである。</p>
+<p>Intelの場合H(省電力), T(超省電力), U(超低消費電力)とラインナップされていたりするのだけど、AMDの場合GEはT相当と考えてよさそうだ。</p>
+<p>2400GもcTDPで35W/45W/65Wということらしいけれど、そんなややこしいことは置いといて、2400GEは35Wである。 35Wだけどベースクロックは3.2GHz。ここらへんのCPUは割と容赦なく電気を使うので、まったり処理してほしい低消費電力システム(特にホームサーバー)ではすごく便利だ。</p>
+<p>それだったらIntelのTでも良さそうに思えるけれども、前述のようにビデオカードが強力である。 ホームサーバーとして使うなら動画処理性能は重要な項目となりえるし、デスクトップとして使うなら描画環境は重要であり、AMDのほうが快適である。</p>
+<p>もちろん、これは「Linuxで使うラップトップでAMD優位」という状況でもあると言える。 (もっとも、絶対的な消費電力の問題があるから話はそう簡単ではなくなってしまうが)</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>この考えはとても正しい。多くの人はCore i3で満足できるが、ゲーマーはCore i3では足りない。一方、多くの人はCore i7を必要としていない。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

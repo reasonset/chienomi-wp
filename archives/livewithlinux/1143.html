@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-11-11T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-11-11T00:00:00+09:00" />
+    <title>Gtkなデスクトップ環境でGtkとQtのテーマと格闘する - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Gtkなデスクトップ環境でGtkとQtのテーマと格闘する</h1></header>
+        <article id="MainArticle">
+<h2 id="gtk環境でのqt">Gtk環境でのQt</h2>
+<p>作業環境はManjaro XFceであり、実際の利用環境はCinnamonで、KDE Plasmaは入れていない。</p>
+<p>KDE環境だとQtのstyle (QtだとthemeではなくてVisual Styleと呼ぶ。Windows風)は色々入っていたりするのだけども、こういうGtkデスクトップ環境だと古臭いの(ClearlooksとかMotif)とかしか入っていなかったりして、Qtアプリの見かけがだいぶよろしくない。</p>
+<p>そこでまず、QtらしいStyleを導入する。 Qt4とQt5のStyleは分かれていて、Manjaro/Archだとkde4やkde5という名前で分けられているようだ。 とりあえず見た限り<code>plasma</code>パッケージに含まれてはいるものの、KDE本体に依存するようなパッケージはない模様。</p>
+<p>Qtのテーマ設定はQt4はqtconfig-qt4、Qt5はqt5ctで行う。</p>
+<p>これでKDEとは関係ないけれどQtを使うアプリ(例えばEksterteraとかq4wineとか)の見た目がよくなり、 Ruby qtbindingsも快適に使うことができる。</p>
+<p>そう、そもそも今回、ruby-qtbindingsを使ったら見た目がひどかったことからスタートしているのだ。</p>
+<h2 id="gtk2テーマ">Gtk2テーマ</h2>
+<p>Gtk2は恐ろしく鬼門だ。 特に厄介なのが次のアプリ</p>
+<ul>
+<li>Sylpheed / Claws Mail</li>
+<li>Mikutter</li>
+<li>Leafpad</li>
+</ul>
+<p>なぜならば</p>
+<ul>
+<li>Sylpheed / Calws Mailはテーマによっては起動しない。</li>
+<li>Sylpheed / Claws Mail / Mikutterはスクロールバーがおかしいテーマが多い</li>
+<li>MikutterはBreezeテーマなどタブの表示が変になるものも多い</li>
+<li>スクロールバーずれ程度で問題がなく美しいOxygen-GtkはLeafpadはSEGVる</li>
+</ul>
+<p>Leafpadを分離するのが良案か。</p>
+<pre><code>#!/bin/bash
+
+GTK2_RC_FILES=/usr/share/themes/Adapta-Eta/gtk-2.0/gtkrc exec /usr/bin/leafpad</code></pre>
+<p>なお、Gtk3版のl3afpadを使うという手もある。</p>
+<p>XFce4は<code>.gtkrc-2.0</code>や環境変数で使用する<code>gtkrc</code>を指定していると、全体的にそれに従う。 外観の設定に左右される範囲よりも大きいようだ。</p>
+<p>Oxygen-gtkは良いのだけどなかなか問題がある</p>
+<ul>
+<li>Gtk3アプリでは表示がおかしくなる可能性が高い</li>
+<li>Xfce4ではアイコンが反映されなくなる</li>
+<li>部分的にUIフォントを頑なに無視する</li>
+<li>もう開発も止まっているようで今後使えなくなるかも</li>
+</ul>
+<p>安定して使えるGtk2テーマがなくなるのはなかなか痛い。見た目はよくはないが、XFceテーマシリーズが安定しているようだ。</p>
+<h2 id="gtk3">Gtk3</h2>
+<p>Gtk3のほうはもっとシンプル。</p>
+<p>Gtk2テーマを指定してXFceを起動すると、Gtk3テーマもそれに従おうとするので、明示する必要がある。</p>
+<p>Gtk3も同一テーマで構わないものであれば良いのだが、oxygen-gtkは駄目だ。</p>
+<pre><code>if [[ $DESKTOP_SESSION == xfce ]]
+then
+  export GTK_THEME=Adapta-Eta
+fi</code></pre>
+<p>しかし、これでもアプリケーションから開くときにGeditを指定するとOxygen-Gtkを使用してしまう。 同様のケースでGeditはfcitxが死んでいる状態で起動したりするので、コマンド名で指定して起動する必要がある。</p>
+<p>Cinnamonではデスクトップ設定が反映されるので設定しないほうが良い。</p>
+<h2 id="guiツールキットのお話">GUIツールキットのお話</h2>
+<p>今回はRuby qtbindingsを使おうとしたところからスタートした。</p>
+<p>RubyでのGUIはまるでスタート廃れたかのような状態にあり、まるでruby-gnome2が唯一の選択肢であるかのようである。 ただ、ruby-qtbindingsは開発は継続しているし、Windowsでも動作するようになっているようだ。</p>
+<p>個人的にあまりGtkは好まない。 UIとして使いにくいというのもあるし、設定が複雑でうまく反映されないというような理由もある。 プログラミング上も、QtのほうがAPIは使いやすい。</p>
+<p>UIとして優れているのはGtk2だと思う。</p>
+<p>Gtk3はメニューが非常に少なく、わかりにくい。 また、ファイルダイアログが劣悪で、ファイルを開くときはまだ良いのだが、ディレクトリを開く場合は非常に辛い。 というのは、何もファイルを選択しない状態で入力を開始した場合のみキーボードからのパス入力を受け付けるが、 Enterを押した時点で「開く」動作をする。 そのため、ディレクトリを開く動作のときには最後まで入力するか、クリックするかしか選べない。</p>
+<p>Qt4/Qt5のダイアログはファイル名としてディレクトリパスを入力することもできるが、やはりディレクトリを開く場合には一発で開かれてしまう。 さらに登録される場所がさらに限定的となり、Gtk3よりなお悪い。 なお、XFce4ではQtのファイルダイアログをGtk3のものに置き換えるようだ。</p>
+<p>Gtk2のファイルダイアログではファイルリスト側にフォーカスされていればWindows同様にインクリメンタルサーチとなり、 ファイル名欄が常に存在しディレクトリに対して入力を行うとまずディレクトリに移動するという振る舞いとなっている。 これはおそらく最も適切である。 (だが、これも場合によるようで、Qt4/5のような振る舞いをする場合もある)</p>
+<p>API的に、あるいは設計的に見ればGtk2からGtk3、Qt3からQt4というのは大幅に進化している。 実際に「よくなった」のだ。</p>
+<p>だが、現状でGtk3、あるいはQt5の熟成度というのは全く足りていない。 Qt4からQt5はある程度の互換性を持った状態で進化している。 その進化はわからないでもない。コンピュータの進化に合わせて、あるいは周辺環境の進化に合わせてコンポーネントを作り直した。 その際にいくつかのいまひとつな設計を修正し、テーマデザインにフラットデザインを推奨した。</p>
+<p>だが、そのような変更は必要だったのか疑問だ。 内部的な進化や、標準テーマデザインの変更に関しては互換性を維持しての改修でもよかったのではなかろうか。</p>
+<p>期間的にGtk3やQt5は日が浅い。 Gtk3のコンセプトが不評ということもあるが、2011年にGtk2は開発終了しているにも関わらずGtk3への移行が進んでいないプロジェクトは多い(XFce4もそのひとつだろう)。 現状ではGtk2を採用するプロジェクトもGtk3への移行を模索する時期にきているが、Gtk3に移行できているプロジェクトはまだ少ない。 Qtに関しては各プロジェクトが苦労してQt3から移行を完了し、あるいは移行できなかったプロジェクトは廃止されているが、 Qt4を採用しつづけるプロジェクトはまだ少なくない。</p>
+<p>この状態でさらに非互換性を持つGtk4やQt6へ移行する必要があるのだろうか。 いずれのツールキットもより熟成すべきであるように私には思える。</p>
+<p>また、GUIプログラミングも以前は盛んでwxwidgetなどが流行したときもあったのだが、早々に廃れてしまった。 WXWidget自体は現在も開発が続けられているが、wxrubyは既に終了しており、rwxは十分に開発・テストされていないようだ。 RubyにおけるGUIプログラミングの選択肢は非常に乏しく、qtbindingsも将来的には不透明だ。</p>
+<p>さらに、Gtkのその問題点から開発者が離れている。 これはGtkの問題点というよりも、Gnomeの方針に開発者がついてきていないという問題なのだが、 GnomeはGtk4においても方針を維持しており、今後もこの傾向は続くだろう。</p>
+<p>ユーザー側にはあまり見えない状況ではあるが、実はLinuxのGUI周りはかなり不安定な状況にある。 個人的にはQtがより普及し、バインディングが安定していてくれると良いのだが…</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

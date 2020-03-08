@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-11-07T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-11-07T00:00:00+09:00" />
+    <title>FM2+Killer GodavariとXeon W3565+Quadro2000マシンを比べてみた - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>FM2+Killer GodavariとXeon W3565+Quadro2000マシンを比べてみた</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">コンピュータの仕様</a>    <ul>
+      <li><a href="#fm288x-killer" id="markdown-toc-fm288x-killer">FM2+88X Killer</a></li>
+      <li><a href="#hp-z400" id="markdown-toc-hp-z400">hp Z400</a></li>
+    </ul>
+  </li>
+  <li><a href="#windows-experience-index" id="markdown-toc-windows-experience-index">Windows Experience Indexによる比較</a></li>
+  <li><a href="#linuxcpu" id="markdown-toc-linuxcpu">LinuxでのCPU処理</a></li>
+  <li><a href="#linuxgpu" id="markdown-toc-linuxgpu">LinuxのGPU処理</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">結果を受けて</a></li>
+</ul>
+
+<h3 id="section">コンピュータの仕様</h3>
+
+<h4 id="fm288x-killer">FM2+88X Killer</h4>
+
+<ul>
+  <li>AMD A10-7870K APU</li>
+  <li>DDR3-1600 8GB RAM *4</li>
+  <li>320GB 2.5inch HDD SATA2 (Windows System)</li>
+  <li>256GB ADATA SSD SATA3 (Linux SYstem)</li>
+  <li>UEFI Boot</li>
+</ul>
+
+<h4 id="hp-z400">hp Z400</h4>
+
+<ul>
+  <li>Intel Xeon W3565</li>
+  <li>nVidia Quadro 2000 Graphics</li>
+  <li>DDR3-1366 2GB ECC Unbuffered RAM * 2 + DDR3-1600 4GB Non-ECC Unbuffered RAM * 2 (DDR3-1066 driven)</li>
+  <li>250GB Samsung 3.5inch HDD SATA2 (Windwos System)</li>
+  <li>120GB Corsair SSD SATA3 (SATA2 Connection) (Linux System)</li>
+  <li>Legacy Boot</li>
+</ul>
+
+<h3 id="windows-experience-index">Windows Experience Indexによる比較</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>項目</th>
+      <th>FM2+Killer</th>
+      <th>Z400</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CPU</td>
+      <td>7.4</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <td>Memory</td>
+      <td>7.4</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <td>3D Graphics</td>
+      <td>6.8</td>
+      <td>7.0</td>
+    </tr>
+    <tr>
+      <td>2D Graphics</td>
+      <td>6.8</td>
+      <td>7.0</td>
+    </tr>
+    <tr>
+      <td>Disk</td>
+      <td>5.9</td>
+      <td>5.9</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>「Z400のXeon W3565+Quadro2000のほうがわずかに速い」というのは、ベンチマークの通りで面白みもない。</p>
+
+<p>だが、見るべきところはある。</p>
+
+<p>まず、メモリーもz400のほうが速い、ということだ。
+メモリーはz400は1066で、FM2+Killerは1600で動作していて、FM2+Killerのほうが速いはずだ。
+しかも、FM2+Killerはデュアルチャンネル構成だが、z400はトリプルチャンネルだが2種類を2枚ずつで機能していない。
+それでもメモリアクセスはz400のほうが高速だという。</p>
+
+<p>さらに、グラフィックスにしても、3DグラフィックスはDirectX9でテストされるが、OpenGLに特化していて3Dグラフィックスを得意としないQuadroであるにもかかわらず、Radeon R7を内蔵したGodavari APUに優るという。</p>
+
+<p>AMDという第二の選択に対して、Intel+nVidiaという定番構成がいかに強力かがよくわかる。
+理屈では見えてこない差があるようだ。</p>
+
+<h3 id="linuxcpu">LinuxでのCPU処理</h3>
+
+<p>実用的かつ単純な方法として</p>
+
+<pre><code>time xz -zc image.iso &gt; /dev/null
+</code></pre>
+
+<p>によって比較。これは、今のところxzが最も時間がかかっているためで、imageはtmpfs上にDebian jessie DVD 64bit(debian-8.2.0-amd64DVD-1.iso)。SystemRescueCDをnomodeset+nokmsboot+docacheでブートし、wgetでイメージを取得してテストした。つまり、イメージはRAM上にあり、ディスクアクセスは発生しない。</p>
+
+<p>FM2+Killerは</p>
+
+<pre><code>1862.41s user 3.46s system 99% cpu 31:09.98 total
+</code></pre>
+
+<p>対するZ400は</p>
+
+<pre><code>1743.0s user 1.92s system 99% cpu 29:09.72 total
+</code></pre>
+
+<p>やっぱりZ400のほうがやや速い。</p>
+
+<p>xzはコアをフルに使い切れないことが多いのだが、日常的にすることで、全てのコアを使い、かつ負荷や結果が一定になるものが思い浮かばず、xzにした。差自体は恐らくこんなものだと思う。ImageMagickでは極端に差が出るが、およそこれくらいの割合でZ400のほうがいつも速い。
+プロセス数の多い処理はZ400のほうが有利か。</p>
+
+<h3 id="linuxgpu">LinuxのGPU処理</h3>
+
+<p>OpenGLの処理速度を比較するため、Linux上でのベンチマーク。</p>
+
+<p>Windows上の普通のベンチマークとは色々と事情が変わってくる。</p>
+
+<ul>
+  <li>LinuxではDirectXは使えないため、OpenGLを使う</li>
+  <li>いずれもメーカー提供のプロプライエタリドライバを使用するが、Windowsドライバと比べるとかなり性能が低い。特にAMD Catalystは出来が悪い</li>
+  <li>Quadroは元々OpenGLグラフィックスであり、AMD APUは一般向けであるためDirectXグラフィックスである</li>
+</ul>
+
+<p>テストはUnigine Heaven Benchmark 4.0を使用した。
+なお、再起動した上で新規ユーザーでテストすることで差異を可能な限り埋めてはいるが、CatalystがLinux 4.2ではうまく動かないため、Linux 4.1を使用している。</p>
+
+<p>いずれもプロブライエタリドライバを使用し、ディスプレイはFHDの1台にセッティングした。</p>
+
+<ul>
+  <li>Render: OpenGL</li>
+  <li>Mode: 1920x1080 fullscreen</li>
+  <li>Preset: Custom</li>
+  <li>Quality: Low</li>
+  <li>Tessellation: Disabled</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th>FM2+Killer</th>
+      <th>Z400</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Platform</td>
+      <td>Linux 4.1.12-1-MANJARO x86_64</td>
+      <td>Linux 4.2.5-1-MANJARO x86_64</td>
+    </tr>
+    <tr>
+      <td>CPU Model</td>
+      <td>AMD A10-7870K Radeom R7, 12 Compute Cores 4C+8G (3892MHz) x4</td>
+      <td>Intel(R) Xeon(R) CPU W3565 @ 3.20GHz (3200MHz) x8</td>
+    </tr>
+    <tr>
+      <td>GPU Model</td>
+      <td>AMD Radeon(TM) R7 Graphics (1024MB) x1</td>
+      <td>Quadro 2000 PCI Express 352.55 (1024MB) x1</td>
+    </tr>
+    <tr>
+      <td>FPS</td>
+      <td>22.4</td>
+      <td>26.0</td>
+    </tr>
+    <tr>
+      <td>Score</td>
+      <td>563</td>
+      <td>655</td>
+    </tr>
+    <tr>
+      <td>Min FPS</td>
+      <td>7.7</td>
+      <td>17.7</td>
+    </tr>
+    <tr>
+      <td>Max FPS</td>
+      <td>47.0</td>
+      <td>39.8</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>FM2+killerも体感よりはかなりがんばっている。
+FM2+Killerはビデオ再生がひどいため、まともに動くとは思わなかったのだ。</p>
+
+<p>Max FPSは大幅に逆転している。
+だが、全体にはWindows Experience Indexの結果と比べて、さらにもう少し差が開いた印象ではある。</p>
+
+<p>LinuxではCatalystドライバに不具合がかなり多いため、数値よりも快適性には大きな隔たりがある。</p>
+
+<p>しかし、ドライバの出来と、openGLに特化したQuadroであることを考えると、もっと差が開いて然るべきだったけれど、意外とGodavariが健闘した。</p>
+
+<h3 id="section-1">結果を受けて</h3>
+
+<p>FM2+Killerの構成は、もともとはKaveri(A10-7700K)で、およそ19万円かかったが、これは大容量メモリと、多数のハードディスクのためだ。</p>
+
+<p>例えば、TSUKUMOのAMD A10-7870K Black Edition BOX スペシャルセットが34344円(2015-11-07現在)となっている。
+実際は、4GBx2 RAMであること、Mini-ITXマザーボードであることを考えれば、TSUKUMOで計算するとFM2A88X Killerが12480円、A10-7870Kが18274円、W3U1600HQ-8GC11(8GBx2)が12150円で42904円。
+PCケースDefine R5が13014円、Seagate STT1000DM003が5992円、慶安 静か KT-S400FXAが6151円なので、全体では68061円になる。</p>
+
+<p>高機能を狙った構成なので、もっと安く上げるのであれば、4.5万円くらいで収まる可能性もあるだろう。だが、だいたいそのあたりであり、別の見方をすればPC1台組むのに必要なコストがそれくらいであるとも言える。
+A10-7870Kはミドルに迫るくらいの性能を持ってはいるが、素晴らしく快適な性能でもない。性能的には中途半端だが、コストパフォーマンスは良い、という微妙な立ち位置だ。
+「下の上」である。</p>
+
+<p>しかし、「微妙な割に便利」でもある。
+オフィススイートななどの基本的な事務、1080p動画再生を含むインターネット体験、そこまで本格的でなければ3Dゲームだってできる。
+つまり、一般的なユーザーのニーズを満たすことができるのだ。</p>
+
+<p>ただし、Windowsであれば。Linuxでは、そのパフォーマンスが十分に発揮できず、実際Windowsで不足を感じないのに、Linuxでは随分ひっかかる。</p>
+
+<p>加えて、「性能はいらないが機能が欲しい」というユーザーにも安価に応えられるのは大きい。例えばトリプルヘッドディスプレイや、4kディスプレイが欲しい、eSATAが欲しい、USB3が欲しい…といった要求にも、マザーボードが安いので対応に費用がかからない。
+性能はともかく高機能を要求する場合には結構な価格差が出る。</p>
+
+<p>一方、Z400は、秋葉原で3万円ほどで買った中古だ。</p>
+
+<p>3万円というと、自作にせよ、BTOマシンにせよ、かなり困難なラインになる。非常に小さな、ラップトップと変わらないようなものなら購入できるが、本当に最低辺のPCだ。
+だが、最新型を購入できてしまうために、中古ならでは、とはいいにくい。</p>
+
+<p>ちなみに、Windowsを含む場合は、3万円で自作は恐らく出来ない。</p>
+
+<p>Z400は、2010年のhpのエントリーワークステーションだ。
+エントリーモデルとはいえミドルタワーのワークステーション。普通の人が手にするようなものではない。
+安価なhp Z230SFFでも123,200円から。値段的にはそこまでもないとも取れるが、用途が特殊だ。
+Z400の構成は、当時でいえば、パソコンならば最上位クラスにあたる。</p>
+
+<p>PCが5年使い続けられることはない。性能の変化、規格の変化、タイミングにもよるが、どうしても5年はもたない。3年が良いところだ。</p>
+
+<p>だが、要求水準が元より異なる場合はその限りではない。5年前は時代遅れのポンコツだが、それでもかたや5年前の、パソコンでいえばハイエンドに匹敵するクラス。かたや最新ながら、あくまで安価でありながら性能を確保したことが魅力であるエントリー・モデルだ。</p>
+
+<p>それを比べた結果、「5年前のワークステーションのほうがやや高性能だった」という結果が出たということだ。これをどう捉えるか。</p>
+
+<p>安価なマシンを求めるのであれば、秋葉原で、良い中古マシンを確保したほうが性能は高い。</p>
+
+<p>これはおおよそ真だ。ただし、機能的にはどうしても劣る。タイミングによっては、旧規格を採用しているために非常に苦労する場合もある。
+Z400はSATA2, USB 2.0といった旧規格であり、新規格には対応していない。小さなことだが、不便でもある。
+メモリの速度は1066だ。1600が普通に使える今となっては低速で勿体無くもある。
+そして、グラフィックスは4kより前の時代であり、4kに対応しておらず、トリプルヘッドにも対応していない。</p>
+
+<p>こうした機能面では最新のGodavari、それも高機能マザーボードのFM2+Killerのほうが圧倒的に優れている。
+もし、Windowsを普通に使うのであれば、私はFM2+Killerをメインにしていたと思う。</p>
+
+<p>だが、Linuxでは随分とエクスペリエンスの差がある。
+さらにいえば、AMD CPUだとオーディオエンジンが頻繁にドロップしてしまう(SONARにおいて)。
+性能差というよりも、快適さが随分と違う。さすがに、王道、Intel+nVidiaという構成は強かった。</p>
+
+<p>もしあなたが、何らかの理由でこのようなコンピュータを欲したとする。
+もちろん、「普通にしか使わないから」といって「普通な用途に適したコンピュータ」を選ぶことはあまり勧められない。
+ライフタイムが短くなるからだ。
+もう少し視野を広くもったほうが良い。それに、そこそこ大きい買い物なのだし、もっと積極的に楽しんだほうがお得だ。</p>
+
+<p>だが、色々理由は考えられる。
+私のように急な故障で、予算はないがとりあえずまともに使えるレベルのーたが早急に必要だとか。
+Windows XPマシンのリプレイスが必要だが、予算が確保できておらず、導入までの時間を遅延させたいとか。</p>
+
+<p>また、業務利用の場合、要件が全く変わらず、「環境が変化しないこと」が求められる場合もある。
+事務仕事や、株取引などにおいては、特に変更される必要はない。
+定期的に必要にはなるが、刷新タイミング意外では毎日同じように業務を遂行できることのほうが大事だ。
+この場合、特に故障などがなければ、規格が時代遅れといった問題はない。そのため、現状で使えるのであれば、そのマシンが使える限り、もしくは刷新がなされるまで使える、という考え方が可能だ。
+ちなみに、DTMは環境を更新し続けるのが一般的なのでむしろ最新マシンが必要になるが、環境を変えないなら変えないでもなんとかなるものだ。</p>
+
+<p>そのような場合においてどちらを選ぶべきか？</p>
+
+<p>中古のほうが若干だがお得感はある。だが、新品のほうが高機能で快適である可能性がある。</p>
+
+<p>もちろん、中古の場合は保証がない。新品の場合はある。
+だが、5年も前のもので、しかもずっと使われてきたものであるならば中古はそうそう壊れない。機会の故障率はバスタブカーブを描くため、故障するなら普通はそれ以前に生じる。
+新品であれば保証が利き、修理も依頼しやすい。</p>
+
+<p>どちらが良いかは、好き好きとしか言いようがない。
+そして、自作も中古も、趣味が入っていないとやっていられない。
+本当の業務システムでやるようなことではない。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-09-11T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-09-11T00:00:00+09:00" />
+    <title>Pandoc Markdown のあまり知られていない書法 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Pandoc Markdown のあまり知られていない書法</h1></header>
+        <article id="MainArticle">
+<p>これで全部ではないし、どちらかといえばPandocユーザーズガイド日本版に記載されているものはそれを読むほうが早いので、記載されていないものを中心にあまり知られていないものを集めてみた。</p>
+<h2 id="上付き文字-superscript">上付き文字 (superscript)</h2>
+<p><code>^</code>ではさむ。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" data-line-number="1">30cm^3^</a></code></pre></div>
+<h2 id="下付き文字-subscript">下付き文字 (subscript)</h2>
+<p><code>~</code>ではさむ。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb2-1" data-line-number="1">2~16~</a></code></pre></div>
+<h2 id="打ち消し">打ち消し</h2>
+<p><code>~~</code>で挟む</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb3-1" data-line-number="1">~~馬鹿な~~一風変わった</a></code></pre></div>
+<h2 id="ヘッダーのidを制御する">ヘッダーのIDを制御する</h2>
+<p>日本語を使用している場合やかぶる場合、あるいは主導でヘッダーへのフラグメントを書く場合などは名前をつけたいもの。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu"># とあるヘッダ {#HelloWorld}</span></a></code></pre></div>
+<p>これでこの<code>h1</code>ヘッダのIDは<code>HelloWorld</code>になる。</p>
+<h2 id="divとspan">divとspan</h2>
+<p>ユーザーズガイドに記載されていない機能。</p>
+<h3 id="div">div</h3>
+<p>3つ以上のコロンをフェンスブロックのように使用する。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb5-1" data-line-number="1">:::</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">divの中の段落</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">:::</a></code></pre></div>
+<h3 id="span">span</h3>
+<p><code>[]</code>形式。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb6-1" data-line-number="1">一部分を[spanで囲む]ことができる。</a></code></pre></div>
+<p>特にspanに関しては<code>{}</code>を伴わないのは危険かもしれない。</p>
+<h2 id="任意にidクラス属性を書く">任意にID/クラス/属性を書く</h2>
+<p>ユーザーズガイドに記載されていない機能。</p>
+<p><code>{...}</code>という形式でヘッダやコードブロックに限らずIDを明示することができる。 <code>#ID</code>によるIDと、<code>.class</code>によるクラス表記ができるほか、<code>attr_name=&quot;attr_value&quot;</code>という形で属性も書くことができる。</p>
+<p>これはインラインコード, コードブロック, リンク, 画像, ヘッダ, div, spanなどで利用できる。</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb7-1" data-line-number="1">クラスが[redになっているspan]{.red}ブロック</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="ot">[external属性つきリンク](http://example.com/fire.html)</span>{rel=&quot;external&quot;}</a></code></pre></div>
+<h2 id="順序つきリストにラベルをつける">順序つきリストにラベルをつける</h2>
+<p>順序つきリストマーカーに<code>(@)</code>という形式があり、<code>(@label)</code>と書くことができる。 そして<code>(@label)</code>として参照できる。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb8-1" data-line-number="1">(@) AAA</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">(@) BBB</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">(@C) CCC</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">(@C)の話しをしたい</a></code></pre></div>
+<p>結果</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">&lt;ol</span><span class="ot"> class=</span><span class="st">&quot;example&quot;</span><span class="ot"> type=</span><span class="st">&quot;1&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="kw">&lt;li&gt;</span>AAA<span class="kw">&lt;/li&gt;</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="kw">&lt;li&gt;</span>BBB<span class="kw">&lt;/li&gt;</span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="kw">&lt;li&gt;</span>CCC<span class="kw">&lt;/li&gt;</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="kw">&lt;/ol&gt;</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="kw">&lt;p&gt;</span>(3)の話しをしたい<span class="kw">&lt;/p&gt;</span></a></code></pre></div>
+<h2 id="シンタックスハイライトニング">シンタックスハイライトニング</h2>
+<p>フェンスブロックで言語名を書けばよい。 一応、ユーザーズガイドにはないZshなんかも対応している。</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="bn">```perl</span></a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="bn">while(&lt;&gt;) {</span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="bn">    if (/hello/) { print &quot;world!\n&quot;}</span></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="bn">}</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="bn">```</span></a></code></pre></div>
+<p>クラスとして言語が指定された場合もそれを認識する。</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="bn">```{.ruby}</span></a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="bn">ARGF.each do |line|</span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="bn">  puts &quot;world!&quot; if line.include?(&quot;hello&quot;)</span></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4"><span class="bn">end</span></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="bn">```</span></a></code></pre></div>
+<p>なお、対応している言語を指定したときだけ<code>sourceCode</code>というクラスが振られるようになっている。</p>
+<h2 id="コードに行番号をつける">コードに行番号をつける</h2>
+<p>ユーザーズガイドに記載されていない機能。</p>
+<p>コードブロックに<code>numberSource</code>というクラスが設定されていると行番号をつける。 numberSourceをつけていなくても必要な情報自体はついているので、CSSを改変すれば必須ということもない。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode markdown numberSource"><code class="sourceCode markdown"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="bn">```{.bash .numberSource}</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="bn">for i in *</span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="bn">do</span></a>
+<a class="sourceLine" id="cb12-4" data-line-number="4"><span class="bn">  sed &quot;s/axe/sword/&quot;</span></a>
+<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="bn">done</span></a>
+<a class="sourceLine" id="cb12-6" data-line-number="6"><span class="bn">```</span></a></code></pre></div>
+<h2 id="定義リスト">定義リスト</h2>
+<p><code>dt</code>は普通に先頭からはじめて、<code>dd</code>側を<code>:</code>に続けてインデントする。</p>
+<p>まず<code>dd</code>が一行なのであれば、空行をあけずに書けば良い。</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb13-1" data-line-number="1">用語1</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">: 定義</a>
+<a class="sourceLine" id="cb13-3" data-line-number="3">用語2</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4">: 定義</a></code></pre></div>
+<p>複数の段落に渡るような場合は空行をあける。 <code>dd</code>の最初の行は<code>:</code>にスペース3つ、以降はスペース4つ。</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb14-1" data-line-number="1">用語1</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">:   定義の段落1</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="bn">    段落2</span></a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7">用語2</a>
+<a class="sourceLine" id="cb14-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb14-9" data-line-number="9">:   定義</a></code></pre></div>
+<h2 id="ラインブロック">ラインブロック</h2>
+<p>いわゆるVerb。</p>
+<p>単に<code>|</code>ではじめるだけ。</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb15-1" data-line-number="1">| 改行と</a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">|     スペースの</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">|   維持された</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">|  詩的な</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5">|        文章を</a>
+<a class="sourceLine" id="cb15-6" data-line-number="6">|     書くことができる</a></code></pre></div>
+<h2 id="リストにブロックレベルのコンテンツを含む">リストにブロックレベルのコンテンツを含む</h2>
+<p>定義リストと同じように継続するものが4つのスペースではじまっていると、それは複数のブロックレベル要素を含むものとみなしてくれる。</p>
+<p>このため、4つのスペースでコードブロックを表している場合、これをリストの一部だとみなしてしまう。</p>
+<p>コメントをいれれば良い、とガイドにはあるのだが、これはHTML以外で困る。 タブを使えば解決するのだが、いくらなんでもスペースでインデントしてからタブを重ねるのは嫌という人もいるだろう。 であれば、フェンスブロックを使えば良い。</p>
+<h2 id="yaml-front-matter">YAML front matter</h2>
+<p>Markdownの先頭にYAMLを置くことでメタデータを書くことができる。 <code>title</code>, <code>subtitle</code>, <code>author</code>, <code>date</code>, <code>keywords</code>はofficialなもの。</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb16-1" data-line-number="1">---</a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">title: ほげほげ</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">---</a>
+<a class="sourceLine" id="cb16-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb16-5" data-line-number="5">ほげほげほげほげ</a></code></pre></div>
+<h2 id="テーブルキャプション">テーブルキャプション</h2>
+<p>ユーザーズガイドに記載されていない機能。</p>
+<p>方法その1。手前に<code>:</code>で始まる行を置く。</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb17-1" data-line-number="1">: これがキャプションになる</a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb17-3" data-line-number="3">|title|price|</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4">|-----|-----|</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5">|ほげほげ|500|</a>
+<a class="sourceLine" id="cb17-6" data-line-number="6">|ふがふが|1000000|</a></code></pre></div>
+<p>もうひとつは<code>Table:</code>という行を後置する。</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb18-1" data-line-number="1">|title|price|</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2">|-----|-----|</a>
+<a class="sourceLine" id="cb18-3" data-line-number="3">|ほげほげ|500|</a>
+<a class="sourceLine" id="cb18-4" data-line-number="4">|ふがふが|1000000|</a>
+<a class="sourceLine" id="cb18-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb18-6" data-line-number="6">Table: これがキャプションになる</a></code></pre></div>
+<h2 id="コードブロックにキャプションをつける">コードブロックにキャプションをつける</h2>
+<p><code>caption</code>という属性を書くと<code>data-caption</code>が定義されるので、</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb19-1" data-line-number="1">pre<span class="in">:after</span> {</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">  <span class="kw">content</span>: <span class="fu">attr</span>(data-caption);</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">  <span class="kw">font-weight</span>:<span class="dv">bold</span>;</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4">}</a></code></pre></div>
+<p>とCSSに書いておけば良い。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-09-28T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-09-28T00:00:00+09:00" />
+    <title>ブラウザのプロファイルを使い分ける - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ブラウザのプロファイルを使い分ける</h1></header>
+        <article id="MainArticle">
+<h2 id="使い分ける意義">使い分ける意義</h2>
+<p>今、個人情報の搾取は当たり前のように社会的に行われ、問題になっている一方、利便性を盾にそれを受け入れざるを得ない状況となっている。</p>
+<p>私達はプライバシーを最優先とした選択をとることは可能だけれども(例えば匿名化ブラウザを使用したり、そこまでではないにせよ常にプライベートブラウジングを行ったり)、それは利便性を大きく損なうことになる。</p>
+<p>こうした被害が大きくなるのは、個人情報が「結び付けられる」からである。</p>
+<p>ブラウザプロファイルをアクションごとに使い分けることは、利便性を維持しながらプライバシーを守る良い手段である。</p>
+<p>例えばサービスにログインしたままにすると乗っ取りの被害に合う可能性は高まる、という話を聞いたことがあるだろう。 だが、それを知っていても、なかなか逐一サービスからログアウトするという手間をかける人はいない。</p>
+<p>また、Facebookのように、あなたが登録していない場合でさえ横断的にあなたを追跡し情報を収集するものもあるかもしれない。</p>
+<p>だが、これらの情報を結び付けなければ、あなたという全体像は見えないままとなる。 TwitterをしているときのプロファイルはTwitter上だけに留めておけば、TwitterをしているあなたとYouTubeを見ているあなたが同一人物だと知ることができない。</p>
+<p>これらは、サービス別であることよりも行動様態別であることのほうが重要だ。</p>
+<p>この使い分けは</p>
+<ul>
+<li>ログインしているサービスの状態</li>
+<li>履歴、クッキーなどの行動情報、行動履歴、追跡できる情報及び個人情報</li>
+<li>インストールしている拡張機能</li>
+<li>ブラウザの設定 (外観を含む)</li>
+<li>起動時に開くページ</li>
+</ul>
+<p>などをそれ専用に用意できるという点が大きい。</p>
+<h2 id="プロファイル機能">プロファイル機能</h2>
+<p>Firefoxにはプロファイル機能が昔から備わっている。</p>
+<pre><code>firefox -P</code></pre>
+<p>のように起動すればプロファイルを選択して起動することが可能だ。 また、<code>-p</code>オプションによって、プロファイルに名前をつけることなく、ユーザープロファイルのディレクトリのみを指定することもできる。 だが、これにはいくつかの不具合がある。</p>
+<p>Chromium系ブラウザには<code>--user-data-dir</code>という、プロファイルディレクトリを指定するオプションがある。 Firefoxと違い、これは完全に分離されるが、Google Chromeの場合不完全であるかもしれない。</p>
+<p>これら以外でプロファイル機能を備えるのはFalkonである。 Falkonは独自の<code>-p</code>オプションによってプロファイルディレクトリを選択できる。</p>
+<p>あとは、Otter Browserもプロファイル機能をサポートする。 Surf, Netsurf, Dillo, eolie, Braveなどはプロファイル機能をサポートしない。</p>
+<p>以前はMidoriにもプロファイルオプションが存在したが、なぜか削除されてしまった。</p>
+<h2 id="my-browser-profile-chooser">My Browser Profile Chooser</h2>
+<p>あなたがLinuxをはじめとするUnix系OSのユーザーであるならば、私の作品である<a href="https://github.com/reasonset/my-browser-profile-chooser">My Browser Profile Chooser</a>を試してみてほしい。</p>
+<p>簡単にプロファイルの切り替えができるようになる。 これでログインしっぱなしも気にならないし、「〇〇がしたい」と思ったときにコマンド一発でその状態を整えてくれるようになる。</p>
+<p>私は、このプログラムが <em>唯一私が使用している全マシンにインストールしているスクリプト</em> である。</p>
+<p>3.xから設定ファイルがYAMLになって書きやすくなり、特に3.0.2からはプロファイルを指定する<code>pstr</code>が省略できるようになった(省略するとプロファイル名がそのまま使われるようになった)ので非常に楽にかけるようになった。</p>
+<p>実例をあげよう。</p>
+<p>まず、My Browser Profile Chooser(MBPC)をインストールする。単純に、パスの通ったディレクトリに<code>web.rb</code>を置くだけで十分だ。 また、RubyとZenityがインストールされている必要がある。</p>
+<pre><code>$ mkdir ~/opt
+$ cd ~/opt
+$ git clone &#39;git://github.com/reasonset/my-browser-profile-chooser&#39;
+$ sudo cp -v my-browser-profile-chooser/web.rb /usr/local/bin/</code></pre>
+<p>次に設定ディレクトリを用意する。ついでだから、プロファイル用のディレクトリも掘ろう。</p>
+<pre><code>$ mkdir -p ~/.config/reasonset/browserprofiles</code></pre>
+<p>つづいて設定ファイルを作成する。</p>
+<pre><code>$ vim ~/.config/reasonset/browserprofiles.yaml</code></pre>
+<p>あなたのホームディレクトリが<code>/home/jrh</code>だとするならば、まずは次のような感じになる。</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span></code></pre></div>
+<p>では、まずはYouTube用プロファイルを作ろう。YouTubeはGoogleにログインして見ることになるだろうから、Google Chromeを使うことにする。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="at">  </span><span class="fu">youtube</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> gch</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span></code></pre></div>
+<p>これでOKだ。あとは</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a><span class="ex">web.rb</span> youtube</span></code></pre></div>
+<p>と入力するだけでこのプロファイルが立ち上がる。</p>
+<p>プロファイルを用意しただけではあまり意味がないだろうが、YouTubeにログインし、「ホームページ」をYouTubeに設定し、スタートページをホームページにしておくと、この状態で立ち上げた瞬間にログイン済みYouTubeが開かれるようになる。</p>
+<p><code>type: gch</code>とした場合、実行されるコマンドは(Arch Linuxに合わせて)<code>google-chrome-stable</code>だが、環境によっては<code>google-chrome</code>だったりするだろう。 その場合は次のようにすることで上書きできる。</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="at">  </span><span class="fu">youtube</span><span class="kw">:</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> gch</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="fu">Override</span><span class="kw">:</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="at">  </span><span class="fu">gch</span><span class="kw">:</span><span class="at"> google-chrome</span></span></code></pre></div>
+<p>では今度はお買い物用のプロファイルを作ろう。 お買い物は価格.comでの比較や、違う通販サイトの横断もしたりするだろう。だから、いくつかのショッピングサービスにログインすることになる。 だからこそ、調べ物は別のプロファイルにするなど余計なブラウジングは避けたほうがいい。</p>
+<p>ここではVivaldiを使うとしよう。</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="at">  </span><span class="fu">youtube</span><span class="kw">:</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> gch</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="at">  </span><span class="fu">shopping</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> viv</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span></code></pre></div>
+<p>これだけだ。あとはお買い物サイトをブックマークして、スタートページをAmazonに設定して、Amazonの拡張機能でも入れればバッチリだ。</p>
+<p>おっと、しかしAmazon PrimeVideoが見たくなってきた。だいたいシリーズで見ているものが多いのだし、いちいち開くのは面倒だ。 Widevineの面倒もある。Firefoxにしてみよう。</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="at">  </span><span class="fu">youtube</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> gch</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="at">  </span><span class="fu">shopping</span><span class="kw">:</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> viv</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="at">  </span><span class="fu">primevideo</span><span class="kw">:</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> fx</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span></code></pre></div>
+<p>Firefoxの場合ブラウザプロファイルを「作る」という作業がある。<code>firefox --ProfileManager</code>としてプロファイルマネージャを起動し、<code>primevideo</code>という名前のプロファイルを作る。 作るときにディレクトリを指定できる。別に必ずしも変えなくてもよいのだが、折角なので他のプロファイルと同じ階層にディレクトリを作って指定するのが良いだろう。</p>
+<p>作成したらそのまま起動しても構わないし、一旦終了しても構わない。いずれにせよ、次回からは</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1"></a><span class="ex">web.rb</span> primevideo</span></code></pre></div>
+<p>でAmazon Prime Videoの視聴モードで始めることができる。 このとき、このプロファイルは設定として</p>
+<ul>
+<li>「起動」→「前回のセッションを復元する」 をオンに</li>
+<li>DRMの再生を有効に</li>
+</ul>
+<p>しておくといいだろう。見たい動画をタブで開いておけば、起動するなりそのラインナップが復元される。 複数のアニメを追っている場合など非常に便利だ。</p>
+<p>調べものをするときなど、追跡されたくないときのために常にプライベートブラウジングができるプロファイルを作ろう。 スマートフォンならFirefox Focusを使用するところだが、そんな必要はない。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">Profiles</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="at">  </span><span class="fu">youtube</span><span class="kw">:</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> gch</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="at">  </span><span class="fu">shopping</span><span class="kw">:</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> viv</span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="at">  </span><span class="fu">primevideo</span><span class="kw">:</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> fx</span></span>
+<span id="cb12-8"><a href="#cb12-8"></a><span class="at">  </span><span class="fu">secret</span><span class="kw">:</span></span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> chi</span></span>
+<span id="cb12-10"><a href="#cb12-10"></a><span class="at">    </span><span class="fu">opts</span><span class="kw">:</span></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="at">      </span><span class="kw">-</span><span class="at"> --incognito</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a><span class="fu">PathBase</span><span class="kw">:</span><span class="at"> /home/jrh/.config/reasonset/browserprofiles/</span></span></code></pre></div>
+<p><code>chi</code>はChromiumで、Chromium系ブラウザは<code>--incognito</code>オプションでプライベートブラウジングで起動する。 ちなみに、Firefoxの場合は<code>--private-window</code>オプションである。</p>
+<p>もしかしたらこれをデフォルトのブラウザにしたいと思うかもしれない。 であれば、<code>.desktop</code>ファイルをインストールしよう。Chromiumベースの場合、</p>
+<pre><code>$ cp /usr/share/applications/chromium.desktop ~/.local/share/applications/incognito-browser.desktop</code></pre>
+<p>という感じでコピーし、</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb14-1"><a href="#cb14-1"></a><span class="dt">Name</span><span class="ot">=</span><span class="st">Incognito Browser</span></span></code></pre></div>
+<p>と名前を変更、<code>exec=/usr/bin/chromium $U</code>という感じになっているので、</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb15-1"><a href="#cb15-1"></a><span class="dt">Exec</span><span class="ot">=</span><span class="st">/usr/local/bin/web.rb secret %U</span></span></code></pre></div>
+<p>という感じに。<code>Actions</code>の行は消してしまって、各アクション部分はごっそりなくしてしまって良いだろう。(もしくはシークレット部分だけちゃんと書くか)</p>
+<p>プロファイルを任意に選択させたい場合、</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb16-1"><a href="#cb16-1"></a><span class="dt">Exec</span><span class="ot">=</span><span class="st">/usr/local/bin/web.rb - %U</span></span></code></pre></div>
+<p>とすることができる。</p>
+<h2 id="windowsの場合は">Windowsの場合は</h2>
+<p>WindowsだとZenityがないことと、ブラウザにパスが通っていないので、MBPCは使用できない。</p>
+<p>Windowsの場合はおそらくショートカットを使うのが一番楽だし、Windowsのスタイルに合っている。</p>
+<a href="/wp-content/uploads/2019/09/shortcut-profile.png"><img src="/wp-content/uploads/2019/09/shortcut-profile.png" alt="プロファイルをショートカットで指定する" width="421" height="580" class="aligncenter size-full wp-image-2138" /></a>
+<p>自然に作られたショートカットはプログラムがクォートで囲まれているが、このクォートの後ろにスペースを入れてオプション文字列を追加できる。 アイコンも独自のものにしておいたほうが良いだろう。Windows 7以降ではタスクバーにショートカットをpinできるようになっているので、タスクバーにpinしておけば簡単に起動できるし、だからこそアイコンを使い分けたい。 もちろん、デスクトップから起動する派の人はそれでも構わないが。</p>
+<p>スタートメニューから起動する派の人もショートカットを入れるだけで十分だが、検索で起動する派の人はひと工夫必要である。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

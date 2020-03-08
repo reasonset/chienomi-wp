@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-06-10T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-06-10T00:00:00+09:00" />
+    <title>Linuxのターミナルエミュレータを比較してみた - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linuxのターミナルエミュレータを比較してみた</h1></header>
+        <article id="MainArticle">
+<p>ターミナルエミュレータにみんな不満を持っているようなのに、きちんと選んでない気がするので、比較。</p>
+<h2 id="メジャー編">メジャー編</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>挙動</th>
+<th>Gnome Terminal</th>
+<th>Xfce4 Terminal</th>
+<th>MATE Terminal</th>
+<th>Konsole</th>
+<th>QTerminal</th>
+<th>Xterm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>タブ</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>単一タブ時の表示</td>
+<td>Hide</td>
+<td>Hide</td>
+<td>Hide</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>カラーテーマ</td>
+<td>Scheme &amp; Edit</td>
+<td>Scheme &amp; Edit</td>
+<td>Scheme &amp; Edit</td>
+<td>per Profile (Scheme)</td>
+<td>Scheme</td>
+<td>Configuratable</td>
+</tr>
+<tr class="even">
+<td>背景画像</td>
+<td>廃止</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes (+Blur)</td>
+<td>Yes</td>
+<td>No?</td>
+</tr>
+<tr class="odd">
+<td>背景透過</td>
+<td>廃止 (外部から可能)</td>
+<td>Yes</td>
+<td>Single Color only</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes?</td>
+</tr>
+<tr class="even">
+<td>アプリケーション透過</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>タブの色分け</td>
+<td>プロファイルごと</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td>セル間隔調整</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>ambiguous char</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+</tr>
+<tr class="even">
+<td>プロファイル</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>File</td>
+</tr>
+<tr class="odd">
+<td>スクロール</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>バッファリミット</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>CLI Option</td>
+</tr>
+<tr class="odd">
+<td>スクロールアップ時の新規出力</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>Keep</td>
+<td>Keep</td>
+<td>Scroll</td>
+<td>Scroll?</td>
+</tr>
+<tr class="even">
+<td>スクロールアップ時の入力</td>
+<td>Configuratable</td>
+<td>Configuratable</td>
+<td>Scroll</td>
+<td>Scroll</td>
+<td>Scroll</td>
+<td>Scroll?</td>
+</tr>
+<tr class="odd">
+<td>終了確認</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>マルチタブでの終了確認</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>稼働中プロセスでの終了警告</td>
+<td>List</td>
+<td>No</td>
+<td>List</td>
+<td>List</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>フォント</td>
+<td>自由</td>
+<td>自由</td>
+<td>自由</td>
+<td>QT monospace</td>
+<td>QT monospace</td>
+<td>自由</td>
+</tr>
+<tr class="odd">
+<td>Backspace</td>
+<td>Configuratable</td>
+<td>Configuratable &amp; Auto</td>
+<td>Configuratable</td>
+<td>Keyboard Type</td>
+<td>Emulation</td>
+<td>ASCII DEL</td>
+</tr>
+<tr class="even">
+<td>Del</td>
+<td>Configuratable</td>
+<td>Configuratable &amp; Auto</td>
+<td>Configuratable</td>
+<td>Keyboard Type</td>
+<td>Emulation</td>
+<td><code>\e[3~</code></td>
+</tr>
+<tr class="odd">
+<td>単語選択文字設定</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>画面分割</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>開くディレクトリ</td>
+<td>Terminal Process Default</td>
+<td>Tab Current / Configuratable</td>
+<td>Terminal Process Default</td>
+<td>Terminal Process Default</td>
+<td>Terminal Process Default / Tab Current</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>Gnome TerminalとMATE Terminalはログイン端末にするかどうかの選択ができる。</p>
+<p>XFce4 Terminalはダブルクリック時に選択する文字列や、ベルも設定可能でかなり細かい。 ただし、稼働プロセス警告やプロファイルはない。</p>
+<p>KonsoleはURLヒントの表示、点滅テキストの制御などが可能。 マルチタブ終了もプロセス終了も警告される。</p>
+<p>QTerminalは使いにくいポイントや配慮不足が色々ある割に、 ドロップダウン端末や、ショートカット設定、画面分割など独特な機能は持っている。 また、プロセス終了警告がなく、タブでプロセスが稼働している場合にタブを閉じると確認せずにタブを閉じる。</p>
+<h2 id="マイナー編">マイナー編</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>挙動</th>
+<th>LXTerminal</th>
+<th>VTE3</th>
+<th>Sakura</th>
+<th>Pantheon Terminal</th>
+<th>rxvt Unicode</th>
+<th>ST</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>タブ</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>単一タブ時の表示</td>
+<td>Hide</td>
+<td>-</td>
+<td>Configuratable</td>
+<td>Show</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>カラーテーマ</td>
+<td>Scheme &amp; Edit</td>
+<td>?</td>
+<td>Sceheme (ウィンドウ色は編集可能)</td>
+<td>Edit</td>
+<td>Edit</td>
+<td>CLI Option / Build Config</td>
+</tr>
+<tr class="even">
+<td>背景画像</td>
+<td>No</td>
+<td>?</td>
+<td>No</td>
+<td>No</td>
+<td>No?</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>背景透過</td>
+<td>No</td>
+<td>?</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes?</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>アプリケーション透過</td>
+<td>No</td>
+<td>No?</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>タブの色分け</td>
+<td>No</td>
+<td>-</td>
+<td>Yes</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td>セル間隔調整</td>
+<td>No</td>
+<td>?</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>ambiguous char</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+<td>FontConfig</td>
+</tr>
+<tr class="even">
+<td>プロファイル</td>
+<td>No</td>
+<td>No?</td>
+<td>No</td>
+<td>No</td>
+<td>File / CLI Option</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>スクロール</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>バッファリミット</td>
+<td>Configuratable</td>
+<td>?</td>
+<td>Fixed</td>
+<td>Fixed</td>
+<td>Configuratable</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>スクロールアップ時の新規出力</td>
+<td>Keep</td>
+<td>Keep?</td>
+<td>Keep</td>
+<td>Keep</td>
+<td>Keep</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td>スクロールアップ時の入力</td>
+<td>Scroll</td>
+<td>Scroll?</td>
+<td>Scroll</td>
+<td>Scroll</td>
+<td>Scroll</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>終了確認</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>マルチタブでの終了確認</td>
+<td>Yes</td>
+<td>-</td>
+<td>No</td>
+<td>No</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>稼働中プロセスでの終了警告</td>
+<td>No</td>
+<td>No</td>
+<td>No/Caution Only</td>
+<td>Caution Only</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>フォント</td>
+<td>自由</td>
+<td>?</td>
+<td>自由</td>
+<td>自由</td>
+<td>自由</td>
+<td>CLI Option / Build Config</td>
+</tr>
+<tr class="odd">
+<td>Backspace</td>
+<td>ASCII DEL</td>
+<td>ASCII DEL?</td>
+<td>ASCII DEL</td>
+<td>ASCII DEL</td>
+<td>ASCII DEL</td>
+<td>ASCII DEL</td>
+</tr>
+<tr class="even">
+<td>Del</td>
+<td><code>\e[3~</code></td>
+<td><code>\e[3~</code>?</td>
+<td><code>\e[3~</code></td>
+<td><code>\e[3~</code></td>
+<td><code>\e[3~</code></td>
+<td><code>\e[3~</code></td>
+</tr>
+<tr class="odd">
+<td>単語選択文字設定</td>
+<td>Yes</td>
+<td>?</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>画面分割</td>
+<td>No</td>
+<td>?</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr class="odd">
+<td>開くディレクトリ</td>
+<td>Tab Current</td>
+<td>-</td>
+<td>Tab Current</td>
+<td>Home Directory</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>LXTerminalとPantheon Terminalは機能自体がすごく限定的だ。</p>
+<p>VTE3については情報がなくて設定方法がわからなかった。 色んな端末が内部的に使っているので入ってはいるけれど、直接使う人はいなさそう。</p>
+<p>Sakuraは設定できる項目がだいぶ少ない。Pantheonも同様でここらへんはユーザーが触れる項目を減らす思想か。</p>
+<p>Pantheon Terminalは終了時に開いていた数だけタブを開く。 多分全くうれしくないが、設定可能である。</p>
+<p>urxvtは何気にフォーカスオフ時に暗くすることもできたりする。</p>
+<p>STはスクロールできないと言っているが、Shift+Pg{Up,Down}でできる…が、かなり端末以外の設定に依存してしまうためできないと思ったほうがよい。 STは非常にシンプルで、日本文化にはなじまないかなぁ。</p>
+<h2 id="おまけ-grml-zsh-config-のグラデーションプロンプトテーマ">おまけ: grml-zsh-config のグラデーションプロンプトテーマ</h2>
+<table>
+<thead>
+<tr class="header">
+<th>端末</th>
+<th>表示</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gnome Terminal</td>
+<td>グラデーション、ただし幅がおかしい</td>
+</tr>
+<tr class="even">
+<td>XFce4 Terminal</td>
+<td>グラデーション</td>
+</tr>
+<tr class="odd">
+<td>MATE Terminal</td>
+<td>グラデーション</td>
+</tr>
+<tr class="even">
+<td>Konsole</td>
+<td>文字として表示</td>
+</tr>
+<tr class="odd">
+<td>QTerminal</td>
+<td>文字として表示</td>
+</tr>
+<tr class="even">
+<td>XTerm</td>
+<td>文字として表示</td>
+</tr>
+<tr class="odd">
+<td>LXTerminal</td>
+<td>グラデーション</td>
+</tr>
+<tr class="even">
+<td>VTE3</td>
+<td>グラデーション</td>
+</tr>
+<tr class="odd">
+<td>Sakura</td>
+<td>グラデーション</td>
+</tr>
+<tr class="even">
+<td>Pantheon Terminal</td>
+<td>グラデーション</td>
+</tr>
+<tr class="odd">
+<td>LXTerminal</td>
+<td>グラデーション</td>
+</tr>
+<tr class="even">
+<td>rxvt Unicode</td>
+<td>文字として表示</td>
+</tr>
+<tr class="odd">
+<td>ST</td>
+<td>文字として表示</td>
+</tr>
+</tbody>
+</table>
+<h2 id="比較してみて">比較してみて</h2>
+<p>XFce4 Terminalが非常に優秀。</p>
+<h2 id="おことわり">おことわり</h2>
+<p>とりあえず試してみたというところなので、各端末の設定に関して知悉しているわけではない。</p>
+<p>誤りや不足がある可能性がある。</p>
+<ul>
+<li>誤りの指摘</li>
+<li>比較して欲しい点の追加</li>
+<li>設定方法のレクチャー</li>
+</ul>
+<p>などどしどしお寄せいただきたい。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

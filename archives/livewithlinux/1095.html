@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-09-19T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-09-19T00:00:00+09:00" />
+    <title>Linuxデスクトップが使えないというのなら、知識を授けるのは私の使命だから - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Linuxデスクトップが使えないというのなら、知識を授けるのは私の使命だから</h1></header>
+        <article id="MainArticle">
+<p><a href="https://t.co/XVMSXyhRJN">齋藤貴義さんのブログ</a>が誤謬満載だったので、突っ込んでみる。</p>
+<h3 id="e-taxが使えない">e-Taxが使えない</h3>
+<p>そんなことはない。 実際私e-Tax使っているし。</p>
+<h3 id="blu-rayの再生が難しい">Blu-Rayの再生が難しい</h3>
+<p>日本における法的な意味ではやや難しいが、実用的な意味ではそれほど難しくない。 日本の法的にも再生自体を禁じるものはない。 普通にlibblurayで再生もできる。</p>
+<p>すごく単純に言えば、lubbluerayを用意しておけばmplayerで再生できる。</p>
+<h3 id="地上波デジタルの視聴が難しい">地上波デジタルの視聴が難しい</h3>
+<p>まぁ、それはそうなんだけれども、パソコン上でテレビを見なければならない必然性と、そもそもテレビの必要性からいってそんなに重大なことなんだろうか。 ましてLinuxerにとって。</p>
+<h3 id="ハイバネート設定が難しい">ハイバネート設定が難しい</h3>
+<p>難しいのはディスクを暗号化した場合と、swapを切らなかった場合だ。 そうでなければインストーラがよきにはからってくれる可能性は高い。</p>
+<p>ただし、うまく復帰できないケースはあまり少なくない。 このようなケースにおいて設定によって改善できる場合もその設定を行うのはかなり難しい。</p>
+<h3 id="省電力設定が難しい">省電力設定が難しい</h3>
+<p>メーカー製PCの場合、プリセットが充実していたりするので、多分それのことをいっているのだろう。 そんなものはないが、別に対して難しくもない。せいぜい細かに設定できる程度の話だ。</p>
+<p>最も細かく設定できるのは恐らくKDE Plasmaだが、それでも項目自体はThinkVantageによるものと大差ない。 プロファイル切り替えに関してはアクティビティを使うのが楽。</p>
+<h3 id="輝度設定キーが動かない">輝度設定キーが動かない</h3>
+<p>輝度設定用のキーは<code>XF86XK_MonBrightnessUp</code>及び<code>XF86XK_MonBrightnessDown</code>として定義されている。 XFキーが動かないというのはどういう状況なのかわからない。モダンなデスクトップを使え。</p>
+<h3 id="タッチパネルをオフにできない">タッチパネルをオフにできない</h3>
+<p>タッチパネルをオフにする必要があるのか?タッチパッドのことか?</p>
+<p>タッチパッドの制御に関しては、Linux版のSynapticsドライバーのほうがWindows版のものよりも細かに制御できる。 タッチパッドをオフにするためのオプションはSynapticsのみならばlibinputにすら存在する。 まだ現時点ではlibinputという選択肢はハードなので、Synapticsは単純に無効にするには</p>
+<pre><code>synclient TouchpadOff=1</code></pre>
+<p>でいい。</p>
+<h3 id="プリンタやスキャナの設定が難しい">プリンタやスキャナの設定が難しい</h3>
+<p>最近はFoomaticも充実してきたし、特に困ることはなくなった。 以前はプロプライエタリドライバでないと動作しなかったMP630も最近はFoomaticに含まれている。 現在はPhotosmart-6620seriesでFoomatic+hplipできちんと動作している。</p>
+<p>細かな制御、が何を意味しているかわからないが、縁無し印刷や両面印刷もできているし、ミリ単位の修正も一応できる。 インク残量もちゃんと見える。</p>
+<p>ただし、ドキュメントスキャナに関しては、紙のサイズの自動判別ができないため、Windowsでやったほうがいい。</p>
+<h3 id="スマホとの同期が難しい">スマホとの同期が難しい</h3>
+<p>同期というのが何をさしているのかわからないが、特になにかができないと感じたことはない。 というか、adbを簡単に叩けるのだから簡単ではないか。それともiPhoneなのか。</p>
+<h3 id="デスクトップ環境のuiがイマイチなのが多い">デスクトップ環境のUIがイマイチなのが多い</h3>
+<p>好みの問題だと思うけれど、じゃあWindows 10のあの腐ったUIが良いのか?</p>
+<p>私はCinnamonを使っているが、非常に快適である。何の問題もない。 KDE Plasmaは流儀が少々Windowsとは異なるが、十分なパワーがあり、使いこなすことができれば極めて快適だ。</p>
+<h3 id="ntfsやhfsの書き込みに設定が要る">NTFSやHFS+の書き込みに設定が要る</h3>
+<p>何を言っているのかわからない。</p>
+<p>NTFSに関しては、普通はntfs-3gで読み書きするだろうし、設定なんか全く必要ない。 それどころか、NTFSに対する操作のためにLive Linuxを使うことすらある。</p>
+<p>ただし、設定はいらないにしても、NTFSの操作にはやや問題はある。ファイルシステムのエラーを発生することが多いのだ。</p>
+<p>HFS+が使えないということも聞いたことがない。</p>
+<h3 id="サウンドやカメラの詳細設定が難しい">サウンドやカメラの詳細設定が難しい</h3>
+<blockquote>
+<p>最近はほとんどのサウンドカードやWebカメラが動くけど</p>
+</blockquote>
+<p>それは嘘だ。動かないものは動かない状況は変わっていない。</p>
+<p>だが、動くものに関しては設定というのが何をさしているのかわからないが、別に難しくもなんともない。 PulseAudioであればWindowsではとても考えられないような複雑な操作も可能だ。</p>
+<p>もちろん、DTM用のオーディオインターフェイスのような設定は難しいが、常識的な範囲での(Windowsの一般的なユーティリティレベルでの)設定はより細かに、容易にできる。 イコライザなんかの話をしたいのかもしれないが、PulseAudio Equalizerというものがあるよ、と教えてあげよう。</p>
+<h3 id="bluetoothデバイスの一部でペアリング出来ないものがある">Bluetoothデバイスの一部でペアリング出来ないものがある</h3>
+<p>これは経験がない。Bluetoothアダプタ自体が動作しなかったことならある。</p>
+<h3 id="ブラウザで閲覧できないサイトがある">ブラウザで閲覧できないサイトがある</h3>
+<blockquote>
+<p>UserAgentをホワイトリストで許可しているサイトの場合、推奨ブラウザでアクセスしても閲覧できない場合がある。UserAgentを書き換えてアクセスし直す必要がある。</p>
+</blockquote>
+<p>これはLinuxの問題ではなく、サービス提供者の性悪さによる問題だし、それくらい対応しろよと思う。</p>
+<h3 id="imeで良いものが少ない">IMEで良いものが少ない</h3>
+<blockquote>
+<p>Atokの大分昔のものは動くけど、基本はMozcなどで頑張るしか無い。拡張辞書必須。</p>
+</blockquote>
+<p>現在のAtokが他と比べて快適なのか、ということ自体に疑問があるけれども、Mozcに何の不満があるのだろう。</p>
+<p>Mozc Neologd UTまたはMozc UT2の場合、辞書の収録数はGoogle日本語入力よりも上であったはずだ。 なんならウェブ変換エンジンを利用することも可能なので、別に変換精度自体は劣るということはない。 まぁ、実際のところ語彙の問題ではなく、Google日本語入力には劣る面もあるのだが、取り立てていうほどのことはない。</p>
+<p>最近はMS-IMEが大変に快適な変換をしてくれるように大変身したので、その意味では辛いものがあるかもしれないが。</p>
+<p>なお、そもそもMozcはIMEではなくて、かな漢字変換ソフトウェアである。 IMEというのは、FcitxやiBusなんかのことだ。</p>
+<h3 id="kindleアプリのlinux版が無い">KindleアプリのLinux版が無い</h3>
+<p>そんなことを言ったらMac版もない。</p>
+<p>それでWINEで動かすことにどれほどの支障があるのかというのは疑問。 WINEが嫌いか?敗北感でも感じるのか?</p>
+<h3 id="evernote公式アプリのlinux版が無い">Evernote公式アプリのLinux版が無い</h3>
+<p><a href="https://help.evernote.com/hc/ja/articles/208313748-Evernote-for-Linux">公式に説明がある</a>。</p>
+<p>つまり、公式アプリでないことをEvernote側で受け入れており、そもそも公式クライアントであることに意義はない、ということだ。</p>
+<h3 id="lineアプリのlinux版が無い">LINEアプリのLinux版が無い</h3>
+<blockquote>
+<p>wineで動かすしかない。</p>
+</blockquote>
+<p>そもそも4.8, 4.9に関してはwineで動作させることができなかった。</p>
+<p>Linux上でLINEを動かす方法としては、Chromeアプリ版(先があまりないが)と、libpurpleによる非公式版がある。</p>
+<p>いずれも通話できないといった意味で完全ではないが、最低限動作はするはずだ。</p>
+<h3 id="画像編集ソフトが限られる">画像編集ソフトが限られる</h3>
+<blockquote>
+<p>GIMPで大体のことはできるけど、PhotoshopやSketchのようなソフトは使えない</p>
+</blockquote>
+<p>Windows向けの特定ソフトウェアが使えないことを嘆くのは不毛極まりない。</p>
+<blockquote>
+<p>RAW現像手段も限られる。</p>
+</blockquote>
+<p>yaourtでrawと検索すると309件、「raw image」でも43件ヒットした。</p>
+<h3 id="steamがubuntu版しか提供されていない">SteamがUbuntu版しか提供されていない</h3>
+<p>Manjaro Linuxではデフォルトインストールであり、PCLinuxOS及びMageiaでも導入可能。</p>
+<h3 id="slackアプリがfedoraかubuntu版しか提供されていない">SlackアプリがFedoraかUbuntu版しか提供されていない</h3>
+<p>AURにある。</p>
+<h3 id="gitクライアントで良いものが無い">Gitクライアントで良いものが無い</h3>
+<p>Windows版Gitクライアントは基本的にgit guiと同等のものではないか。 これが快適だとはどんなにがんばっても思えないが。</p>
+<p>他にもまぁまぁあるが、Zshより快適なGit環境はそもそもないと思う。</p>
+<h3 id="入力デバイスの操作がイマイチ">入力デバイスの操作がイマイチ</h3>
+<p>全く意味がわからない。 入力デバイスの操作はハードウェア的なものでLinux関係ないと思うが。</p>
+<blockquote>
+<p>マウス系のホイール操作はエミュレート精度が</p>
+</blockquote>
+<p>解釈可能な日本語でお願いしたい。</p>
+<p>ちなみに、Qt環境では驚くほど滑らかなスクロールが可能で、 さらにタッチパッドの場合はLinux版Synapticsのサーキュラースクローリングの快適さはWindowsになくて苦痛になるものの代表格だと思っている。</p>
+<p>それともボタン3クリックの話をしているのだろうか? それであるならばArch wikiに多くの情報がある。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-12-22T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-12-22T00:00:00+09:00" />
+    <title>PureBuilder Simplyと新しいサイトのお話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>PureBuilder Simplyと新しいサイトのお話</h1></header>
+        <article id="MainArticle">
+<h2 id="purebuilder-simply">PureBuilder Simply</h2>
+<h3 id="デザイン">デザイン</h3>
+<p>PureBuilder Simplyは従来とは大幅に考え方を変えた。</p>
+<p>従来は基本的に「いっぺんの処理ですべて行う」というものであった。 このため、特に難しかったのが、ACCSにおける「前後の記事へのリンク」である。</p>
+<p>PureBuilder Simplyは処理が分離されている。 一番基準となるスクリプトはデフォルトで全記事を処理する。 そして、全記事のメタデータをデータベースに書き出すのである。</p>
+<p>従来はPureDocメタセクションに直接書くという方法をとってきた。 そのため、ドキュメントが処理時に変更されるのだが、これは扱いにくい側面が結構あった。</p>
+<p>従来のPureBuilderはドキュメントごとに処理するようになっており、 メタデータはドキュメントにある。 そのため、処理時には「そのドキュメントのメタデータしか知らない」状態であった。</p>
+<p>今回のPureBuilderもすべてのドキュメントのメタデータを読み込むことはしないが、 すべてのドキュメントのメタデータの書き出しは行う。</p>
+<p>メインスクリプト以外については、このスクリプトが書き出したデータベースに基づいて処理を行うため、 すべてのドキュメントのメタデータを知った状態で処理することができる。</p>
+<h3 id="frontmatter">Frontmatter</h3>
+<p>もともとPureBuilderはPureDocを前提としていて、Markdown supportはPureBuilder2で採用された。</p>
+<p>Markdown Supportを採用したのはWindowser向けのフレンドリーシュガーであり、 Mimir Yokohamaでサービスを展開するにあたって、記述の難しいPureDocではなく、 記述しやすいMarkdownで書けるようにすることで「ユーザーによる更新の容易さ」を向上させる目的があった。</p>
+<p>この時点でMarkdown YAML Frontmatterのことを知らなかった。 そのため、従来のPureBuilderではMarkdownドキュメント中にHTMLコメントを入れ、その中にPureDoc meta headerを入れるという仕様になっていた。</p>
+<p>だが、そもそもMarkdownにYAMLでメタデータを書ける仕様である。 同じYAMLのメタデータなのだから、これに従うべきだ。</p>
+<p>そのため、PureBuilder SimplyではMarkdownドキュメントのFrontmatterを必須としており、 frontmatterが存在する前提で処理する。 (titleメタデータが必須であるため、どのみちfrontmatterは必須となる)</p>
+<p>さらにReStructured Textに対応したが、これも先頭にコメントを入れてYAMLでヘッダを書く、という仕様とした。 次のような具合である。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><a class="sourceLine" id="cb1-1" data-line-number="1">---</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">title: SomeTitle</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">author: &quot;It&#39;s me!&quot;</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">date: 2022-12-22</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">---</a></code></pre></div>
+<p>ReSTなら</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode rst"><code class="sourceCode rest"><a class="sourceLine" id="cb2-1" data-line-number="1">..</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">    title: SomeTitle</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    author: &quot;It&#39;s me!&quot;</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    date: 2022-12-22</a></code></pre></div>
+<h3 id="pandoc">Pandoc</h3>
+<p>PureBuilder Simplyはドキュメント処理をPandocにゆだねている。</p>
+<p>これは別に手抜きというわけではない。従来にしてもMarkdownの処理はKramdownによって行っているのであり、 PureDocの実装は別なので特にPandoc採用でアウトソーシングしたという感はない。</p>
+<p>Pandocの利便性と「標準性」から、「Pandocを主としてPureBuilderは補助であるほうがユーザービリティが高い」と判断したのだ。</p>
+<p>PureBuilder Refinedでは新しいPureDoc Zをサポートする予定だが、 PureBuilder Refined自体がPureBuilder Simplyでは不足の場合に限られるので微妙かもしれない。</p>
+<h3 id="事前生成戦略">「事前生成」戦略</h3>
+<p>PureBuilderは言葉の意味としてはCMSで合っているのだが、どちらかというとCCS(Content construction system)に近い。 基本的に生成機能だけで、管理に関してはシステムの標準的機能でなるべく簡単てにできるようにしている。</p>
+<p>一般的なCMSとの最大の違いは、「Webアプリケーションとして動作しない」ということだろう。 原則としてPureBuilderは(ホームページビルダーなどで書いた場合と同様に)ローカル環境でウェブページを組み上げ、そのままアップロードすることで動作する。</p>
+<p>従来のPureBuilderにあった、Webアプリケーションとして動的に生成するためのプラガブルな仕様は現時点ではPureBuilder Simplyにはない。 予定もされていない。単一ページのサポートは限定的で、原則としてディレクトリ単位でビルドを行う。 全体ビルド機能も排除された。</p>
+<p>より「サイトを構築するためのスクリプト」という点に特化した。</p>
+<p>私のウェブコンテンツ生成は可能な限り「事前生成戦略」をとっている。 通常、ページは書く回数よりも読まれる回数が多いので、コストのかかる処理は1度だけ行いたい、という方式だ。</p>
+<p>これは構造的に最速の方式でもある。</p>
+<p>ウェブサイトの仕組みを考えればわかるが、たとえばWordPressでは</p>
+<ol start="0" type="1">
+<li>ウェブサーバーが接続を受け付ける</li>
+<li>ウェブサーバーがPHPプロセスにWordPressを渡す</li>
+<li>WordPressがデータベースにアクセスする</li>
+<li>データベースから必要なデータを受け取ったWordPressがページを生成して返す</li>
+<li>ウェブサーバーが応答する</li>
+</ol>
+<p>という手順になる。 WordPressのキャッシュ機能ではWordPressはデータベースから受け取った結果を処理せずにそのまま応答するため、高速化するのだが、 それでもこの接続にかかる時間が決して小さくない。</p>
+<p>対して、静的ファイルならば</p>
+<ol start="0" type="1">
+<li>ウェブサーバーが接続を受け付ける</li>
+<li>ウェブサーバーがファイルを読み込んで応答する</li>
+</ol>
+<p>とプロセスが少なくなり、より高速だ。 WordPressの高速化手法も、PureBuilderが同様の手法を適用すればさらに高速する。</p>
+<p>さらに、ウェブサーバーにとって静的ファイルの応答は基本的機能であるため、 より高速なウェブサーバーが選択できる、というメリットがある<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>。</p>
+<p>また、静的ファイルのみでウェブサイトの構築が可能なことで、ウェブサーバーの選択肢が増える。 PHPが動作しないGeocitiesやGitHub Pagesでも構築可能だ。</p>
+<h2 id="mimir-yokohama新サイト">Mimir Yokohama新サイト</h2>
+<h3 id="新サイト開設">新サイト開設</h3>
+<p>Mimir Yokohamaの新ウェブサイト開設は、主に「異様にサイトが重くなっている」という事情からきているのだが、 実はそもそもPureBuilder Simplyはこの新サイト構築のために書き直した。</p>
+<p>Aki SIE新サイト開設時もそのためにPureBuilder2を作ったのだが、 PureBuilder2が6ヶ月も要したのに対して、作業時間で4日、経過時間でも9日と非常に速く書き上がった。 やはりデザインは大事だ。</p>
+<p>そして当然ながら、Mimir YokohamaウェブサイトがPureBuilder Simplyのデビュー戦となった。</p>
+<h3 id="楽という言葉の意味">「楽」という言葉の意味</h3>
+<p>Mimir Yokohamaのウェブサイトの出来には非常に満足している。</p>
+<p>だが、この開発において“PureBuilder Simplyの開発”は全行程における30%程度でしかなかった。</p>
+<p>PureBuilder Simplyを使ったサイトは非常に「楽」であり、「簡単」なのだが、誤解してはいけない部分がある。</p>
+<p>今回はWordPressからの移行であるため、WordPressで利用している機能に近い状態を狙った。 デザイン的にも近く、バックエンドの変更や、それによって品質が低下した印象を与えないようにしている。</p>
+<p>まず言っておくと、「WordPressのサイトを欲している」のであれば、PureBuilderを採用するよりも、 WordPressを採用したほうが確実に楽にできる。 なぜならば、そもそも欲しているのはWordPressなのだから、WordPressよりも楽にはならない。</p>
+<p>そもそもPureBuilder Simplyによる構築と、WordPressによる構築はちょっと話が違うのだ。</p>
+<p>WordPressの場合、テーマ機能やプラグインなどは既に揃っている段階から話をはじめる。 PureBuilder SimplyはそもそもWordPressではできない完全なカスタマイズを実現するという前提があり、 WordPressで言えばテーマやプラグイン、CSSなどを「すべて0から記述するところからはじめる」というのと同じ位置にある。</p>
+<p>もしもWordPressをその位置ではじめるという形で条件を揃えたならば、PureBuilder Simplyのほうが「楽だ」と断言できる。</p>
+<p>実際はそのような条件では比べないと思うのだが、逆にWordPressに合わせて構造やビルドの仕組み、テンプレートやCSSなどがすべて揃った状態からはじめるならば、 これもPureBuilderとしてはそこまで分の悪い勝負ではない。</p>
+<p>なぜならばその状態で必要なことは</p>
+<ul>
+<li>文書を配置したい場所に新しくファイルを作り、MarkdownまたはReSTで書く</li>
+<li>PureBuilderのバッチスクリプトを実行する</li>
+<li>Gitでcommit&amp;pushする</li>
+</ul>
+<p>というだけのことだからだ。</p>
+<p>「設定ファイルを書く」「コマンドを実行する」というあたりに、「Unixer的な楽さ」の感覚があるが、 これに関しても別にお客様に納品するときにはちょちょいと調整すれば良い話だ。 若干手順が多いようにも感じられるが、実際はWordPressの場合は</p>
+<ul>
+<li>ログインページにアクセスしてログインする</li>
+<li>ダッシュボードから新規記事の投稿を選択する</li>
+<li>ページ上で文章を書き、タイトルやカテゴリなどを選択する</li>
+<li>投稿ボタンを押す</li>
+</ul>
+<p>という手順で、慣れてしまえば麻痺するが、かなり手順は多い。 私が使っているWordPressサーバーは遅く、1クリックあたり1分とか待たされるので、 「WordPressは手順が多くて面倒」という印象が強い。 あちこち飛んではキーボードとマウスを持ち帰るUIも嫌いだ。</p>
+<p>もし、PureBuilder Simplyでできることと相当のものとして、 「WordPressもデザインや挙動をカスタマイズする」 という条件にしたならば、これはPureBuilder Simplyが有利だろう。</p>
+<h3 id="purebuilder-simplyを採用するのは入り口">PureBuilder Simplyを採用するのは「入り口」</h3>
+<p>だが、実際はPureBuilder Simplyの採用というのは全行程においてそこまで大きなものではない。 おそらく、PureBuilder Simplyのデフォルトで作られたサイトには誰もが失望するだろう。</p>
+<p>PureBuilder Simplyの場合、「テンプレート」と「CSS」という要素がある。 これを書くのは、PureBuilder Simplyで「簡単にしている」部分ではないところであり、技術者の腕のみせどころだ。</p>
+<p>最近はwebといってもCMSありきのエンジニアが増えていて、HTMLやCSSを直接記述することができない人が増えている。 だが、それはCMSの枠の中でしか仕事ができていない。 PureBuilder Simplyはそれをイチから作るのであり、ウェブデザイナーとエンジニアの腕の見せ所だ。</p>
+<p>PureBuilder SimplyのテンプレートはPandocのHTMLテンプレートである。 ただし、「Pandocの出力に対してeRubyで処理できる」ようになっている。 結果、テンプレートの展開は2度行われる。</p>
+<p>Pandocのテンプレート機能は意外なほど強力だが、 「値が○○だったら」という式はかけない。</p>
+<p>eRubyは完全なプログラムであり、「なんでもあり」である。</p>
+<p>比較的単純な(PHPやSSLで行うような)ものに関してはPandocテンプレートで処理できる。 実際、現時点でMimir YokohamaのウェブサイトはeRubyでの処理を無効にしている。</p>
+<p>PureBuilder Simplyにおけるテンプレートの作成は「若干の、もしくは本格的なロジックを含むHTMLテンプレートを書く」という作業である。 もちろん、それはデザインが必要であり、CSSと連動した「ページ設計」が必要となる。 ページ設計はかなりエンジニアリングレベルの高い作業だし、 最も単純にはデフォルトテンプレートを使っても良いのだが</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ex">pandoc</span> -D html5 <span class="op">&gt;</span> temaplte.html</a></code></pre></div>
+<p>CSSと連動した高度なロジックを使いたいといった場合には難易度は上がる。</p>
+<h3 id="プログラミングではないけれどロジカルに考える">プログラミングではないけれど、ロジカルに考える</h3>
+<p>もちろん、CSSを書くのはプログラミングに近い次元になってくる場合もある。</p>
+<p>今回のMimir YokohamaのウェブサイトはハンバーガーメニューとドロワーについてはJavaScriptを一切使用していない。 これはAki SIEウェブサイトで使用されていたものの改善版である。</p>
+<p>だがそのために、配置や仕組みに関してはかなりロジックが含まれている。 CSSにはロジックはほとんど含まれないが、「ロジックをほとんど含むことのできないものによって動的なフローを実現する方法」を考えるところにロジックが行使されているのだ。</p>
+<p>プロモーションモードのページでは下からフェードインするようなページデザインになっているが、 これもJavaScriptは使用していない。</p>
+<p>これは単純にHTMLとCSSで実現するウェブサイトを構築するときに、 「単に書くのではなく、そこにロジックを含んだ構造をもたせる」ときに必要となるものだ。</p>
+<p>PureBuilder Simplyはウェブサイト構築ツールであって、 デザインに関しては感知しない。 だから、そこに関しては「自分で作る」必要があるのだ。</p>
+<p>今回も難易度や作業量としては、テンプレートとCSSを書くことのほうが大きかった。</p>
+<p>PureBuilderはサイトの内容については感知しないのだから、別にJavaScriptを含んでもいい。 特にそれを禁止はしていないし、支援もしていない。 別にWordPressのクローンを作ることも、できなくはないのだ。</p>
+<h3 id="サイトを構築する手間で考えると">「サイトを構築する」手間で考えると…</h3>
+<p>単純に「見栄えするサイトを作りたい」という条件で考えた場合、 WordPressのほうがずっと楽だ。 なぜならば、デザインやロジックが既に存在していて、それを選ぶだけだからだ。</p>
+<p>PureBuilderが担っている部分に関してはWordPressよりも楽かもしれないが、 WordPressにはあるがPureBuilderにはない部分がある。 それについてはどうしてもWordPressでは発生しない労力を払わざるをえない。</p>
+<p>だから、サイトを構築する手間がWordPressよりも軽いということはない。 WordPressのインストールの労力を含めてもだ。</p>
+<p>だが、そのような「敷居の低さ」を求める人がPureBuilder Simplyを自らインストールしてサイトを構築することは想定していない。 PureBuilder Simplyで自ら構築する人は、そんなものがなかったとしてもテンプレートを書き、CSSを書き、JavaScriptを書く人だ。 私がお客様にPureBuilderの簡便性を説くときは、そのような想定で話しているわけではない。 構築はこちらで行って、更新をお客様がされる際には難しくない、ということを言っているのだ。</p>
+<p>テンプレートやCSSやJavaScriptは自分で書く、という前提のもとでは、PureBuilder Simplyの採用はかなり労力を削減することができる。 PureBuilder2と比べ管理の手間もかなり減り、非常に楽になった。</p>
+<h3 id="新サイトのデザインポリシー">新サイトのデザイン、ポリシー</h3>
+<p>PureBuilderの強みは事前生成による高速性である。</p>
+<p>さらにMimir Yokohamaでもポリシーとしている「軽量さ」と「アクセシビリティ」に重きをおいたデザインとなっている。</p>
+<p>ただし、Aki SIEのウェブサイトは発想力をアピールする意図もあったのだが、デザインがちょっと古くさい<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>。 今回Mimir Yokohamaのサイトではよりモダンなデザインを採用することにした。</p>
+<p>といっても、そのデザインはほとんどがWordPressで使用していたテーマのビジュアルを踏襲している。 ただし、全く同じというわけではなく、もとがシンプルなデザインであったために「ブロックごとに端までボーダーをひっぱる」「白に対してグレーのラインを引くモノトーン調」「右側サイドバーの2カラム」といったことを踏襲しているだけで、 メニューデザインなどは異なるし、実はカラーテーマも違う。 このあたりは「変えることが目的だった」わけではなく、そもそももとのブログでもカスタマイズしたかった部分なのだ。</p>
+<p>ちなみに、ブログではそんなシンプルなデザインであるにもかかわらず、ちょっと古い環境(IEなど)では表示が崩れる。 なんでその程度のもので崩れてしまうのか、私には疑問でならない。</p>
+<p>前述の通り、ハンバーガーメニューやフェードインテキストなどはCSSで記述されている。 これは、主に次のような意図だ。</p>
+<ul>
+<li>JavaScript禁止の環境や、JavaScriptを搭載しないブラウザでもエクスペリエンスを損ねない</li>
+<li>JavaScriptを使用していない分容量的に軽量</li>
+<li>HTMLを「意味」を欠落させない</li>
+</ul>
+<p>ただし、古いブラウザでのエクスペリエンスは若干犠牲になっている。 だが、それは「アニメーションが表示されない」程度の話で、表示自体はChrome 1.0, Firefox 1.7, Opera 9.0, Safari 3.1で対応している。 あまり言いたくはないが、IEは9.0からの対応だ。</p>
+<p>実は今回のサイトではHTML中に同じメニューが2回登場する。これは、上記環境よりも古い環境においてはドロワーが表示できない代わりにサイドバーにメニューを表示させるようにするためだ。 これはアクセシビリティのための処置だが、場合によっては1kB程度はサイズが増加するため、ちょっと残念なところだ。 このメニューはごく初期のCSSしかサポートしない環境でも正常に表示される。 CSSを全くサポートしない環境の場合、メニューは2つ表示される。 この場合上のメニューは記事タイトルよりも上になり、高さもあるため見栄えしないが、そのような環境では仕方ないし、十分許容範囲だろう。 むしろタイトルと記事の間に入るよりはずっと良いと考えられる。</p>
+<p>軽量性重視だが、従来と違い飾りとしての画像がところどころに入っている。 従来があまりにも殺風景すぎたという反省であり、このあたりはブログの時点で投入しているものを継承している。</p>
+<h3 id="プロモーションページの実現">プロモーションページの実現</h3>
+<p>全く印象の異なるプロモーションページだが、書き方はほとんど同じである。 別にテンプレートをかき分けることもしていないし、普通にMarkdownで書かれたページだ。</p>
+<p>プロモーションページの印象の違いは、テンプレートにおける若干の工夫と、CSSによって実現されている。 frontmatterでプロモーションページであることを指定すると、Pandocテンプレートによってそれがクラス設定される。 あとはそのクラス設定に基づいてCSSで見せたくない要素を消去し、一部レイアウトを変更する。</p>
+<p>こうした発想力は、やっぱりロジカルシンキングなのだ。</p>
+<p>プロモーションページもかなりシンプルだが、 見出しには画像を使いたかった、という気持ちがある。</p>
+<p>そうしていないのは、「適切な画像」の選定が非常に困難だったことと、 ヘッダーごとに画像を選択するためにはそれなりにあまりスマートでない余計なロジックを追加する必要があったからだ。</p>
+<p>もしもこれぞという画像があれば採用することだろう。</p>
+<p>ちなみに、プロモーションページはスマートフォンの商品プロモーションページをイメージしている。 なるべく説明的にならないようにしたのだが、後に書いたものほど説明的になってしまった。 どこまでイメージで語り、どこまで具体的に語るかは難しいところだ。</p>
+<h3 id="速度">速度</h3>
+<p>実際のところ、Mimir Yokohamaにおける制作ポリシーと同一ポリシーで制作したのであり、「最速を目指す」という方式ではない。<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>だがそれでも、旧WordPressサイトの10倍程度の速度になっている。 高速化のために使用した手段は以下のようなものだ</p>
+<dl>
+<dt>高速なサーバーを選択</dt>
+<dd>ConoHaはSSDを採用しており、ネットワーク帯域も太く高速だ。 Nginxを採用
+</dd>
+<dd>静的ファイルの応答に関してはNginxは最速に近い コンパクトなHTML
+</dd>
+<dd>できるだけ冗長な表現を避けてコンパクトなHTMLが生成されるようにした。ただし、アクセシビリティを優先してメニューは重複している 可能な限りCSS
+</dd>
+<dd>JavaScriptなしで動作するようにしたのは「JavaScript無効というオプションを与えるため」だが、ロジックの最適化によってある程度の容量削減に繋がっている WebP
+</dd>
+<dd>WebPをサポートするのはChrome/Chromium系列だけだが、WebPは「アルファチャンネルつきロッシー圧縮」が可能なため、PNGよりもだいぶ軽くなる。一部PNG画像については<code>object</code>タグによりWebPを優先して使用するようにしている。アクセシビリティを重視し、重要な画像ではこの処理は行われず<code>img</code>画像を使用している。 画像よりもCSS
+</dd>
+<dd>「デザインはセンスでがんばる」方式で、画像などのアイテムの使用数は非常に少ない。寂しさはグラデーションで埋めているが、華やかさに欠ける感は否めない。
+</dd>
+</dl>
+<p>高速性ということでいえば、「CSSが重い」ということは感じるが、改善は若干難しい。 もちろん、minifyなどのテクニックである程度は小さくなるが、保守性を重視しているためだ。</p>
+<p>また、CSSを3つから1つに減らすというアイディアもあったのだが、比較的サイズの大きいファイルであり、並列ダウンロードしてもらったほうが速いことから分割に戻した。</p>
+<p>ミーミルのロゴなどは埋め込んだほうが高速化するだろうが、軽量化には寄与しないし、アクセシビリティが下がるので実施していない。 トップページで51.5KB、低速なうちの環境でTTFBは14.08ms、DNS lookupとfaviconを除いた時間は101.36msとなった。 従来が500kB/5s程度だったことを考えると、この計測では1/10の容量、50倍の高速化となっている。</p>
+<h2 id="markdownとrest">MarkdownとReST</h2>
+<p>今回、Pandocの採用によってMarkdown以外のソースフォーマットに対応することが可能になった。 そして、最初に採用したのがReStructured Text(ReST)である。</p>
+<p>Pandocがサポートする中で最もMarkdownに近い汎用性があるのはReSTである。 他にそのようなフォーマットはないが、あるいは専門分野での記述用にDocBookなどをサポートする可能性はある。</p>
+<p>なお、入力ソースとしてのHTMLは、判別しがたさの観点からサポートは行わない。</p>
+<p>ReSTはMarkdownと比べて表現力に優れている。 記述の簡便性も「好みの問題」と言えるような差異だ。 ただし、ReSTが優れている点について必ずしもそのまま適用できるわけではない。 なぜならばPandocがReSTをフルサポートしていないからだ。</p>
+<p>実際のところ他フォーマットへの変換を想定しないのであれば、HTMLを直接記述できるMarkdownの優位性は揺らがない。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>今回はNginxを使ったが、基本的にNginxも静的HTMLファイル向けのサーバーで、アプリケーションは他のサーバーに接続するリバースプロキシとして動作する方式だ。Thinなどを使う手もあるかもしれないが、Nginxよりも高速化するかは疑問。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>800pxのブロックが中央にフロートしているデザインは2005年ころから流行したブログデザインと類似のものだ。今でもamebloなんかはこのデザインなのだが、新規にサイト立ち上げると画面めいっぱいまで使うデザインがデフォルトになっている。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>最速を目指すのであればコードゴルフやminified、画像の排除や機能の統一化なども考えられる。実際のところ「速度は上がるがアクセシビリティが下がる」方式は取ってないし、コスト過剰にもならないようにしている。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-01-24T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-01-24T00:00:00+09:00" />
+    <title>新 Aki SI&Eサイト構築と、納得できないCSS解釈 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>新 Aki SI&Eサイト構築と、納得できないCSS解釈</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#lightbox" id="markdown-toc-lightbox">Lightbox</a></li>
+  <li><a href="#css" id="markdown-toc-css">CSS</a></li>
+</ul>
+
+
+<p>作り直してるよという話はしていたが、ついに全面刷新となったAki SI&amp;Eの作成に着手した。</p>
+
+<p>昨日1日でlightboxプログラムを作り、さらにメニューボタンアニメーションを作った。</p>
+
+<p>Lightboxアプリケーションは作った時点で1kBを切っており、相当軽量な内容になっていた。
+JQueryなどは使っていない。</p>
+
+<h3 id="lightbox">Lightbox</h3>
+
+<pre><code>(function() {
+  if (! document.addEventListener ) { return false; }
+  
+  var wrapper = document.getElementById("WrapWindow") /* ModalWindow */
+  var fadingTimer = false /* IntervalTimer */
+  var alpha = 0.0 /* ModalWindows's alpha number */
+
+  /* draw content */
+  var displayContent = function() {
+  }
+  
+  /* fading out (interval callback) */
+  var fadeout = function() {
+    if (alpha &lt; 0.8) {
+      alpha = alpha + 0.05
+      wrapper.style.backgroundColor = "rgba(0,0,0," + alpha + ")"
+    } else {
+      clearInterval(fadingTimer)
+      fadingTimer = false
+      displayContent()
+    }
+  }
+  
+  /* set this for event callback */
+  var setLightboxTrigger = function(e) {
+    wrapper.style.visibility = "visible"
+    fadingTimer = setInterval(fadeout, 30)
+  }
+
+  /* Return from lightbox */
+  wrapper.addEventListener("click", function(e) {
+    if (fadingTimer) {
+      clearInterval(fadingTimer)
+    }
+    wrapper.style.backgroundColor = "transparent"
+    wrapper.style.visibility = "hidden"
+    alpha = 0.0
+  }, false)
+
+  
+  document.getElementById("SideNotes").addEventListener("click", setLightboxTrigger, false)
+
+
+  
+})()
+</code></pre>
+
+<p>基本的な作りはごく単純だ。
+<code>html</code>と<code>body</code>が<code>height: 100%;</code>を持っていて、</p>
+
+<pre><code>&lt;section id="WrapWindow"&gt;
+&lt;/section&gt;
+</code></pre>
+
+<p>と</p>
+
+<pre><code>#WrapWindow {
+  visibility: hidden;
+  z-index: 10000;
+  background-color: #000; /* for RGBa Unsupported browseres */
+  background-color: rgba(0,0,0,0);
+  min-height: 100%;
+  min-width: 100%;
+  position: fixed;
+  top: 0px;
+  bottom: 0px;
+}
+</code></pre>
+
+<p>となっている。これにより見えていないし触れることもできないが見えている画面より手前に全体を覆うブロックがあり、これが<code>visible</code>になることで全体を覆って操作不能にする。</p>
+
+<p>プログラム全体を関数で書こうことで、全体でアクセスできるプロパティを外側に伝播しないように閉じ込めることができる。「クロージャを作ることで変数をローカル化し直ちに呼び出す」というテクニックは、オライリーのJavaScriptで紹介されている。</p>
+
+<p>グローバルな値として<code>fadingTimer</code>と<code>alpha</code>が定義されている。
+<code>fadingTimer</code>は<code>setInterval()</code>オブジェクトを格納するためのものだ。これをどこかにとっておかないと<code>clearInterval()</code>することができずに困ってしまう。</p>
+
+<p>イベントが発生した時に<code>fadingTimer</code>が真か偽か、によって判断を変えることができる。
+fadingTimerが真の状態で呼ばれる可能性があるのは、<code>#WrapWindow</code>に対するクリックイベントだけだ。
+なぜならば、fadingTimerがセットされる前に透明なだけでvisibilityはvisibleになっているので、クリックイベントは必ず<code>#WrapWindow</code>が取る。もちろん、なんらかのブラウザの不備でクリックされる可能性はないではないが。
+では、「これから真になる、まだ偽の状態で発生するか」というと、真になる関数が走った時点で、JavaScriptはシングルスレッドなので、真になるまで他のイベントを発生させても実行されないので関係ない。
+操作に対するフリーズタイムを短くするために<code>setTimeout()</code>を使うこともあるくらいだ。</p>
+
+<p>文字列(evalされる)の登録でなくコールバック関数の登録をするためには、intervalで呼ばれるコールバックで繰り返し使われる値を覚えておくことができないので、これはコールバック関数に対してグローバルでなくてはいけない。
+そのための値が<code>alpha</code>だ。</p>
+
+<p><code>1.0</code>になれば終了なのでその時点で<code>clearInterval</code>だが、まだインターバルタイマーが動作している状態で<code>#WrapWindow</code>がクリックされる可能性はある。これが真の場合だ。</p>
+
+<p>では、その場合どうするかというと、インターバルタイマーの状態に関わらずオーバーレイを消す。そのため、インターバルタイマーが働いていれば<code>clearInterval</code>してしまう。</p>
+
+<p>なお、最後に追加しているイベントは本番用ではなくテスト用だ。</p>
+
+<h3 id="css">CSS</h3>
+
+<p>今回の目玉のひとつが、<code>main</code>, <code>article</code>, <code>section</code>, <code>header</code>, <code>footer</code>, <code>aside</code>といった「HTML5への対応」だ。
+私のサイトにある大量の<code>div</code>を少しでも減らしたいからなのだが、HTML5への対応は様々なメリットがある。
+一方でレガシー環境を切り捨てることになりそうだったので慎重に対応してきたが、NN 4.6相当でも動作しそうな見通しがたったので採用となった。</p>
+
+<p>それはともかく、納得できない振る舞いに随分悩まされた。</p>
+
+<pre><code>        &lt;div id="SideContent"&gt;
+      	&lt;section&gt;
+             &lt;nav id="Toc" class="toc marginbox_main contentbox"&gt;
+               &lt;h1&gt;目次&lt;/h1&gt;
+               &lt;ul&gt;
+                 &lt;li&gt;ページナビゲーション&lt;/li&gt;
+               &lt;/ul&gt;
+             &lt;/nav&gt;
+        ...
+        &lt;/section&gt;
+        &lt;/div&gt;
+</code></pre>
+
+<p><code>div</code>, <code>section</code>, <code>nav</code>、あるいはそれらが内包する全てのテキストに対して<code>font-size</code>の相対的変更(<code>80%</code>など)をすると、ボックスが上下とも縮まり、左カラムと位置が揃わなくなる。
+インスペクタで見ると、table-cell要素の<code>#SideContent</code>の位置は正しいが、<code>section</code>のマージン上辺と<code>#SideContent</code>の上辺の間に隙間ができる。</p>
+
+<p>また、中に入っているボックスの上マージンを削ると、ボックスの高さがそれだけ減ってその分上に隙間が空く。
+配置は関係ないらしく、またこれはpaddingが設定されている場合のみ発生する。
+paddingを設定したボックスに内包されるブロック要素のmarginをいじるのは、高さを意識する必要がある場合は厳禁ということか。</p>
+
+<pre><code>        &lt;section id="MainArticle"&gt;
+          &lt;article class="marginbox_main contentbox"&gt;
+            &lt;h1&gt;記事のタイトル=章&lt;/h1&gt;
+                ...
+          &lt;/article&gt;
+</code></pre>
+
+<p>このh1のマージンを設定するとその分<code>article</code>が下がる。
+h1より上にボックスを置くとボックスは伸びるが、その分右カラムが下げられてしまう。</p>
+
+<p>恐らくは「h1を特別扱いしている」のだろうと思う。
+だが、このためにh1を修飾することが非常に難しい。</p>
+
+<p>結局<code>position: relative</code>にしてずらした。上以外のmarginについてはこうした問題はない。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

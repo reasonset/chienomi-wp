@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-01-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-01-17T00:00:00+09:00" />
+    <title>アメブロから更新時に一部を抽出して通知する - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>アメブロから更新時に一部を抽出して通知する</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>私はかなりの頻度でアメブロのとあるブログエントリの更新をチェックしているのだが、ほとんどの場合重要な情報はそのごく一部である。 しかし、アメブロにスマホでアクセスするたびに、くだらない広告や関心のないTV出演者の話に通信量が割かれ、時間も割かれることを大変に腹立たしく思っていた。</p>
+<p>そこで、PCからページを取得し、スクレイピングする方針で考えたものである。 スクレイピングした内容はDiscordで通知する。</p>
+<p>具体的な内容は差し障るので抽象化する。</p>
+<h2 id="コード">コード</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">#!/usr/bin/zsh</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">if [[</span> <span class="ot">-e</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry<span class="kw"> ]]</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">  <span class="kw">mv</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry.prev</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">  <span class="kw">touch</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry.prev</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">w3m -dump <span class="st">&quot;</span><span class="ot">$URL</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="kw">sed</span> -n -e <span class="st">&#39;/ptn1/ p&#39;</span> -e <span class="st">&#39;/ptn2from/,/ptn2to/ p&#39;</span> -e <span class="st">&#39;/endmark/ q&#39;</span> <span class="kw">&gt;</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="kw">if</span> ! <span class="kw">diff</span> -q <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry.prev</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="kw">then</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">  curl -H <span class="st">&quot;Accept: application/json&quot;</span> -H <span class="st">&quot;Content-type: application/json&quot;</span> -X POST -d <span class="st">&#39;{ &quot;content&quot; : &quot;&#39;&quot;</span><span class="ot">$(</span><span class="kw">perl</span> -pe <span class="st">&#39;s/\r?\n/\\n/&#39;</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry<span class="ot">)</span><span class="st">&quot;&#39;&quot; }&#39;</span> <span class="st">&quot;</span><span class="ot">$webhook_uri</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="kw">fi</span></a></code></pre></div>
+<h2 id="解説">解説</h2>
+<h3 id="アメブロからという難しさ">「アメブロから」という難しさ</h3>
+<p>ユーティリティスクリプトでは「問題自体を可能な限り引き下げ、ゆるく解決する」のが重要である。 開発コストを下げるべきなのだ。</p>
+<p>amebloの内容を見ると、独特なエディタから生成されるものだけに、エディタ上での記述はちょっとした違いで大幅に異なるHTMLコンテンツが生成される。 私は投稿者とは連携していないので、ちょっとした記述のブレで抽出すべきコンテンツを見失う可能性がある。</p>
+<p>生成されるタグと比べると見た目上の違いは少ない。 言い回しの違いや、スペースの有無程度である。</p>
+<p>そこで、<code>w3m</code>を活用する。<code>w3m</code>の<code>-dump</code>オプションは、見た目に近い形でレンダリングした上でテキストにして出力する。 アメブロの執筆者はエディタ上の見た目で書いている可能性が高く、このようにレンダリングしてしまったほうがブレは抑えられる。</p>
+<p>その中から情報を抽出する。 ある正規表現に一致する行、またはある正規表現の範囲をアドレスとして出力すれば多くの場合は十分だろう。</p>
+<p>続くエントリや広告のゴミ値を拾ってしまわないように、エントリ終了時にはSedを終了させる。 多くの場合、<code>/^AD$/</code>で良いかと思うが、<code>/いいね！した人.*リブログ/</code>というパターンも考えられる。</p>
+<p>例えば<a href="https://ameblo.jp/hibino-ya/">おやつ工房 ひびのや</a>をdumpした結果からメニューを取得するとすれば、筆者はメニューの表記前に<code>本日のメニューは、</code>という行を置く習慣があるようで、またブログの締めとして<code>本日もよろしくお願いいたします</code>を置いている。 これに基づけば</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sed"><code class="sourceCode sed"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="st">/本日のメニューは/</span>,<span class="st">/本日ものよろしくお願いいたします/</span> <span class="kw">p</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="st">/</span><span class="ch">^</span><span class="st">AD</span><span class="ch">$</span><span class="st">/</span> <span class="kw">q</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="st">//</span><span class="er">いいね！した人.*リブログ/ q</span></a></code></pre></div>
+<p>メニューそのものを抽出するならば、<code>＊</code>で囲むようにしているようなので、そこに限定しても良い。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sed"><code class="sourceCode sed"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="st">/＊</span><span class="ch">.*</span><span class="st">＊/</span> <span class="kw">p</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="st">/</span><span class="ch">^</span><span class="st">AD</span><span class="ch">$</span><span class="st">/</span> <span class="kw">q</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="st">//</span><span class="er">いいね！した人.*リブログ/ q</span></a></code></pre></div>
+<p>しかし、どうもこれは項目であるようだから、メニューとしては成立しないかもしれない。 項目終わりは空行を空けているようなので、この項目から空行まで抽出してみよう。 一応、スペースを入れていた場合にも対応しておく。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sed"><code class="sourceCode sed"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="st">/＊</span><span class="ch">.*</span><span class="st">＊/</span>, <span class="st">/</span><span class="ch">^</span><span class="st">\s</span><span class="ch">*$</span><span class="st">/</span> <span class="kw">p</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="st">/</span><span class="ch">^</span><span class="st">AD</span><span class="ch">$</span><span class="st">/</span> <span class="kw">q</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="st">//</span><span class="er">いいね！した人.*リブログ/ q</span></a></code></pre></div>
+<p>しかし次のようなケースが発見された。</p>
+<pre><code>＊天然酵母パン＊
+&#x26ab;︎食パン1斤→焼き上がりました
+自家製カボス酵母、春よ恋使用。
+乳製品不使用のシンプルなパンです。国産のお粉の素朴な風味をそのまま味わっていただけます。 
+
+&#x26ab;︎レーズンとくるみのパン→焼き上がりました
+自家製レモン酵母、春よ恋使用。
+
+&#x26ab;︎カンパーニュ →焼き上がりました
+自家製ラ・フランス酵母使用。
+ライ麦粉と全粒粉を配合。</code></pre>
+<p>なので、項目開始だけでなく小項目開始も受け入れることにする。</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sed"><code class="sourceCode sed"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="st">/＊</span><span class="ch">.*</span><span class="st">＊</span><span class="ch">\|^</span><span class="st">&#x26ab;/</span>, <span class="st">/</span><span class="ch">^</span><span class="st">\s</span><span class="ch">*$</span><span class="st">/</span> <span class="kw">p</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="st">/</span><span class="ch">^</span><span class="st">AD</span><span class="ch">$</span><span class="st">/</span> <span class="kw">q</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="st">//</span><span class="er">いいね！した人.*リブログ/ q</span></a></code></pre></div>
+<p>結果次のように抽出できた。</p>
+<pre><code>＊マフィン＊
+プレーン&#x2b07;
+ポップシュガーに戻しました。
+きのこみたい
+
+＊シフォンケーキ＊
+プレーン小
+
+＊天然酵母パン＊
+&#x26ab;食パン1斤→焼き上がりました
+自家製カボス酵母、春よ恋使用。
+乳製品不使用のシンプルなパンです。国産のお粉の素朴な風味をそのまま味わっていた
+だけます。 
+
+&#x26ab;レーズンとくるみのパン→焼き上がりました
+自家製レモン酵母、春よ恋使用。
+
+&#x26ab;カンパーニュ →焼き上がりました
+自家製ラ・フランス酵母使用。
+ライ麦粉と全粒粉を配合。</code></pre>
+<p>日付も入れるならば、投稿時タイムスタンプの行を追加しよう。</p>
+<pre><code>/[0-9]\{4\}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]/ p
+/＊.*＊\|^&#x26ab;/, /^\s*$/ p
+/^AD$/ q
+//いいね！した人.*リブログ/ q</code></pre>
+<p>なお、サンプルとして「ameblo 本日のメニュー」で検索して最上位に出た<a href="https://sorairo.shopinfo.jp/">おやつ工房 ひびのや</a>さんを使わせていただいた。 埼玉県越谷市にあり、東京スカイツリーライン大袋駅、せんげん台駅が最寄りとなる、パンとお菓子のお店だそうである。11時から18時営業、金曜日休業。</p>
+<h3 id="更新されたかどうか">更新されたかどうか</h3>
+<p>単純に考えれば取得したページを<code>tee</code>で保存して比較したいところだが、 広告などランダムに生成される部分があるため、これは失敗する。</p>
+<p>amebloは<code>Date</code>ヘッダを含み、<code>Content-Length</code>ヘッダを含まないため<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>、ヘッダ部分だけ保存するという方法もある。 <code>curl</code>で<code>--dump-header</code>を使用し、内容は捨てるという方法が良いだろう。</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="ex">curl</span> -D ~/.cahce/someameblo/header <span class="st">&#39;https://ameblo.jp/hibino-ya/&#39;</span> <span class="op">&gt;</span> /dev/null</a></code></pre></div>
+<p>もうひとつはそもそも抽出した内容を比較するという方法がある。 リクエスト回数が減るため合理的だ。</p>
+<p>いずれにせよ、前回取得分をローテーションして、今回取得分と比較する。</p>
+<pre><code>diff -q ~/.cache/someameblo/header ~/.cache/someameblo/header.prev &gt; /dev/null</code></pre>
+<h3 id="通知する">通知する</h3>
+<p>今回の場合、Discordのwebhookを使用している。</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb11-1" data-line-number="1">curl -H <span class="st">&quot;Accept: application/json&quot;</span> -H <span class="st">&quot;Content-type: application/json&quot;</span> -X POST -d <span class="st">&#39;{ &quot;content&quot; : &quot;&#39;&quot;</span><span class="ot">$(</span><span class="kw">perl</span> -pe <span class="st">&#39;s/\r?\n/\\n/&#39;</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry<span class="ot">)</span><span class="st">&quot;&#39;&quot; }&#39;</span> <span class="st">&quot;</span><span class="ot">$webhook_uri</span><span class="st">&quot;</span></a></code></pre></div>
+<p>Twitterという手もある。ここでは<code>tw</code>を使用する。 セルフDMの送信自体は可能だが、Twitter webや公式アプリでは確認/通知はなくなっている。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode zsh"><code class="sourceCode zsh"><a class="sourceLine" id="cb12-1" data-line-number="1">tw --yes dm:<span class="ot">to=</span>account <span class="st">&quot;</span><span class="ot">$(</span><span class="kw">perl</span> -pe <span class="st">&#39;s/\r?\n/\\n/&#39;</span> <span class="ot">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="ot">}</span>/someameblo/entry<span class="ot">)</span><span class="st">&quot;</span></a></code></pre></div>
+<p>LINE Notifyという方法もある。</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="ex">curl</span> -X POST -H <span class="st">&quot;Authorization: Bearer </span><span class="va">$TOKEN</span><span class="st">&quot;</span> -F <span class="st">&#39;message=&#39;&quot;</span><span class="va">$(</span><span class="fu">perl</span> -pe <span class="st">&#39;s/\r?\n/\\n/&#39;</span> <span class="va">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="va">}</span>/someameblo/entry <span class="kw">|</span> <span class="ex">nkf</span> -WwMQ <span class="kw">|</span> <span class="fu">tr</span> = %<span class="va">)</span><span class="st">&quot;</span> https://notify-api.line.me/api/notify</a></code></pre></div>
+<p>メールが配送できる環境からであればMMS宛というのも悪くない</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="fu">perl</span> -pe <span class="st">&#39;s/\r?\n/\\n/&#39;</span> <span class="va">${XDG_CACHE_HOME:-$HOME</span>/.cache<span class="va">}</span>/someameblo/entry <span class="kw">|</span> <span class="ex">mailx</span> -r <span class="st">&quot;notification@localhost.localdomain&quot;</span> -s <span class="st">&quot;Hooked notification&quot;</span> mms@example.com </a></code></pre></div>
+<h3 id="ジョブスケジューラによる定期実行">ジョブスケジューラによる定期実行</h3>
+<p>スクリプトを書いても手動実行するというのはちょっとださい。 ジョブスケジューラによって自動的に実行してほしいところだ。</p>
+<p>anacronあたりを使うのが妥当なのだろうけれど、私はSystemd Timer (User)を使用することにした。</p>
+<p>まずは<code>service</code>ユニットを書く。 ここでは<code>~/.config/systemd/someameblo.service</code>を作成している。</p>
+<pre class="systemd"><code>[Unit]
+Description=Get ameblo entry.
+
+[Service]
+Type=simple
+ExecStart=/bin/zsh &quot;/home/aki/opt/someameblo/getamebloentry.zsh&quot;
+
+[Install]
+WantedBy=default.target</code></pre>
+<p>次に対応した<code>timer</code>ユニットを書く。 ここでは起動から10分で初回実行し、それ以降4時間ごとに起動している。</p>
+<pre class="systemd"><code>[Unit]
+Description=Get ameblo entry.
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=4hour
+Unit=someameblo.service
+
+[Install]
+WantedBy=timers.target</code></pre>
+<p>ユーザーユニットをリロードする。</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="ex">systemctl</span> --user daemon-reload</a></code></pre></div>
+<p>タイマーを起動&amp;有効化</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="ex">systemctl</span> --user start someameblo.timer</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="ex">systemctl</span> --user enable someameblo.timer</a></code></pre></div>
+<h2 id="ゆるい解決について">「ゆるい解決」について</h2>
+<p>このようなユーティリティは基本的に人間を補助するものである。 オートメーションに属するものの、このユーテリティが人間に無断で何かを決断するわけではない。 また、人間にとってこのユーテリティによって与えられる唯一絶対の情報というわけでもない。</p>
+<p>できるだけ精度が高ければ嬉しいけれども、もしも例外的ケース(例えば著者が普段とはまるで違う書き方をした場合など)においてうまく機能しなかったとしたならば、それは単に普通にブログを見に行けばいいだけである。 例外的ケースにおいて問題が発生しないように設計し、成功しない可能性については許容する。</p>
+<p>同様に情報が常に完璧なフォーマットであることを求める必要もない。 ソースが完璧なフォーマットで書かれない可能性は高いので、完璧を求めることは不毛である可能性が高い。 これもまた、不十分な情報となったときには自らブログを見に行く選択肢もあるのだ。</p>
+<p>ただし、十分に機能させるためには、抽出条件はfalse negative(取りこぼしがある)よりはfalse positive(ゴミがはいる)ほうが好ましい。 ゴミがあっても無視すればいいが、取りこぼしがあると必要な情報が損なわれる可能性があるためだ。</p>
+<p>プログラミングはプログラムを書くことよりも、どのようにアプローチするかということのほうが重要な場合は少なくない。 プログラミング初級者のうちは設計をないがしろにしがちだが、プログラムの出来や困難性はだいたい設計によって決まる。 今回の主題も、正攻法ではかなり難しい条件を、考え方を変えることで簡単な問題に変換しているということだ。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>あるいはcurlがContent-Lengthを含まないのかもしれない<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

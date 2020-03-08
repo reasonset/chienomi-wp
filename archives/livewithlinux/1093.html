@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2017-09-17T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2017-09-17T00:00:00+09:00" />
+    <title>Discord Webhook + curlでスマホに通知してみる(LINE Notifyもあるよ) - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Discord Webhook + curlでスマホに通知してみる(LINE Notifyもあるよ)</h1></header>
+        <article id="MainArticle">
+<p>IFTTTに近いかもしれないが、特定の条件で発生するアクションを作ったのだが、Linuxコンピュータで処理しただけでは外出中に気づくことができない。 そこでスマホに通知する方法が欲しくて考えた結果、もっとも適切そうなのは、DiscordのWebhookを使うというものだった。</p>
+<h3 id="通知までの考え方">通知までの考え方</h3>
+<p>一般には次のような流れになる</p>
+<ol style="list-style-type: decimal">
+<li>検証すべきデータを取得する</li>
+<li>データを解析する</li>
+<li>条件を満たす場合にhookを実行する</li>
+</ol>
+<p>データ取得、解析は、例えばウェブスクレイピング。次の例では特定のページが最終取得時と変更されているかをチェックする</p>
+<pre><code>getfunc() {
+  curl &#39;http://journal.reasonset.net/&#39; &gt; ~/tmp/new.page.html
+}
+
+checkfunc() {
+  if cmp ~/tmp/new.page.html ~/tmp/old.page.html
+  then
+    return 0
+  else
+    rm ~/tmp/old.page.html
+    mv ~/tmp/new.page.html ~/tmp/old.page.html
+    return 1
+  fi
+}</code></pre>
+<p>ここでhookさせるべきときに<code>1</code>を返すのは、<code>while</code>で処理しやすいようにするためである。</p>
+<p>データの解析までは通常ひとつづりで行われるため、まとめてしまって構わない。 Ruby + Nokogiri + Capybara + Poltergeistという構成でスクレイピングする場合もあるだろう。</p>
+<p>また、twによってツイッターの投稿をチェックしたり、IMAPメールボックスをチェックしたり、あるいはfetchmailで受信したメールをフィルタするという方法もあるでしょう。</p>
+<p>hookについては、次のようなものが考えられます。 まず、通知を表示する。</p>
+<pre><code>notify_hook() {
+  notify-send &quot;$1&quot;
+}</code></pre>
+<p>音を鳴らす。SOXを使うか、mpvを使うか、aplayを使うか…など選択肢は多いのですが、ここではSOXを使うことにしましょう。 音が鳴り終わるまで止める必要はないので、バックグラウンドで</p>
+<pre><code>notify_hook() {
+  play &quot;$1&quot; &amp;
+}</code></pre>
+<p>ダイアログを表示する。Zenityの場合、制御端末が存在していると、制御端末ウィンドウがアクティブにならないとダイアログが表示されないため、ここではYadを使います。</p>
+<pre><code>notify_hook() {
+  yad &quot;$1&quot;
+}</code></pre>
+<p>コマンドを実行する。hookが起動された時点で実行したい内容があれば書いておきます。</p>
+<pre><code>notify_hook() {
+  tw --yes &quot;HOOKされたよ!&quot;
+}</code></pre>
+<h3 id="スマートフォンに対する通知">スマートフォンに対する通知</h3>
+<p>Linuxコンピュータの前にいればユーティリティを自在に書くことのできる我々は全能感にすら浸ることができる。 だが、残念ながらLinuxコンピュータで優れたスクリプトを書いていたとしても、それはLinuxコンピュータに触れていなければ十分に発揮することができない。</p>
+<p>そんな外の世界をつなぐのがスマートフォンの存在だ。 スマートフォンが注意をひきつけてくれれば何かしらの対応が可能だろう。</p>
+<p>最も簡単な方法はメールではないだろうか。昔からよく使われていた方法だ。 現在もその方法は有効であり、例えばMailxを使ってメールを送ることもできる。 次の例ではMailxは設定済みであるか、もしくはlocalhsotに有効なMTAがあるものとする。</p>
+<pre><code>notify_hook() {
+  echo &quot;Hookされました&quot; | mail -r &quot;notification@localhost.localdomain&quot; -s &quot;Hooked notification&quot; mms@example.com
+}</code></pre>
+<p>だが、今時MMSなんか使っていないというHackerも多いのではないだろうか。 GMail宛に送るという方法もあるが、GMailで大量のメールをもらっているからあまり参考にはならないという人も多いはず。</p>
+<p>ではインスタントメッセンジャーについて検討してみよう。</p>
+<p>Facebook Messangerはfb-messanger-cliやMesserなどがあるが、自分自身に送るためのハードルが高すぎるため現実的ではないだろう。</p>
+<p>Google Hangoutsはhangupsによってコマンドラインからの送信が可能だ。 ただし、Pythonスクリプトで書く必要があり、それなりに複雑だ。事前準備もある程度必要で、bot用アカウントを作成しておかなければ自分自身には送れないという意味でハードルは高い。</p>
+<p>SkypeもSkype4pyによってコマンドラインから利用が可能だが、問題はHangouts同様である。 最近はSkypeアカウントの認証は厳しいし、サードパーティクライアントに対して非常に厳しい対応をとっていることを考えるとより難しいだろう。</p>
+<p>以外にもLINEは現実的な処理が可能だ。 <a href="https://notify-bot.line.me/my/">LINE Notifyのマイページ</a>から登録を行い、トークンを取得する。 そして次のようにして送信するのだ([token]と[message]は適切に置き換える)</p>
+<pre><code>curl -X POST -H &#39;Authorization: Bearer [token]&#39; -F &#39;message=[message]&#39; https://notify-api.line.me/api/notify</code></pre>
+<p>有力な選択肢のひとつである。</p>
+<p>SlackはBOTを作成することができ、簡単に通知することができるが、Slackの通知は安定しないため、すぐに気づきたい場合に見逃すかもしれない。</p>
+<h3 id="discordを使う">Discordを使う</h3>
+<p>LINEで通知できるのも素晴らしいが、Discordならもっと楽しい。</p>
+<p>Discordはマルチプラットフォームであり、PC, Android, iOSで扱うことができる。 加えて、それぞれの端末にアカウントを分けることで電話番号のない端末を探したり、一斉に通知したりすることが可能だ。</p>
+<p>しかも、LINEでは通知はすべてがまとめられてしまうが、これなら分類することもできる。 LINEにおいても自分のみが所属するグループを作ることで共有が可能だが、Discordのほうが共有も容易だ。 URIなどを端末間で共有したい場合の利便性も高い。</p>
+<p>まずは準備をしよう。 各端末にアカウントを用意し(PCと共有のアカウントがあっても構わない)、自分(たち)用のサーバーを用意する。 そして各端末のアカウントを招待し、通知/共有に含めたい全アカウントを登録する。</p>
+<p>これでgeneralを介してアクセス可能になったが、全てがまとめられてしまう状況には変わりない。 そこで、内容を適切に分割するようにチャンネルを作成しよう。</p>
+<p>チャンネルをわけることで、そのチャンネルに対する内容を通知しなくていい端末は当該チャンネルの通知を切っておく、ということも可能になるる これにより内容によって端末に通知する/しないを選択可能だ。</p>
+<p>ではいよいよWebhookを作成する。 チャンネルの設定に移動し、&quot;Webhooks&quot;を選択する。ここでWebhookを作成するとWebhookの名前とアバターを設定し、通知するチャンネルを選択、そしてURLが発行されるはずだ。 このwebhook URLに対してJSONをPOSTすることでbotとして発言させることができる。</p>
+<p>Webhookに対して送れるJSONオブジェクトは次の通りだ。</p>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>content</td>
+<td>string</td>
+<td>2000文字までのメッセージ</td>
+<td>1つのcontent/file/embeds</td>
+</tr>
+<tr class="even">
+<td>username</td>
+<td>string</td>
+<td>Webhookのusernameを上書きする</td>
+<td>false</td>
+</tr>
+<tr class="odd">
+<td>avatar_url</td>
+<td>string</td>
+<td>デフォルトのアバターを上書きするURL</td>
+<td>false</td>
+</tr>
+<tr class="even">
+<td>tts</td>
+<td>bool</td>
+<td>trueならTTSメッセージとする</td>
+<td>false</td>
+</tr>
+<tr class="odd">
+<td>file</td>
+<td>file contents</td>
+<td>送信するファイル</td>
+<td>one of content, file, embeds</td>
+</tr>
+<tr class="even">
+<td>embeds</td>
+<td>array of embed objects</td>
+<td>埋め込まれたリッチコンテンツ</td>
+<td>one of content, file, embeds</td>
+</tr>
+</tbody>
+</table>
+<p>チャンネルは設定を上書きできないが、発言者の名前やアバターは上書きすることができる。 そのため、単一のWebhookでも種類の異なる通知をすることが可能だ。 (アバター変更するなら複数のWebhookを使ったほうが効率は良いだろうが)</p>
+<p>curlを使って次のようにJSONを送信することができる。</p>
+<pre><code>curl -H &quot;Accept: application/json&quot; -H &quot;Content-type: application/json&quot; -X POST -d &#39;{&quot;username&quot;:&quot;J.R.H&quot;,&quot;content&quot;:&quot;ホックされたよ!!!&quot;}&#39; &#39;https://discordapp.com/api/webhooks/koko-ni-hook-no-uri&#39;</code></pre>
+<p>JSONがダブルクォートを必要とするため、変数展開したい場合は少し大変かもしれない。</p>
+<h3 id="ひとこと">ひとこと</h3>
+<p>LINEもDiscordも、ユーザーごと/チャンネルごと個別の通知音設定がほしい</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

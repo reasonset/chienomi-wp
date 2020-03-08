@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2016-02-03T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2016-02-03T00:00:00+09:00" />
+    <title>ThinkPad e440 * PCLOS - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>ThinkPad e440 * PCLOS</h1></header>
+        <article id="MainArticle">
+<ul id="markdown-toc">
+  <li><a href="#section" id="markdown-toc-section">フォント問題</a></li>
+  <li><a href="#touchpad-synaptics" id="markdown-toc-touchpad-synaptics">Touchpad Synaptics</a></li>
+  <li><a href="#usb30" id="markdown-toc-usb30">USB3.0</a></li>
+  <li><a href="#section-1" id="markdown-toc-section-1">日本語入力</a></li>
+</ul>
+
+
+<p>ラップトップはPCLinuxOSで運用しているのだが、いくつかの不具合に気づいていた。
+修正しておいた。</p>
+
+<h3 id="section">フォント問題</h3>
+
+<p>Konsoleが適切なフォントで表示しない。</p>
+
+<p>KonsoleはKDEのMonospaceフォントの設定に従うのだが、KDEのMonospaceフォントは好きなフォントを指定できない。
+Monospaceフォントに任意のフォントを使いたいのであれば、Fontconfigでmonospaceフォントを明に指定するしかない。</p>
+
+<p>しかし、多くの場合Konsoleはフォントの幅がおかしく、おかしなことになる。
+カーソル位置と文字位置がずれてしまうのだ。</p>
+
+<p>この点については、Monospaceフォントをmonospaceにし、さらにフォントを選ぶことで調整する。
+それでもKonsoleはずれやすいので、素直にQTerminalあたりを使うほうがマシかもしれない。
+最も良いterminalアプリはXFce Terminalだと思う。PCLOSでも使用可能だ。</p>
+
+<p>また、いくつかのフォントで異常な表示になっていた。
+Web上で散見されたので、Fontconfigでそのフォントを置き換える。</p>
+
+<h3 id="touchpad-synaptics">Touchpad Synaptics</h3>
+
+<p>タッチパッドを使ったスクロールが正常に機能していなかった。
+twofinger scrollも相当回しまくらないと動かないし、Circular Scrollingに至っては30回ほど回して3行スクロールされるため話にならない。</p>
+
+<p>KCM Touchpadでいくら調整してもまともにならなかった。結局、kcm_touchpadをアンインストールして、手動で調整することで解決した。
+Touchpad-solutionを入れておくとベースになる設定を作りやすい。</p>
+
+<pre><code>Section "InputClass"
+    Identifier "touchpad catchall"
+        Driver "synaptics"
+        MatchIsTouchpad "on"
+        MatchDevicePath "/dev/input/event*"
+        #Option  "Device"        "/dev/input/mouse0"
+        Option  "Protocol"      "auto-dev"
+        Option  "LeftEdge"      "1700"
+        Option  "RightEdge"     "5300"
+        Option  "TopEdge"       "1700"
+        Option  "BottomEdge"    "4200"
+        Option  "FingerLow"     "25"
+        Option  "FingerHigh"    "45"
+        Option  "MaxTapTime"    "180"
+        Option  "MaxTapMove"    "220"
+        Option  "VertScrollDelta" "-100"
+        Option  "HorizScrollDelta" "-100"
+        Option  "MinSpeed"      "0.20"
+        Option  "MaxSpeed"      "1.00"
+        Option  "AccelFactor" "0.15"
+        Option  "SHMConfig"     "1"
+        Option  "VertTwoFingerScroll"   "1"
+        Option  "HorizTwoFingerScroll"  "1"
+        Option  "VertEdgeScroll"        "0"
+        Option  "HorizEdgeScroll"       "0"
+        Option  "TapButton1"            "1"
+        Option  "TapButton2"            "2"
+        Option  "TapButton3"            "3"
+        Option  "EmulateTwoFingerMinZ" "40"
+        Option  "EmulateTwoFingerMinW" "8"
+        Option  "RTCornerButton" "3"
+        Option  "CircularScrolling" "on"
+        Option  "CircScrollTrigger" "6"
+        Option  "PalmDetect" "1"
+        Option  "PalmMinWidth" "10"
+        Option  "PalmMinZ" "200"
+EndSection
+</code></pre>
+
+<p>ついでに自動起動で<code>syndaemon -t -k -i 2 -d</code>して完了。
+スムーズに動くようになった。Windows 10に合わせてナチュラルスクロール化している。</p>
+
+<h3 id="usb30">USB3.0</h3>
+
+<p>e440がUSB3.0だとかいうので、実際に試してみた。</p>
+
+<p>USB3.0ペンドライブを左側奥に挿した場合</p>
+
+<pre><code>/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/6p, 5000M
+    |__ Port 5: Dev 2, If 0, Class=Mass Storage, Driver=usb-storage, 5000M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/14p, 480M
+    |__ Port 7: Dev 2, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 7: Dev 2, If 1, Class=Wireless, Driver=btusb, 12M
+    |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+</code></pre>
+
+<p>左側手前に挿した場合</p>
+
+<pre><code>/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/6p, 5000M
+    |__ Port 2: Dev 3, If 0, Class=Mass Storage, Driver=usb-storage, 5000M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/14p, 480M
+    |__ Port 7: Dev 2, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 7: Dev 2, If 1, Class=Wireless, Driver=btusb, 12M
+    |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+</code></pre>
+
+<p>右側に挿した場合</p>
+
+<pre><code>/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/6p, 5000M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/14p, 480M
+    |__ Port 6: Dev 4, If 0, Class=Mass Storage, Driver=usb-storage, 480M
+    |__ Port 7: Dev 2, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 7: Dev 2, If 1, Class=Wireless, Driver=btusb, 12M
+    |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+</code></pre>
+
+<p>つまり左がUSB3.0で右がUSB2.0。
+さらに言えば、左側のUSB3.0はひとつのroot_hubで、USB2.0は3つ全部でひとつのroot_hub。</p>
+
+<p>e440はUSBポートはすべて黒いので注意が必要。</p>
+
+<p>ちなみに、これを調べるまでSDカードスロットが手前下方にあるとか知らなかった。
+さらにBTがあることも知らなかった。ただ、BTはデバイスが見つからないので使えない。理由は分からない。</p>
+
+<h3 id="section-1">日本語入力</h3>
+
+<p>Gtk2アプリに大してUIMが機能しないという問題があり、<code>gtk-query-immodules</code>でもどうしようもなかったので対応していた。</p>
+
+<p>結局、develを含めて全UIMコンポーネントをインストールすることで解決した。
+この過程でUIM appletが動作せず、uimを有効にできなくなってしまったが、再インストールで解決した。</p>
+
+<p>uim-mozc-neologd-utというパッケージがあって</p>
+
+<blockquote>
+  <p>Uim 用 Mozc プラグイン (Mozc NEologd UT 用)
+Uim で Mozc NEologd UT を使用するためのプラグインです。</p>
+
+  <p>※ インストール後はコンピューターを再起動してください。</p>
+</blockquote>
+
+<p>とあり、UTが使えるようだ。
+さすがTomcatさんというか、おかげで文字入力効率は大幅に向上した。しかし、Mozcではひらがな/カタカナキーが機能しないという問題がある。
+普通はあまり気にしないよということかもしれないが、かな入力の一貫として私は全角英数入力のためにEisu-toggleを使っているので、ここで英数にした時にかなに戻ることが難しい。
+そこで、無変換をひらがな/カタカナキーの代わりに使用するように変更した。</p>
+
+<p>なお、アプレットはuim-applet-gtk-systray以外はAnthyで予測変換の候補が出ない。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

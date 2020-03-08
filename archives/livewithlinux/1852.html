@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-11-21T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-11-21T00:00:00+09:00" />
+    <title>Baloo File Extractorの大暴走 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>Baloo File Extractorの大暴走</h1></header>
+        <article id="MainArticle">
+<h2 id="顛末">顛末</h2>
+<p>BalooはKDE5のファイルインデックス機能。 かなり性質は違うものの、部分的に見ればKDE4のNepomukを置き換える機能だと私は見ている。</p>
+<p>先日、突然デスクトップが非常に重くなった。操作に対して数秒反応しないということを繰り返す。 私はConkyで常に状態を見ているのだが、Baloo File ExtractorがCPUを2.5%(=ロード1.0)使用しており、 IOも非常に高い。しかし、止まるほどではない気がするのだけど…と思い、嫌な予感がして<code>journalctl</code>してみたら</p>
+<pre><code>11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file_extractor[2677]: qt5ct: using qt5ct plugin
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file_extractor[2677]: inotify_add_watch(/home/haruka/.config/fcitx/dbus) failed: (No space left on device)
+11月 19 08:29:06 hydrangea baloo_file_extractor[2677]: inotify_add_watch(/home/haruka/.config/fcitx/dbus/4b235cc9521d448a9769a6f507904e37-0) failed: (No space left on device)
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file_extractor[2677]: QFileSystemWatcher::removePaths: list is empty
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file_extractor[2677]: QFileSystemWatcher::removePaths: list is empty
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.
+11月 19 08:29:06 hydrangea baloo_file[2401]: KDE Baloo File Indexer has reached the inotify folder watch limit. File changes will be ignored.</code></pre>
+<p>地獄だった。 要はBalooがinotifyを食い尽くしてしまっていて、カーネルレベルでのエラーを(他を巻き込みつつ)無限に繰り返している、と。</p>
+<p>というわけでBalooを止める。完全に。</p>
+<pre><code>$ balooctl disable
+$ rm -rf .local/share/baloo
+$ systemctl reboot</code></pre>
+<h2 id="インテグレーテッドシームレスuxの代償">インテグレーテッドシームレスUXの代償</h2>
+<p>最近はOSが統合的な環境を提供するというのはひとつの流れになっていると思う。 やり始めたのはAppleだと思うけど、ユーザーの囲い込み勝負になっていて、WindowsだってなにかしようとすればWindowsのソフトウェアが自動的に起動する。 そのインターフェイスにもCortanaを使わせようとするし、各コンポーネントが密結合し、「全体でひとつ」に見せようとしてくる。</p>
+<p>これが良いことなのかどうかは、ちょっと私には判断しかねる。 少なくとも理想的な挙動を考えればシームレスで統合されているのは美しいことだ。 だが、現実はそうはいかない。気に入らないソフトウェアや気に入らない挙動、そしてもっと好きなソフトウェアというのはどうしたってあらわれるものだから。 KDEが統合的かつ多角的に機能を提供してくれることは、私は好ましいことだと思っているが、ではそれに満足しているかというと、実際のところKDEPIMですら「余計なもの」だと感じている。KDE TelepathyではなくPidginを使っているし、KMailでなくClaws Mailを使っているし、Akonadiに至ってはいらないとすら思っている。</p>
+<p>そして何より気持ちわるい。 AppleやMicrosoftやGoogleが統合的に機能を提供しようとするのは、ユーザーのUXのためではないし、単なる囲い込みのためでもない。 ユーザーの情報を集約し入手するためだ。 FacebookがなんでもかんでもFacebookを経由して利用させ、かつFacebookを常に開いておくように要求するのもそのためだ。 そういう意図を持っているのがわかっているのに、情報を集める機能があるというのは、私はすごく気持ち悪いと思うのだ。</p>
+<p>KDEコミュニティはそのようなことはないだろう。なんといっても、情報を集約したところでその使い途がない、というかそもそもそんなサーバーがない。 サーバーがあったところで、ではそのデータは誰の所有物かという問題になる。 だからKDEに情報収集機能があってもそれほど問題はない…はずだが、それでも私はNepomukも気持ちわるいと感じていたし、Balooもそんなに歓迎していない。</p>
+<p>そもそも、私の感覚からいえば、ファイルインデックス系の機能というのは無駄なコストだ。</p>
+<p>基本的にファイルは属性に応じてちゃんとヒエラルキーを持って管理しているし、「フォルダをまたいで特定の条件でファイルを抽出したい」というケースはかなり稀だ。 もちろん、全く役に立たないとは言わない。その稀なケースでは役に立つわけだから。</p>
+<p>だが、支払うコストがそれに見合ったものではない。 基本的にファイルインデックス系の機能は常に非常に多くのアクセスを行うし、CPU時間も長い。 つまり、ファイルインデックス機能が機能するために必要とするIO及びCPUのコストは極めて高いのだ。</p>
+<p>ご存知の通り、Windows Updateは「Windows Updateをするべき余地がない」ことが確定しない限り非常に重い動作になる。 どれほど高性能なコンピュータを使っていても、ほぼ使い物にならない(マウスカーソルも止まるし、メニューも開けない、文字入力もひどいラグが発生する)状態になる。 常にWindowsを立ち上げっぱなしの人であればそれほど気にならないだろうが、Windowsをそれほど起動しない人にとっては、Windowsは常に操作をうけつけない印象になる。 これはアップデートのための話になるが、もちろんアップデートのためにこのようなアクセスを行うことは優れたデザインではない。</p>
+<p>このような、操作を明らかに妨げ、コンピュータが使い物にならなくなるような、利用可能な時間が制限されるような、ディスクデバイスの寿命を縮めるような、コンピュータが著しくストレスを生じる性能であるかのように思わせるようなコストを払ってまで必要な機能ではない、と私は思うのだ。</p>
+<p>KDEに関してはNepomukでも同じようなことを経験したはずだ。CPUを食いつぶし、IOを食いつぶし、メモリを食いつぶしてコンピュータが使いものにならず、どれほど崇高な理想を掲げたところでコンピュータが使いものにならなくなればそれは意味がないということを思い知ったはずだ。 Nepomukは結局ほとんどのプログラムに利用されることなく終わったし、KDE5には継承されなかった。 にもかかわらずBalooを採用した。いや、Nepomukでの失敗を踏まえて改善したものを投入したのかもしれないが、そもそもNepomukがなぜ失敗したのかということを理解していない、結局わかっていない。 実際のところBalooについて調べると「お前を消す方法」で溢れてしまうのがその証左だろう。</p>
+<p>「優れたUXはあれこれお節介を焼くことではなく、余計なことは何もしないことである」ということに、 一体いつ気がつくのだろうか。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

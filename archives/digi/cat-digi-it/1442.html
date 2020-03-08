@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-07-02T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-07-02T00:00:00+09:00" />
+    <title>DPIと画面サイズとスケーリングとピクセルの話 - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>DPIと画面サイズとスケーリングとピクセルの話</h1></header>
+        <article id="MainArticle">
+<h2 id="概念の確認">概念の確認</h2>
+<p>今やあまり意識されることはないのだが、改めて言うと</p>
+<ul>
+<li>ディスプレイは多数のドットからできている</li>
+<li>1インチ辺あたりいくつのドットがあるかというのがDPIである</li>
+<li>であるから、DPIというのはXYがある。 ちなみに、ThinkPad X1 Carbon 2017は143x158DPIである。 (ppiといったりもする)</li>
+<li>このためドットの実寸(正確に言えばドット間隔の実寸)はドット数が多いほうが、そしてディスプレイサイズが小さい方が小さくなる</li>
+<li>ドット数が一定である場合、ディスプレイが大きくなるほど密度(解像度)は下がる</li>
+<li>逆にディスプレイサイズが一定である場合、ドット数が増えるほど密度(解像度)は上がる</li>
+<li>ピクセル数はディスプレイ表示上の絶対数で、その実寸は変動的</li>
+<li>cm, inch, mmといった単位は実寸上の絶対値で、実際に何ピクセルで描画するかは変動的</li>
+<li>ラスターグラフィックス、あるいは固定的ピクセル数で描画されるUIは解像度が向上すると実寸としては小さくなる</li>
+<li>ベクターグラフィックス、あるいは固定的実数値で描画されるUIは解像度が向上すると描画に使用するピクセル数が増加する</li>
+</ul>
+<h2 id="論理上の振る舞い">論理上の振る舞い</h2>
+<p>もともとWindowsは96dpiに固定的に設定されていた。 つまり、実際のディスプレイのDPIがどうであるかということに関係なく 1inch = 96pixels という計算をしていたわけだ。 これにより実数をピクセル数に変換していた。</p>
+<p>このことから、また固定的ピクセル数でUIが書かれていたことも相まって、基本的に「解像度が上がるとありとあらゆる部品が小さくなる」という現象が起きていた。 Macも72dpiに固定されていて、同じような事情だった。</p>
+<p>Windowsは可変値だが、現在Macは72dpiとして計算しつつ、1ポイントは2pxで表示するように変更された。</p>
+<p>正しいのは明らかに正しいDPIを設定できるようにすることである。 というよりも、ディスプレイサイズとピクセル数がわかっていれば正しいDPIが算出できるはずだ。 ディスプレイサイズを論理サイズ(24インチとか)から算出するのは難しいが、そもそもどの製品も同じではないので、メジャーで測れば1分もかからない話だ。</p>
+<p>実際、Linux(Unix)においてX Window Systemはそのような方式を取っている。</p>
+<p>そしてその上で実寸値で指定するか、あるいは画面に対する相対値で指定すれば画面密度によらないスケーラブルな指定が可能だ。</p>
+<p>一般的にウェブUIはピクセル数で指定されている。 文字のような流動的情報はインチで指定するほうが一般的だが、これに従うと高解像度ディスプレイではUIは小さいが文字の大きさは正しくUIに書ける文字が減る、ということになる。</p>
+<h2 id="現実のスケール">現実のスケール</h2>
+<p>ところが、現実はそうなっていない。</p>
+<p>仕方ない部分もある。 例えばパソコンの場合は、13インチでも15インチでも、21インチでも24インチでも「だいたい100から115dpi」あたりに落ち着く。</p>
+<p>これを基準にすると、5インチやそこらで400dpiを越えるスマートフォンが困ってしまう。</p>
+<p>これは、パソコンを基準に実寸値で表すと、例えば「幅10インチのウィンドウ」といった場合、5インチのスマートフォンでは2画面分の幅があるすさまじく見づらいUIができあがる。</p>
+<p>対してピクセル数で表すのもかなり危険だ。 例えばMimir Yokohamaのウェブサイトは900px幅であり、FullHD液晶の場合半分よりちょっと小さいくらい<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>なのだが、例えば手元のAxon7の場合WQHDなので幅は1440pxある。だから画面の幅の1/3くらい、実寸では5.18cm = 2.03937inchだが、900pxというと3.2375cmになる。</p>
+<p>3.2375cmのウィンドウ、しかもサイドバーつき。視点から近いといってもあまりにも小さい。</p>
+<p>スマートフォンをパソコンと同じ基準にするのは、実寸値だろうがピクセル数だろうが、かなり難しいわけだ。</p>
+<p>じゃあどうしたか、というと、1px=1ピクセルじゃなくしてしまった。</p>
+<p>なにを言っているか意味がわからないだろう。</p>
+<p>実はMacも同じで、「1ポイントを2ピクセルで描画する」といったが、実はMacでは「1ピクセル指定しても実際は2ピクセルで表示する」ようになっている。 「密度が高いから従来の倍で表示しちゃおう」というわけだ。実際、Retinaディスプレイは180dpiとかあるので、従来のラスターUIをベクターUIのように扱って144dpi相当で描画されることはそれほど困らない。</p>
+<p>技術に明るくないウェブエンジニア諸兄はCSSにこんなことを書いているかと思うが</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode css"><code class="sourceCode css"><a class="sourceLine" id="cb1-1" title="1"><span class="im">@media</span> <span class="dv">screen</span> <span class="kw">and</span> (<span class="kw">max-width</span>: <span class="dv">799</span><span class="dt">px</span>){</a>
+<a class="sourceLine" id="cb1-2" title="2">    <span class="co">/* ... */</span></a>
+<a class="sourceLine" id="cb1-3" title="3">}</a></code></pre></div>
+<p>何も疑問に思わないのだろうか。 1080pxをこえているならスマートフォンでは満たさない可能性が高いが、799pxなら今のスマートフォンは大概満たしているだろう。 だが、実際スマートフォンでこれが適用される可能性はかなり高い。</p>
+<p>基本的に現代では96dpiを基準にスケールしている。 つまり、実際には180dpiくらいあるディスプレイなら、1ピクセルを倍で描画する。言い換えると、あたかもピクセル数が半分しかないディスプレイであるかのように扱う。</p>
+<p>これは正しいのだろうか?</p>
+<p>実際は、結構困る。 というのは、UIでピクセルで指定できない場合というのは普通にあって、この場合画面全体のピクセル数は「本当のピクセル数」を回答する。 これに基づいて割合を決めてピクセル数指定すると実際ははみ出してしまったりするのだ。</p>
+<p>また、例えばThinkPad X1 Carbon 2017だと約1.4896倍にスケールする<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>のだが、900pxは1341px、1080pxは1608pxで表示されることになる。 ディスプレイ全体では1920pxなので、もちろん画面には収まるのだが、タイルした場合は1341pxは画面の半分に収まらないのでサイドバーは表示されなくなる。 「タイルしたときにはギリギリサイドバーが表示されたほうが良い」という私の考えは無碍にされてしまうわけだ。</p>
+<p>これは12インチクラスのモバイルラップトップだとさらに厳しい。ThinkPad X280は12.5inchなので計算上は10.9inch-&gt;176dpiとなり、 12.1inchのLet’s Note SZに至っては10.5inch-&gt;182dpiとなる。 この計算においては、ThinkPad X280の場合幅1047px扱いとなり、1080pxですら満たせない。Let’s Note SZに至ってはギリギリ1000pxを満たす程度だ。</p>
+<p>色々難しいのには理解を示したいところだが、現実問題としてこれは望ましくなく、「自分に使いやすい嘘DPIを設定する」以外になくなってしまう。</p>
+<p>また、この事情により、以前はスケーリングを想定してフォントサイズはピクセル数からポイント数へと動いてきたのだが、 現在はスクリーンフォントはピクセル数で指定したほうが柔軟にスケールしてくれたりする。</p>
+<h2 id="個人的な所感">個人的な所感</h2>
+<p>嘘DPIを設定するようでは、せっかくDPIが設定できることが無意味になってしまうし好ましくないと思う。 そもそも、96dpiを基準に固定したまま何倍にしよう、というのはVGA時代の失敗の繰り返し以外の何者でもないとも思う。</p>
+<p>おおよそ正しいアプローチなのだから、DPIとスケール倍率という概念を分離できなかったものか。</p>
+<p>実はGNOMEはDPIの設定がなくて、DPIを一切尊重しない。 そのかわり</p>
+<pre><code>$ gsettings set org.gnome.desktop.interface scaling-factor 2</code></pre>
+<p>のようにしてスケールできるのだが、このスケール、整数しか指定できない。 せめて1.5を指定させてくれとものすごーく言われているのだが(13.3inch, 14inchクラスでFullHDだと140から150程度なので1.5がちょうどよい)、対応の気配はない。<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>一方、KDE PlasmaはGTK+アプリケーションであっても適切にスケールしてくれるが、あくまでDPIによって自動的にスケールするだけで倍率の指定はできない。</p>
+<p>現状で理想的なのは</p>
+<ul>
+<li>DPIは正確なDPI値を算出する。この状態ではinchやcm指定は厳密に適切な値で表示される。 グラフィッカーには便利な状態</li>
+<li>これによって自動的に<code>RASTER_SCALE</code>と<code>ACTUALSIZE_SCALE</code>が表示として倍率として設定される。これによって現在と同じ状態になる</li>
+<li><code>RASTER_SCALE</code>はディスプレイの論理ピクセル数に影響する。 つまり<code>RASTER_SCALE=2</code>の状態でFullHDディスプレイなら、水平ピクセル数は960だと回答する</li>
+<li><code>RASTER_SCALE</code>を手動設定可能とする。ユーザーは自動設定された値(デフォルト値でもある)を基準に好みに合わせて動かす。これに伴うディスプレイの論理ピクセル数も表示すると親切。</li>
+<li>グラフィッカーのために<code>ACTUALSIZE_SCALE</code>を<code>RASTER_SCALE</code>と切り離して設定可能とする。<code>ACTUALSIZE_SCALE=1</code>にすれば1インチは1インチで正しく表示してくれる。</li>
+</ul>
+<p>だと思うけれど、きっと誰も聞き入れてくれないだろう…</p>
+<p>なお、4kディスプレイにしたWindowser向けにアドバイスとして「このままだと文字が小さいので解像度を1920x1080に設定すると解決するよ」と言っているのをかなり見るのだが、もはやこれは頭痛が痛い…</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>「半分よりも小さい」のは、フルHDディスプレイでタイリングしたときにサイドバーを表示させるためだ。<a href="#fnref1" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn2"><p>これは、X Window Systemで正確なディスプレイサイズを入力し、精密にスケールできるKDE Plasmaを使った場合の話である。<a href="#fnref2" class="footnote-back">&#x21a9;</a></p></li>
+<li id="fn3"><p>この記述について<a href="https://twitter.com/kotatsu_mi/status/1061848402856599552?s=20">指摘があり</a>、GNOME 3.26から実験的機能として25%単位のスケーリングを可能としているとのことだった。 <a href="https://youtu.be/yq1BRoG1JC0" rel="external">YouTubeにも動画が上がっていたりするが</a>、実際に試したところかなり粘ったものの値自体は入れることができるものの依然として「100%」「200%」の選択肢のみであった。Nvidiaでなければいけないなどの制限があるのかもしれない。<a href="#fnref3" class="footnote-back">&#x21a9;</a></p></li>
+</ol>
+</section>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

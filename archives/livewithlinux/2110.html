@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2019-09-11T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2019-09-11T00:00:00+09:00" />
+    <title>mpv * Linux でハードウェアビデオアクセラレーション - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>mpv * Linux でハードウェアビデオアクセラレーション</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>この話は</p>
+<ul>
+<li>各ビデオカードにはビデオエンコード/デコード支援チップが載っている</li>
+<li>QSVとかUVDとかVCEとかNVENCとかNVDECとか名前がついてる</li>
+<li>Linux的にはVDPAUとVA-APIというAPIがある</li>
+<li>Nvidiaの場合はNVENC直 (NVDEC直も可)</li>
+<li>CUDAを使ったCUVIDってのもある</li>
+<li>mpvで再生支援するのが便利</li>
+</ul>
+<p>っていうのは理解しているという前提で始まる。</p>
+<p>それは、「結局渡すべきパラメータはなに?」って話である。 なお、VDPAU及びVA-APIは有効である前提で話す。それがわからない人は<a href="https://wiki.archlinux.jp/index.php/%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%83%93%E3%83%87%E3%82%AA%E3%82%A2%E3%82%AF%E3%82%BB%E3%83%A9%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3" rel="external">ArchwikiへGo</a>。</p>
+<h2 id="はじめに">はじめに</h2>
+<p>mpvを使うと非常に便利で、</p>
+<pre><code>$ mpv video.mp4</code></pre>
+<p>みたいな話なんだけれども、mpvには<code>--hwdec</code>と<code>--vo</code>というオプションがあり、ハードウェアビデオアクセラレーションを行う場合はこれらを指定する。</p>
+<p>で、<code>--hwdec</code>は話としては簡単だ。ハードウェアデコーダを使うという話。つまりはコーデック的な話。</p>
+<p>じゃ<code>--vo</code>は? という話になるのだが、これは「ビデオ出力ドライバ」の指定。 なんじゃそら…という感じなのだけれど、「エンコードと描画レイヤーは別の話」みたいなことらしい。 だからSDLとか、Direct3Dとか出てくる。 YUVビデオとかそのまま書くんじゃないの?とかいう気持ちになったけれど、そんなことはないようで、「ハードウェアでデコードしたらハードウェアで書くところまでしないと効果なし」みたいな話になるようだ。</p>
+<p>とはいえ、<code>--vo</code>で<code>x11</code>なんてすると凄まじくCPU負荷が増えてしまうし、<code>xv</code>を使う理由も全くない。 だから現実的な選択肢としては、<code>vdpau</code>, <code>vaapi</code>, <code>gpu</code>の3つだ。</p>
+<h2 id="試してみる">試してみる</h2>
+<h3 id="vdpau-vdpau">vdpau + vdpau</h3>
+<p>VDPAUでデコードしてVDPAUで出力する、というのは悪くないようだ。</p>
+<p>ただし、この場合ポストプロセスはVDPAUでやることになる。 VDPAUはポストプロセスに対応しているからできるのだけど、一部使えなくなるものもある。例えば、ズームは効かなくなる。</p>
+<h3 id="vdpau-gpu">vdpau + gpu</h3>
+<p>VDPAUで出力するよりも軽い。</p>
+<p>そしてフィルタ等はすべて使える。</p>
+<h3 id="vaapi-vaapi">vaapi + vaapi</h3>
+<p>ちゃんとアクセラレーションが効いて軽くなるけれど、エフェクト、フィルタなどは一切使えなくなる。 マニュアルにも、だめなシステム向けだと書いてある。</p>
+<h3 id="vaapi-gpu">vaapi + gpu</h3>
+<p>VA-APIだと<code>--vo</code>は<code>gpu</code>指定にすべきなようだ。</p>
+<p>ちなみに、VDPAUだと<code>--vo</code>を書かなくても十分アクセラレーションが効くのだけど、VA-APIの場合は<code>--vo</code>必須。</p>
+<h3 id="nvdec-cuvid">NVDEC / CUVID</h3>
+<p><code>--vo</code>は<code>gpu</code>一択。ほかはそもそも使えない。</p>
+<h2 id="結局">結局…?</h2>
+<h3 id="intel">Intel</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="bu">alias</span> mpv=<span class="st">&#39;mpv --hwdec=vaapi --vo=gpu,vaapi&#39;</span></span></code></pre></div>
+<h3 id="amd-nvidia-nvドライバ">AMD, Nvidia (nvドライバ)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="bu">alias</span> mpv=<span class="st">&#39;mpv --hwdec=vdpau --vo=gpu,vdpau&#39;</span></span></code></pre></div>
+<p>Intel同様にVA-APIを使っても構わない。 ただ、再生だけを考えるならVDPAUのほうが少し良い感じがする。</p>
+<p>nvドライバ環境でハードウェアビデオアクセラレーションすべきかどうか自体が疑問。</p>
+<h3 id="nvidia-nvidiaドライバ">Nvidia (nvidiaドライバ)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="bu">alias</span> mpv=<span class="st">&#39;mpv --hwdec=nvdec --vo=gpu --profile=gpu-hq&#39;</span></span></code></pre></div>
+<p>NVDEC直のほうが速い。</p>
+<h3 id="gpu-hq">gpu-hq</h3>
+<p>通常の<code>--vo=gpu</code>はフェイルセーフで、<code>--profile=gpu-hq</code>すると品質優先、とのことなのだけど、 試してみた限りでは、特に<code>gpu-hq</code>して問題になるケースは見つからなかったので、<code>--profile=gpu-hq</code>つけても良いかもしれない。</p>
+<p>その場合はfallback用に指定している<code>vaapi</code>や<code>vdpau</code>の<code>vo</code>は必要ないというか、つけないほうが良い。</p>
+<h3 id="私の設定">私の設定</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode zsh"><code class="sourceCode zsh"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">alias</span> <span class="ot">mpvpau=</span><span class="st">&quot;mpv --loop-playlist=yes --hwdec=vdpau --vo=gpu --profile=gpu-hq --prefetch-playlist=yes --video-latency-hacks=yes --osd-font=&#39;Fira Sans&#39; --osd-font-size=23 --sub-font=&#39;MotoyaLCedar&#39; --sub-font-size=32 --sub-blur=3.5 --script=playlistmanager --script-opts=playlistmanager-loadfiles_on_start=yes&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">alias</span> <span class="ot">mpvva=</span><span class="st">&quot;mpv --loop-playlist=yes --hwdec=vaapi --vo=gpu --profile=gpu-hq --prefetch-playlist=yes --video-latency-hacks=yes --osd-font=&#39;Fira Sans&#39; --osd-font-size=23 --sub-font=&#39;MotoyaLCedar&#39; --sub-font-size=32 --sub-blur=3.5 --script=playlistmanager --script-opts=playlistmanager-loadfiles_on_start=yes&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">alias</span> <span class="ot">mpvnv=</span><span class="st">&quot;mpv --loop-playlist=yes --hwdec=nvdec --vo=gpu --profile=gpu-hq --prefetch-playlist=yes --video-latency-hacks=yes --osd-font=&#39;Fira Sans&#39; --osd-font-size=23 --sub-font=&#39;MotoyaLCedar&#39; --sub-font-size=32 --sub-blur=3.5 --script=playlistmanager --script-opts=playlistmanager-loadfiles_on_start=yes&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">alias</span> <span class="ot">mpvcud=</span><span class="st">&quot;mpv --loop-playlist=yes --hwdec=cuda --vo=gpu --profile=gpu-hq --prefetch-playlist=yes --video-latency-hacks=yes --osd-font=&#39;Fira Sans&#39; --osd-font-size=23 --sub-font=&#39;MotoyaLCedar&#39; --sub-font-size=32 --sub-blur=3.5 --script=playlistmanager --script-opts=playlistmanager-loadfiles_on_start=yes&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">alias</span> <span class="ot">mpv=</span><span class="st">&quot;mpv --hwdec=auto --vo=gpu --sub-font=&#39;MotoyaLCedar&#39; --sub-font-size=32 --sub-blur=3.5&quot;</span></span></code></pre></div>
+<p>playlistmanagerスクリプトを使っている。 単独の<code>mpv</code>コマンドだけが単一ファイル用。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

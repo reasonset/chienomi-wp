@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-06-18T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-06-18T00:00:00+09:00" />
+    <title>壊れたシステムの修復のためのManjaro 0.8.13インストール - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>壊れたシステムの修復のためのManjaro 0.8.13インストール</h1></header>
+        <article id="MainArticle">
+<p><code>update-grub</code>できない問題は根が深く、様々なところで訊いてはみたものの、結局答えが出ない。</p>
+<h3 id="manjaro-0.8.13について">Manjaro 0.8.13について</h3>
+<p>Manjaro Linuxは0.9.0リリースを控えていたが、新インストーラのCalamaresのバグがなかなか解消できず、結局0.8.12でCalamaresを採用したものの、インストーラをThusに戻した0.8.13をリリースするに至った。</p>
+<p>Manjaro Linuxの日本語を一手に引き受け、Manjaro JPも開発する<a href="http://rago1975.blog.shinobi.jp/manjaro_linux/">rago1975</a>さんによれば、0.9.0のThusインストーラバージョン的なものだとという。</p>
+<p>実際にそのように感じる。というのは、XFceはGTK3を採用する4.12、KDEはPlasma5なので、デスクトップが別物になっている。 XFce版だとDMも完全に別物となっており（もしかしたらMDMから差し替えられたのかもしれないが）、雰囲気はがらっと変わった。</p>
+<p>XFceは0.8.12でも4.12の開発版である4.11を採用しており、現行のManjaroテーマも既に採用されていたため、0.8.12からの目新しさは特にない。 とはいえ、それまでの0.8.11からすれば劇的に変わり、垢抜けないデザインが特徴だったXFceもぐっとスタイリッシュになった。0.8.12と比べてもやはり部分的に見た目も変更されている。</p>
+<p>アップデートでは見た目に関する部分は変わらないため、「見た目が変わった」というのは、入れ替える動機にもなるかとは思うが（Plasma4がPlasma5に置き換えられるのは当面先だろうから、入れ替えはかなり大変だと思う）、今回はThusの改良に非常に力が入れられていた。</p>
+<p>まず、Thusインストーラの起動はすごく速くなった。これまでは、忘れた頃に起動する勢いだったが、すぐに起動するようになった。</p>
+<p>Thusは手動パーティショニングをしてもLUKSの利用ができるようになったはずだが、それについては今回試していない。</p>
+<p>LUKSパスフレーズについては、「特殊な文字を使うな」という注意書きが増えた。「LUKSパスフレーズに記号を含めると復号化できなくなる」という問題に対応したのか。</p>
+<p>またブートローダーはGRUB2とGummibootを選択できるようになった。しかし、Gummibootを選択するとブートローダーはインストールされない。 また、Gummibootを選択した場合、ブートできない可能性があるのでウェブサイトを見るかと聞かれる。</p>
+<p>Thusはかなり改善されたことを感じられる。</p>
+<p>また、0.8.11まではUEFIでインストールしても第1パーティションに<code>GRUB_BOOT</code>を切っていたが、これをやめて3パーティション構成になった(ESP, BOOT, LVM)。Gummibootにすると、2パーティションになる。</p>
+<p>Gummibootにきちんと対応してくれると嬉しかったのだが…</p>
+<p>なお、Manjaro 0.8.11をそのままにしてインストールすると、GRUB2でも起動しなかった。 事前にGPTを作成しておくことで無事に起動できた。</p>
+<p>ただし、UEFIブートメニューに謎の無効な空欄エントリがあるということは変わらない。</p>
+<h3 id="導入しようにも">導入しようにも…</h3>
+<p>しかし、Alternative HDD (500GB)に入れても、そこで構築してSSDに移す、というのはかなり大変な作業になる。SSDのほうが小さいからだ。</p>
+<p>かといって、環境をイチから作るのに、現行の環境を潰してしまうと、だいぶ長く仕事ができなくなってしまう可能性がある。</p>
+<p>散々悩んだ挙句、結局はSSDをもう1台追加することにした。 ケーブルも併せてだいたい12000円の出費。なかなか痛い。 だが、仕事を見通しが立たないまま止めるわけにもいかないし、かといって更新できない状態でも放置できないので、やむなしか。</p>
+<p>ケーブルはAmazonで、SSDはNTT-Xで購入。NTT-Xは仕事でも使えるようなので、これからかなりお世話になることになるだろう。</p>
+<p>ケーブルは当日、SSDは翌日に到着した。</p>
+<h2 id="インストール作業">インストール作業</h2>
+<h3 id="インストール">インストール</h3>
+<p>まずは単純に、SSDを組み込んで元のSSDとAlternative HDDを外し、予めGPTを作成した上でThusインストーラでインストールする。</p>
+<p>UEFIでLVM, LUKS, /home分割はon, GRUB2を選択、なお起動時には<code>nomodeset</code>と<code>nokmsboot</code>オプションが必要。</p>
+<p>ただし、インストール後は<code>nomodeset</code>及び<code>nokmsboot</code>は必要なかった。</p>
+<h3 id="基本セッティング">基本セッティング</h3>
+<p>まずはworldencmountの必要なファイルをtarで展開する。これでbtrfsボリュームのマウントが可能になる。</p>
+<p>そしてzshのインストール。 なお、<code>zsh-config</code>についてはかなり癖がある設定の上に、手元の.zshrcで設定できなくなるので私は好まない。</p>
+<p>これでマウントできるようになったら、btrfsをroでマウントし、最低限のファイルをコピーする。主要な設定ファイルは</p>
+<pre><code>cp ~/share/manjaro-home-transition/*(#q@) .</code></pre>
+<p>で以降できる。データ本体は<code>~/share</code>にあるため、データの以降は必要ない。</p>
+<p>日本語フォントはあるが、日本語入力ができない状態でスタートするため、とりあえず</p>
+<pre><code>yaourt -S fcitx-mozc-ut</code></pre>
+<p>インストール前にPKGBUILDをいじってニコと英語dicを有効にしてインストール。 ただし、googlecode.comのIPv6問題があるため、その前に</p>
+<pre><code>yaourt -S dnsutils</code></pre>
+<p>して<code>dig</code>を使えるようにし、</p>
+<pre><code>dig japanese-usage-dictionary.googlecode.com</code></pre>
+<p>して/etc/hostsにIPv4で決め打ちする。</p>
+<p>私のプログラムは多くがRubyを使うため、Rubyも設定しておく必要がある。 これは次の方法で行う。元々</p>
+<pre><code>pacman -Q &gt; pacman-q</code></pre>
+<p>としてあり、ここから</p>
+<pre><code>grep -F ruby pacman-q | cut -d &quot; &quot; -f 1 &gt; rubypkg</code></pre>
+<p>として抽出。このうちインストール済みのものは必要ないので、</p>
+<pre><code>pacman -Q | cut -d &quot; &quot; -f 1 &gt; pacman-qq</code></pre>
+<p>と現状のものを取得し</p>
+<pre><code>cat pacman-qq pacman-qq rubypkg | sort | uniq -u &gt; target-ruby</code></pre>
+<p>とする。あとは</p>
+<pre><code>yaourt -S $(cat target-ruby)</code></pre>
+<p>でOKだ。</p>
+<p>同様の方法でTTFファイルもインストール。</p>
+<p>また、EncFSをコアに入れているので、EncFSをインストール。</p>
+<pre><code>yaourt -S encfs</code></pre>
+<p>また、nemoはテンプレートディレクトリにシンボリックリンクを許容するが、Thunarはしないので、シンボリックリンクをやめて、コピーに</p>
+<pre><code>rm template
+cp -R share/template .</code></pre>
+<p>さらに、エスケープしたfstabをベースにfstabを修正する。 その前にVIもVimもなくて混乱するため(例えばvipwはあるのに、vipwはできない)、インストールしておく。</p>
+<pre><code>yaourt -S gvim vi</code></pre>
+<p>とりあえずエディタはmousepadが使える。とりあえずはmousepadで修正しリブート。</p>
+<h3 id="日本語周り">日本語周り</h3>
+<p>fcitx-mozc-utだけ入れたが、それさえ入っていなかった。 そして、日本語周りはManjaro JPベースではないため、それなりに複雑だ。</p>
+<p>まず、fcitx-mozc-utがベースになるので、それをインストール。</p>
+<pre><code>yaourt -S fcitx-mozc-ut</code></pre>
+<p>各ツールキットに対して入力するためのパッケージと、設定のためのパッケージも導入</p>
+<pre><code>yaourt -S fcitx-gtk2 fcitx-gtk3 fcitx-qt4 fcitx-qt5 fcitxconftool</code></pre>
+<p>これだけでは入力できないため、<code>~/.xprofile</code>に追記</p>
+<pre><code>export GTK_IM_MODULE=fcitx
+export GTK2_IM_MODULE=fcitx
+export GTK3_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=&quot;@im=fcitx&quot;
+export DefaultIMModule=fcitx
+export PATH=/home/aki/bin:$PATH</code></pre>
+<p><code>$PATH</code>は別件だが、ついでに書いておいた。<code>XMODIFIERS</code>を<code>XMODIFERS</code>と書いており、LINEやSkypeに対して日本語入力できないという問題が発生して若干ハマった。</p>
+<p>なお、さらに後ほど突如としてGTKアプリケーションに対してfcitxが有効にならず、</p>
+<pre><code>gtk-query-immodules-2.0 --update-cache 
+gtk-query-immodules-3.0 --update-cache </code></pre>
+<p>しても直らず、結局両パッケージをアンインストールした上で再インストールしたら直った、などということもあった。</p>
+<p>そして再起動。</p>
+<h3 id="パッケージインストール-part1">パッケージインストール part1</h3>
+<p>先にいくつか使われるのがわかっている<code>~/.config</code>以下のファイルをコピーしておく。 .config以下はそのままシンボリックリンクに変換できないからだ。</p>
+<pre><code>cp ~/share/manjaro-home-transition/.config/usr-dir* .config/
+cp -R ~/share/manjaro-home-transition/.config/opera-developer .config/
+cp -R ~/share/manjaro-home-transition/.config/tasque .config/
+cp -R ~/share/manjaro-home-transition/.config/fontconfig .config/</code></pre>
+<p>そして次のパッケージをインストールしていく。</p>
+<ul>
+<li>ctags</li>
+<li>leafpad</li>
+<li>medit</li>
+<li>geany, geany-plugins</li>
+<li>smplayer, smplayer-themes, smplayer-skins</li>
+<li>opera-developer</li>
+<li>linux405</li>
+<li>infinality*</li>
+<li>wine</li>
+<li>plasma</li>
+<li>kde-applications</li>
+<li>kopete</li>
+</ul>
+<p>Wine * LINEで文字が非常に汚い、という問題があったが、いつの間にか直った。</p>
+<p>KDE5関連はplasmaパッケージで、kde-applicationと合わせるとかなりの部分がインストールされる。</p>
+<p>kopeteのファイルは<code>~/.kde4</code>以下にあるので、これをコピーする。</p>
+<pre><code>cp -R ~/share/manjaro-home-transition/.kde4/share/apps/koepte ~/.kde4/share/apps/
+cp  ~/share/manjaro-home-transition/.kde4/share/config/kopeterc ~/.kde4/share/config</code></pre>
+<h3 id="kde5">KDE5</h3>
+<p>KDE5は、KDE4よりもさらにスタイリッシュにはなったが、スマホっぽいふらっとUIになり、洗練されたがいかにも重量級な「すごい演出」は損なわれた。</p>
+<p>また、非常に多くの機能が未実装だ。</p>
+<p>マルチディスプレイの対応についてはkscreenパッケージで対応できるが、細かく設定ができない。 Catalystで設定することはできるが、永続しない。</p>
+<p>また、systrayが未実装(!)。libappindicatorとsni-qtを使えばいけるような話なのだが、実際はいくつかのアプリケーションがこれでもsystrayに入らない。</p>
+<p>相変わらずKDEで設定が効かない部分があるので、</p>
+<ul>
+<li>kde-gtk-config</li>
+<li>kcm-gtk</li>
+</ul>
+<p>を導入、さらにqtconfig-qt4を使って設定する。</p>
+<p>悪くはないけれど、KDE4から乗り換えるには早いか。 アニメーションはKDE5のほうがパワーアップしているが、KDE4よりも良いかと言われると悩むところ。 少なくとも、設定の問題でKDE4のほうが現状は良いと思う。</p>
+<h3 id="kdeとxfce">KDEとXFce</h3>
+<p>そして、KDEで設定するとXFceのUIが壊れたりするのでたちが悪い。 この設定はかなり難しいが、基本的には「設定マネージャー→外観」でテーマ設定してからgtk-theme-configで調整すれば良い。</p>
+<p>ちょっとややこしいが、gtk-theme-configはextraに&quot;gtk-theme-preferences&quot;という名前でパッケージがあり、さらにAURに&quot;gtk-theme-config&quot;というパッケージもある。 恐らくは公式入りしたが、AURのパッケージ作者がメンテナになっているわけではないのだろう。</p>
+<p>より細かく設定するならばxfce-theme-managerがあれば良いが、場合によってはより迷宮入りする。KDEといったり来たりすることになるだろう。</p>
+<p>なお、一度XFceが起動不能になり、~/.config/xfce4を吹き飛ばして作りなおすはめになった。この場合、skelからコピーするのが近道。</p>
+<h3 id="パッケージインストールpart2">パッケージインストールpart2</h3>
+<ul>
+<li>cinnamon</li>
+<li>xsane</li>
+<li>xfce4-theme-manager</li>
+<li>fetchmail</li>
+<li>spamassassin</li>
+<li>razor</li>
+<li>virtualbox*</li>
+<li>tasque</li>
+<li>skype, skype-call-recorder</li>
+<li>openssh, sshfs</li>
+<li>lv</li>
+<li>w3m</li>
+<li>nss-mdns</li>
+<li>amarok</li>
+<li>audacious, audacious-plugins</li>
+<li>libcue</li>
+<li>audacity</li>
+<li>inkscape-gtk3-bzr</li>
+</ul>
+<p>Inkscapeは猛烈に長い。</p>
+<p>Zeroconfの設定は、これに加え<code>/etc/nsswitch.conf</code>にmdns-minimalを書くこと。avahi-daemonは標準で起動。</p>
+<h3 id="pandoc">Pandoc</h3>
+<p>相変わらずhaskell-pandocパッケージが入らないので</p>
+<pre><code>yaourt -S ghc cabal happy alex</code></pre>
+<p>してから</p>
+<pre><code>export PATH=$HOME/.cabal/bin
+cabal update
+cabal install pandoc</code></pre>
+<p>PDF出力用に…</p>
+<pre><code>yaourt -S texlive-core texlive-langcjk</code></pre>
+<p>うまくいった。</p>
+<h3 id="todo">TODO</h3>
+<p>今わかっているのは、Spamassassinのsa_learnで学習したデータを持ち込んでいないこと。</p>
+<p>あと、SOXもまだインストールしていない。 それ以外は恐らくは必要になったら足す形で、ゴミパッケージをなるべく増やさないようにするだろう。結局使えなかったものをためこんでしまったからだ。</p>
+<p>また、英数キーを押すと問答無用でCapsLockになる、というトラブルも出ている。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

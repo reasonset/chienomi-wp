@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2015-08-10T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2015-08-10T00:00:00+09:00" />
+    <title>VDPAU / VAAPI * AMD A10 kaveri / Cinnamonが立ち上がらない - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>VDPAU / VAAPI * AMD A10 kaveri / Cinnamonが立ち上がらない</h1></header>
+        <article id="MainArticle">
+<p>LinuxでのGPUハードウェアアクセラレーションつきでの再生のトライ。</p>
+<p>設定はわかっているが動作のためにセットアップ。</p>
+<p>VDPAUを利用するため、libvdpau-va-glとlibva-xvba-driverのインストールを行い、<code>/etc/profile.d/vdpau_vaapi.sh</code>に</p>
+<pre><code>#!/bin/sh
+export VDPAU_DRIVER=va_gl</code></pre>
+<p>と設定して実行可能に。(root:root 744)。再起動して有効化できる。 別パッケージの<code>vdpauinfo</code>によると</p>
+<pre><code>libva info: VA-API version 0.38.0
+libva info: va_getDriverName() returns 0
+libva info: Trying to open /usr/lib/dri/fglrx_drv_video.so
+libva info: Found init function __vaDriverInit_0_33
+libva info: va_openDriver() returns 0
+display: :0.0   screen: 0
+[VS] Software VDPAU backend library initialized
+API version: 1
+Information string: OpenGL/VAAPI/libswscale backend for VDPAU
+
+Video surface:
+
+name   width height types
+-------------------------------------------
+420     1920  1080  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 
+422     1920  1080  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 
+444     1920  1080  NV12 YV12 UYVY YUYV Y8U8V8A8 V8U8Y8A8 
+
+Decoder capabilities:
+
+name                        level macbs width height
+----------------------------------------------------
+MPEG1                          --- not supported ---
+MPEG2_SIMPLE                   --- not supported ---
+MPEG2_MAIN                     --- not supported ---
+H264_BASELINE                  51 16384  2048  2048
+H264_MAIN                      51 16384  2048  2048
+H264_HIGH                      51 16384  2048  2048
+VC1_SIMPLE                     --- not supported ---
+VC1_MAIN                       --- not supported ---
+VC1_ADVANCED                   --- not supported ---
+MPEG4_PART2_SP                 --- not supported ---
+MPEG4_PART2_ASP                --- not supported ---
+DIVX4_QMOBILE                  --- not supported ---
+DIVX4_MOBILE                   --- not supported ---
+DIVX4_HOME_THEATER             --- not supported ---
+DIVX4_HD_1080P                 --- not supported ---
+DIVX5_QMOBILE                  --- not supported ---
+DIVX5_MOBILE                   --- not supported ---
+DIVX5_HOME_THEATER             --- not supported ---
+DIVX5_HD_1080P                 --- not supported ---
+H264_CONSTRAINED_BASELINE      --- not supported ---
+H264_EXTENDED                  --- not supported ---
+H264_PROGRESSIVE_HIGH          --- not supported ---
+H264_CONSTRAINED_HIGH          --- not supported ---
+H264_HIGH_444_PREDICTIVE       --- not supported ---
+HEVC_MAIN                      --- not supported ---
+HEVC_MAIN_10                   --- not supported ---
+HEVC_MAIN_STILL                --- not supported ---
+HEVC_MAIN_12                   --- not supported ---
+HEVC_MAIN_444                  --- not supported ---
+
+Output surface:
+
+name              width height nat types
+----------------------------------------------------
+B8G8R8A8         457866064 457866064    y  
+R8G8B8A8         457866064 457866064    y  
+R10G10B10A2      457866064 457866064    y  
+B10G10R10A2      457866064 457866064    y  
+A8               457866064 457866064    y  
+
+Bitmap surface:
+
+name              width height
+------------------------------
+B8G8R8A8         16384 16384
+R8G8B8A8         16384 16384
+R10G10B10A2      16384 16384
+B10G10R10A2      16384 16384
+A8               16384 16384
+
+Video mixer:
+
+feature name                    sup
+------------------------------------
+DEINTERLACE_TEMPORAL             -
+DEINTERLACE_TEMPORAL_SPATIAL     -
+INVERSE_TELECINE                 -
+NOISE_REDUCTION                  -
+SHARPNESS                        -
+LUMA_KEY                         -
+HIGH QUALITY SCALING - L1        -
+HIGH QUALITY SCALING - L2        -
+HIGH QUALITY SCALING - L3        -
+HIGH QUALITY SCALING - L4        -
+HIGH QUALITY SCALING - L5        -
+HIGH QUALITY SCALING - L6        -
+HIGH QUALITY SCALING - L7        -
+HIGH QUALITY SCALING - L8        -
+HIGH QUALITY SCALING - L9        -
+
+parameter name                  sup      min      max
+-----------------------------------------------------
+VIDEO_SURFACE_WIDTH              -  
+VIDEO_SURFACE_HEIGHT             -  
+CHROMA_TYPE                      -  
+LAYERS                           -  
+
+attribute name                  sup      min      max
+-----------------------------------------------------
+BACKGROUND_COLOR                 -  
+CSC_MATRIX                       -  
+NOISE_REDUCTION_LEVEL            -  
+SHARPNESS_LEVEL                  -  
+LUMA_KEY_MIN_LUMA                -  
+LUMA_KEY_MAX_LUMA                -  </code></pre>
+<p>H.264しかサポートできていない？</p>
+<p>VAAPIはAMD APU A10 Kaveriで必要なのは<code>libva-xvba-driver</code>なので、それだけでOK。Catalystドライバは既に使用している。 Mplayerはmplayer-vaapiをAURから導入すれば良いということだが（コマンドラインオプションは必要。Wikiは英語版mplayerの項目でのみ、AURにあることが示されている。communityからdropしたパッケージ）、現在のところ鍵が検証できない（手動追加しても受け付けない）ので試していない。 SMplayerはVAAPIはIntelのみだと言ってくる。</p>
+<p>結局うまく動いていない気がする。</p>
+<h3 id="cinnamonが立ち上がらない">Cinnamonが立ち上がらない</h3>
+<p>再起動すると、Cinnamonが立ち上がらなくなった。</p>
+<p>待たされた上でデフォルトの壁紙が表示され、</p>
+<pre><code>Cinnamonはクラッシュしました</code></pre>
+<p>と表示される。</p>
+<p><code>~/xsession-errors</code>を調べると、<code>~/.config/dconf</code>がPermission Deniedになっている。</p>
+<pre><code>ls -ldR ~/.config/dconf</code></pre>
+<p>したところ、ごっそりとパーミッションがroot:rootのmask077になっている。 <code>chown</code>したのだが、<code>chown</code>しても何度も戻ってしまい、ちょっと苦労した。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>

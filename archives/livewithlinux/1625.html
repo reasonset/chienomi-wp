@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="PureBuilder Simply WP Importer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="author" content="Masaki Haruka" />
+    <meta name="date" content="2018-08-20T00:00:00+09:00" />
+    <meta name="dcterms.date" content="2018-08-20T00:00:00+09:00" />
+    <title>【まとめ特集記事】 ビデオカード * VDPAU / VA-API * ffmpeg - Chienomi</title>
+    <style type="text/css">article {
+max-width: 1080px;
+margin: auto;
+}</style>
+  </head>
+  <body>
+
+    <section id="ContentContainer">
+      <header id="MainHeader"><a href="/"><h1>Chienomi</h1></a></header>
+      <section id="ArticleBox">
+        <header id="ArticleTitle"><h1>【まとめ特集記事】 ビデオカード * VDPAU / VA-API * ffmpeg</h1></header>
+        <article id="MainArticle">
+<h2 id="序">序</h2>
+<p>パッケージ名などはArch Linux/Manjaro Linux準拠である。</p>
+<p>PRIME(異なるメーカーのビデオカード混合)の話はしていない。 (持っていないので) そのうちするかもしれない。</p>
+<p>ffmpeg周りに関しては過去の記事には載せてなかった話も色々書いた大作になっている。 (特にAMD関連の情報やVDPAUなんかはドキュメントが少ないので有益なはず)</p>
+<h2 id="ビデオカードとドライバ">ビデオカードとドライバ</h2>
+<p>現在使用されているビデオカードは次の3メーカー。</p>
+<ul>
+<li>Intel</li>
+<li>Nvidia</li>
+<li>AMD</li>
+</ul>
+<p>Intelはコンシュマー向けIntel CPUに内蔵されているビデオカードである。 Intel CPUでもごく一部AMDビデオカードを内蔵したものもある。</p>
+<p>NvidiaはGeForce/Quadro/Teslaビデオカード、AMDはRadeonビデオカード(AMD APU内蔵のものを含む)のことである。</p>
+<table>
+<thead>
+<tr class="header">
+<th>ビデオカード</th>
+<th>ドライバー</th>
+<th>タイプ</th>
+<th>現状</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intel</td>
+<td>intel</td>
+<td>free</td>
+<td>Supported</td>
+</tr>
+<tr class="even">
+<td>Nvidia</td>
+<td>nvidia</td>
+<td>non-free</td>
+<td>Supported</td>
+</tr>
+<tr class="odd">
+<td>Nvidia</td>
+<td>nvidia-tesla</td>
+<td>non-free</td>
+<td>Supported</td>
+</tr>
+<tr class="even">
+<td>Nvidia</td>
+<td>nouveau</td>
+<td>free</td>
+<td>Supported</td>
+</tr>
+<tr class="odd">
+<td>Nvidia</td>
+<td>nv</td>
+<td>free</td>
+<td>Deprected in 2010</td>
+</tr>
+<tr class="even">
+<td>AMD</td>
+<td>AMDGPU</td>
+<td>free</td>
+<td>Supported</td>
+</tr>
+<tr class="odd">
+<td>AMD</td>
+<td>Catalyst</td>
+<td>non-free</td>
+<td>Legacy</td>
+</tr>
+<tr class="even">
+<td>AMD</td>
+<td>ATI/Radeon</td>
+<td>free</td>
+<td>Legacy</td>
+</tr>
+<tr class="odd">
+<td>AMD</td>
+<td>radeonhd</td>
+<td>free</td>
+<td>Obsolated?</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>IntelとAMDのオープンソースドライバはメーカー協力のもと作られており、現状唯一の選択肢</li>
+<li>AMDGPUは新しいドライバで新しいカードしかサポートしておらず、それ以前のものはATI及びRadeonドライバのサポート</li>
+<li>プロプライエタリのCatalystドライバも更新されておらず、古いカード向け</li>
+<li>nouveauドライバはメーカーサポートがないリバースエンジニアリングの賜物</li>
+</ul>
+<h2 id="ハードウェアビデオアクセラレーション">ハードウェアビデオアクセラレーション</h2>
+<h3 id="ハードウェア搭載機能">ハードウェア搭載機能</h3>
+<h4 id="intel">Intel</h4>
+<p>IntelはQSV(Quick Sync Video)という補助機能を搭載。 割とビデオが重かった時代から、ビデオを快適に再生できるようにビデオカードの力を借りて再生するものである。</p>
+<p>そのため、QSVはビデオカードだけでなくCPUパワーも併用する。</p>
+<p>NvidiaやAMDよりも非力だが、サポートしている形式が多く、意外と使いやすい。 また、画質がちょこっとだけいい。</p>
+<h3 id="nvidia">Nvidia</h3>
+<p>Nvidiaはエンコード用のNVENCとデコード用のNVDECという2つの専用チップを搭載。 CUDAコアは利用していない。</p>
+<p>IntelやNvidiaと比べ桁違いに高速。 GTX1080でFHD動画をH.264で1300FPS、H.265でも650FPSで処理できるという。</p>
+<h3 id="amd">AMD</h3>
+<p>AMDはエンコード用のVCE(Video Coding Engine)、デコード用のUVD(Universal VideoDecorder)を搭載。 AMDも全然宣伝していなくて、情報がとにかく少ない。</p>
+<p>VCEの速度的にはライバルNvidiaカードのNVENCの半分くらいが相場…らしい。 また、サポートしているフォーマットが結構少ない。あとからアップデートでサポートされたりもしているが。</p>
+<h3 id="linux用のapi">Linux用のAPI</h3>
+<p>VDPAUはNvidia主導の、VA-APIはIntel主導のAPI。</p>
+<p>VDPAUは再生のみ。VA-APIはエンコードもできる。</p>
+<table>
+<thead>
+<tr class="header">
+<th>API</th>
+<th>エンコード</th>
+<th>デコード</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>VDPAU</td>
+<td></td>
+<td>✓</td>
+</tr>
+<tr class="even">
+<td>VA-API</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+</tbody>
+</table>
+<p>当然NvidiaはVDPAU、IntelはVA-APIをサポート。AMDはオープンソースドライバーでは両方サポート、CatalystはVA-APIのみ。</p>
+<table>
+<thead>
+<tr class="header">
+<th>カード</th>
+<th>VDPAU</th>
+<th>VA-API</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intel</td>
+<td></td>
+<td>✓</td>
+</tr>
+<tr class="even">
+<td>Nvidia</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>AMD non-free</td>
+<td></td>
+<td>✓</td>
+</tr>
+<tr class="even">
+<td>AMD free</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+</tbody>
+</table>
+<p>それぞれアダプタを使用してVDPAUをラップしてVA-APIで処理する方法や、VA-APIをラップしてVDPAUで処理する方法がある。 (<code>libvdpau-va-gl</code>及び<code>libva-vdpau-driver</code>) これによってIntelでVDPAUを、NvidiaでVA-APIを処理できる。</p>
+<p>VDPAUアダプタを使う場合、環境変数として<code>VDPAU_DRIVER=va_gl</code>する必要がある。</p>
+<p>AMDの場合VA-APIとVDPAU両方をアダプタにすることが可能だが、それをするとエラーになる。 <em>また、このVDPAUに対応させ、VA-APIをアダプタにするとエンコードはできなくなる。</em></p>
+<h3 id="nouveauドライバの注意点">nouveauドライバの注意点</h3>
+<p>nouveauドライバでVDPAUを使うにはプロプライエタリドライバのフォームウェアを流用したバージョンが必要で、 NVENCは利用することができない。</p>
+<h2 id="プレイヤーでデコード">プレイヤーでデコード</h2>
+<h3 id="vlc">VLC</h3>
+<p>ツール → 設定 → ビデオ → ディスプレイ → アウトプット → VDPAU出力 (もしくは自動)</p>
+<p>ツール → 設定 → 入力 / コーデック → Hardware-accelerated decoding → VDPAUビデオエンコーダー or VA-APIビデオエンコーダー</p>
+<h3 id="smplayer">SMPlayer</h3>
+<p>オプション → 環境設定 → 全般 → ビデオ → 出力ドライバー → vdpau or vaapi</p>
+<h3 id="gstreamer">GStreamer</h3>
+<p><code>gstreamer-vaapi</code> (VA-API) 及び <code>gst-plugins-bad</code> (VDPAU) パッケージを導入</p>
+<h3 id="mpv">mpv</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">mpv</span> --hwdec=vaapi --vo=gpu video</span></code></pre></div>
+<p>または</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">mpv</span> --hwdec=vdpau video</span></code></pre></div>
+<p>mpvの場合NVDECを直接叩くこともできる。</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">mpv</span> --hwdec=nvdec --vo=gpu video</span></code></pre></div>
+<p>さらにCUDAも使える。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">mpv</span> --hwdec=cuda --vo=gpu video</span></code></pre></div>
+<h3 id="mplayer">MPlayer</h3>
+<p>VDPAUの場合</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="ex">mplayer</span> -vo=vdpau -vc=ffh264vdpau,ffmpeg12vdpau,ffodivxvdpau,ffwmv3vdpau,ffvc1vdpau,ffhevcvdpau</span></code></pre></div>
+<p>VA-APIはフォークでサポート。mpvのほうがおすすめ</p>
+<h3 id="xine">Xine</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">xine</span> -V vdpau video</span></code></pre></div>
+<p>詳しくは</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a><span class="ex">xine</span> --list-plugins</span></code></pre></div>
+<h3 id="dragon-player">Dragon Player</h3>
+<p>できないっぽい。</p>
+<h3 id="kaffeine">Kaffeine</h3>
+<p>多分できない。</p>
+<p>もしVLCがコマンドラインでVDPAUあるいはVA-APIの使用を受け入れるならなんとかなる。</p>
+<h2 id="ffmpeg">FFMpeg</h2>
+<h3 id="基本編">基本編</h3>
+<p>マルチメディアフレームワークffmpeg。だいたい動画を操作するときはスイスナイフのように使える。</p>
+<p>まずは基本</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a><span class="ex">ffmpeg</span> -i infile outfile</span></code></pre></div>
+<p>ffmpegは出力の拡張子を見る。なのでちゃんと指定することが必要。</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="ex">ffmpeg</span> -i infile outfile.mkv</span></code></pre></div>
+<p>オプション指定は順序が決まっている。</p>
+<pre><code>ffmpeg [global_options] {[input_file_options] -i input_url} ... {[output_file_options] output_url} ...</code></pre>
+<p>おおまかなグループで間違えなければ大丈夫そうだけれども、順番が問題になることは覚えておくといいかもしれない。</p>
+<p>それでは古いreal mediaを今風にH.264+aacのmp4にしてみる。</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -c:a aac 001.mp4</span></code></pre></div>
+<p><code>-c:v</code> = <code>-vcodec</code> (video codec)で、 <code>-c:a</code> = <code>-acodec</code> (audio codec)。</p>
+<p>これでは品質指定ができないので、ビットレートを指定してみる。</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -b:v 5M -c:a aac -b:a 256k 001.mp4</span></code></pre></div>
+<h3 id="h.264-libx264-で色々する">H.264 (libx264) で色々する</h3>
+<p>H.264はだいたい標準的なビデオフォーマット。 標準のソフトウェアビデオコーデックはlibx264。</p>
+<p><code>-c:v</code>でビデオコーデック指定、<code>-b:v</code>でビデオビットレート指定、<code>-*:a</code>はそのオーディオ。</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -b:v 5M -c:a aac -b:a 256k 001.mp4</span></code></pre></div>
+<p>libx264はビットレートではなく品質で固定する<code>-crf</code>オプションが利用できる。</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -c:a aac -crf 23 001.mp4</span></code></pre></div>
+<p><code>-crf</code>していてもオーディオは固定することもできる。</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -crf 23 -c:a aac -b:a 256k 001.mp4</span></code></pre></div>
+<p>速度が問題になるケースでは<code>-preset</code>が有効。 選択肢は<code>x264 --help</code>で確認可能。</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -crf 23 -preset ultrafast -c:a aac -b:a 256k 001.mp4</span></code></pre></div>
+<p>あまり使われないけれども有用なオプションとして<code>-tune</code>がある。 主には実写用の<code>film</code>とアニメーション用の<code>animation</code>を使うことになるだろう。 フィルムグレインを損なわないために<code>grain</code>を使うことも考えられる。</p>
+<p>また配信用には<code>zerolatency</code>も有効だ。</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1"></a><span class="ex">ffmpeg</span> -i 001.rm -c:v libx264 -crf 23 -preset ultrafast -tune film -c:a aac -b:a 256k 001.mp4</span></code></pre></div>
+<p>2-passエンコーディングで画質が〜と言っている人がいるが、基本的に2-passエンコーディングはファイルサイズをより正確にするためのものである。 詳しくは<a href="http://www.yy-yako.net/tr/h264.html" rel="external">この日本語訳</a>あたりを。</p>
+<p>x265もだいたい同じような感じで使える。</p>
+<h3 id="さらに色々する">さらに色々する</h3>
+<h4 id="動画から先頭4秒を切り出す">動画から先頭4秒を切り出す</h4>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -t 4 -c:v copy -c:a copy out4sec.mp4</span></code></pre></div>
+<h4 id="開始30秒のところから5秒切り出す">開始30秒のところから5秒切り出す</h4>
+<p>以前は<code>-ss</code>は<code>-i</code>より後のほうがよかったらしい。 また、エンコードしないと不具合が出るので<code>-c:v copy</code>はできない。</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -ss 30 -t 5 -c:v libx264 -crf 27 -c:a copy -t 4 out4sec.mp4</span></code></pre></div>
+<h4 id="動画の開始10秒から10秒分を1秒あたり2枚で静止画に切り出す">動画の開始10秒から10秒分を1秒あたり2枚で静止画に切り出す</h4>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -ss 10 -t 10 -r 2 image%d.jpg</span></code></pre></div>
+<h4 id="動画をリサイズする">動画をリサイズする</h4>
+<p><code>scale</code>はリサイズ先のサイズ。</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -vf scale=1920:1080 -c:v libx264 -qp 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<h4 id="動画をクロップする">動画をクロップする</h4>
+<p>左上から200x200の座標を起点に、1600x900の動画で切り出す。</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -vf crop=1600:900:200:200</span></code></pre></div>
+<h4 id="連番動画からgif動画を生成">連番動画からGIF動画を生成</h4>
+<p>フレームレートは5FPSで作ってみる。</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1"></a><span class="ex">ffmpeg</span> -r -i image%d.jpg -r 5 outvideo.gif</span></code></pre></div>
+<h4 id="音声を遅らせる早める">音声を遅らせる(早める)</h4>
+<p>音ズレを解消する。</p>
+<p>次の例では音声を1.5秒遅らせる。</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -itsoffset 1.5 -i invideo.mp4 -map 0:0 -map 1:1 -c copy out.mp4</span></code></pre></div>
+<p>逆にビデオを1.5秒遅らせる</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -itsoffset 1.5 -i invideo.mp4 -map 0:1 -map 1:0 -c copy out.mp4</span></code></pre></div>
+<p>これは理解が難しいので解説。</p>
+<p><code>-itsoffset 1.5</code> でその入力ストリームを1.5秒遅らせている。 2つ指定している入力ストリームが両方同じファイルなので、同じファイルがソースになっているのだけど、</p>
+<ul>
+<li>入力0は1.5秒遅れたinvideo.mp4</li>
+<li>入力1はそのままのinvideo.mp4</li>
+</ul>
+<p>になる。</p>
+<p>この入力0, 1, 2, 3…はあくまで入力ソースなので、これ自体は特にその動画のなにを使うということに影響はない。</p>
+<p>ffmpegは複数の指定した入力ストリームをマージする。 単純に複数の<code>-i</code>を並べた場合、どうなるかはいまいち制御できないようだ。確かなのは、オーディオチャンネルのないビデオと、オーディオを入力ストリームとした場合、確実にそのビデオとオーディオが合成される。</p>
+<p>基本的にはffmpegは(というよりは一般的にビデオコンテナフォーマットは、かもしれない)<code>#:0</code>にビデオ、<code>#:1</code>にオーディオというファイルを作るようだ。 これは3つ以上のファイルをマージした場合でもである。</p>
+<p>そして複数のビデオトラック、あるいはオーディオトラックを持たせるには<code>-map</code>を使う。 例えば音声のないビデオinvideo.mp4とオーディオinaudio1.aac, inaudio2.aacがあったとして</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -i inaudio1.aac -i inaudio2.aac -c copy outvideo.mp4</span></code></pre></div>
+<p>では単純にinvideo.mp4のビデオとinaudio1.aacのオーディオが合成され、inaudio2.aacは無視される。 invideo.mp4が音声を持っていた場合はinaudio1.aacも無視される。</p>
+<p>ここで<code>-map</code>を使い</p>
+<ul>
+<li>入力0のストリーム0</li>
+<li>入力1のストリーム0</li>
+<li>入力2のストリーム0</li>
+</ul>
+<p>を合成させる</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -i inaudio1.aac -i inaudio2.aac -c copy -map 0:0 -map 1:0 -map 2:0 outvideo.mp4</span></code></pre></div>
+<p>ここで<code>-map 0:0 -map 0:1 -map 1:0</code>として、オリジナルのビデオに追加のオーディオトラックを合成する、というようなことも可能だ。</p>
+<p>ソースは複数のストリームを持てるので、何番のストリームに何が入っているかは<code>ffprobe file</code>とすることで知ることができる。</p>
+<p>さて、元の話に戻ろう。<code>#:0</code>がビデオ、<code>#:1</code>がオーディオの一般的なビデオファイルであるならば、同じビデオファイルをソースとする「1.5秒遅れた入力0」と「そのままの入力1」を合成したとき、入力0のストリーム0と入力1のストリーム1を合成すればビデオが遅れるし、入力0のストリーム1と入力1のストリーム0を合成すれば音声が遅れるわけである。</p>
+<h4 id="コントラストを上げる">コントラストを上げる</h4>
+<p>mpvで2を押すほうが簡単なのであまり使わないけど、暗いところで撮影した動画をupする場合などには少しコントラストを上げたほうが見やすい動画になる。</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -vf eq=contrast=3 -c:v libx264 -crf 23 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>さらにブライトネスもちょっと上げたいなと思ったらこんな感じ。</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -vf eq=contrast=3:brightness=1 -c:v libx264 -crf 23 -c:a copy outvideo.mp4</span></code></pre></div>
+<h4 id="お手軽にビデオオーディオをなしにする">お手軽にビデオ/オーディオをなしにする</h4>
+<p>ノイズを避ける場合や抽出したい場合に使える。</p>
+<p>ビデオなしのオプションは<code>-vn</code>、オーディオなしのオプションは<code>-an</code>。 サブタイトルなしの<code>-sn</code>もある。</p>
+<h3 id="vdpauva-apinvenc">VDPAU/VA-API/NVENC</h3>
+<h4 id="再生支援">再生支援</h4>
+<h5 id="vdpau">VDPAU</h5>
+<p>VDPAUの場合。これはあまり資料がない。単純には</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1"></a><span class="ex">ffmpeg</span> -hwaccel vdpau -i invideo.mp4 -c:v libx264 -crf 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>並列で複数のストリームを扱う場合は名前をつけよう。ここではvdpauストリームに<code>foo</code>という名前をつけて扱っている。</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1"></a><span class="ex">ffmpeg</span> -init_hw_device vdpau=foo:<span class="va">$DISPLAY</span> -hwaccel vdpau -hwaccel_device foo -i invideo.mp4 -c:v libx264 -crf 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<h5 id="va-api">VA-API</h5>
+<p>VA-APIの場合も同じ感じ。ただ、VA-APIデバイスの指定が必要。</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1"></a><span class="ex">ffmpeg</span> -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -i invideo.mp4 -c:v libx264 -crf 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>複数扱えるようにするには名前をつける。</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1"></a><span class="ex">ffmpeg</span> -init_hw_dfevice vaapi=foo:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_device foo -i invideo.mp4 -c:v libx264 -crf 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<h5 id="nvdec">NVDEC</h5>
+<p>NVDECはVDPAUと同じ。<code>-hwaccel</code>だけでいい。</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1"></a><span class="ex">ffmpeg</span> -hwaccel nvdec -i invideo.mp4 -c:v libx264 -crf 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<h4 id="エンコード支援">エンコード支援</h4>
+<h5 id="va-api-1">VA-API</h5>
+<p>VA-APIでは同じようにデバイスを指定し、ビデオフィルタでVA-APIにアップロードし、VA-APIハードウェアコーデックでエンコードする。</p>
+<p>コーデックは「エンコードに何を使うか」なので、libx264を指定すればソフトウェアコーデックであるx264が使われる。 ここではVA-APIのハードウェアコーデックを使用する。</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1"></a><span class="ex">ffmpeg</span> -vaapi_device /dev/dri/renderD128 -i invideo.mp4 -vf <span class="st">&#39;format=nv12,hwupload&#39;</span> -c:v h264_vaapi -qp 24 -c:a copy output.mp4</span></code></pre></div>
+<p>なお、A10-7870K (Radeon R7)をAMDGPUで使ったときは、<code>-profile 578</code>してあげないとうまくいかなかった。</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1"></a><span class="ex">ffmpeg</span> -vaapi_device /dev/dri/renderD128 -i invideo.mp4 -vf <span class="st">&#39;format=nv12,hwupload&#39;</span> -c:v h264_vaapi -profile 578 -bf 0 -qp 24 -c:a copy output.mp4</span></code></pre></div>
+<p>VA-APIで利用できるコーデックはこんな感じ。もちろん、ハードウェアとドライバが対応していればの話。</p>
+<table>
+<thead>
+<tr class="header">
+<th>フォーマット</th>
+<th>VA-APIコーデック</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>H.262 / MPEG-2 part 2</td>
+<td>mpeg2_vaapi</td>
+</tr>
+<tr class="even">
+<td>H.264 / MPEG-4 part 10 (AVC)</td>
+<td>h264_vaapi</td>
+</tr>
+<tr class="odd">
+<td>H.265 / MPEG-H part 2 (HEVC)</td>
+<td>hevc_vaapi</td>
+</tr>
+<tr class="even">
+<td>MJPEG / JPEG</td>
+<td>mjpeg_vaapi</td>
+</tr>
+<tr class="odd">
+<td>VP8</td>
+<td>vp8_vaapi</td>
+</tr>
+<tr class="even">
+<td>VP9</td>
+<td>vp9_vaapi</td>
+</tr>
+</tbody>
+</table>
+<h5 id="nvenc">NVENC</h5>
+<p>VDPAUはデコード専用でエンコードには使えない。 Nvidiaビデオカードの場合、ffmpegからNVENCが利用できる。ただし、nouveauドライバでは不可。</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -c:v h264_nvenc -qp 23 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>H.265(HEVC)の場合は<code>hevc_nvenc</code>。<code>h264_nvenc</code>とはオプションがちょっと違ったりする。</p>
+<h4 id="デコードもエンコードも支援">デコードもエンコードも支援</h4>
+<h5 id="va-api-2">VA-API</h5>
+<p>VA-APIの場合は結構使うようだ。</p>
+<p>最小で言えばVA-APIでデコードした出力を、<code>-hwaccel_output_format</code>によってVA-APIで渡せば良いようだ。</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1"></a><span class="ex">ffmpeg</span> -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -hwaccel_output_format vaapi -i invideo.mp4 -c:v h264_vaapi -qp 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>ただし、私の環境(Intel Xeon Silver 4114, AMD Radeon RX580, Linux 5.3)ではこれをやるとかなりの確率でフリーズしてしまう。</p>
+<h5 id="vdpaunvdec-nvenc-nvidia">VDPAU/NVDEC + NVENC (Nvidia)</h5>
+<p>NvidiaのVDPAU+NVENCはほとんど見かけないけれども、NVENCの使い方が単純にNVENCハードウェアコーデックを指定するだけなので、単純な組み合わせになる。</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1"></a><span class="ex">ffmpeg</span> -hwaccel vdpau -i invideo.mp4 -c:v h264_nvenc -qp 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<p>NVDECを使う場合もほとんど同じ。 CUVIDを使うこともできるけれど、多分使うべき理由はない。</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1"></a><span class="ex">ffmpeg</span> -hwaccel nvdec -i invideo.mp4 -c:v h264_nvenc -qp 24 -c:a copy outvideo.mp4</span></code></pre></div>
+<h3 id="他のコーデックを使う">他のコーデックを使う</h3>
+<h4 id="コピー">コピー</h4>
+<p><code>copy</code>はビデオ、オーディオともに利用でき、エンコードを行わず単純にストリームをコピーする。</p>
+<p>エンコードを行わないので劣化が発生しない。 「ビデオだけ加工したい」といった場合に多用する。</p>
+<h4 id="ビデオ">ビデオ</h4>
+<h5 id="h.265hevc">H.265(HEVC)</h5>
+<p>H.264よりもファイルサイズあたりの品質がいい。 特許問題でものすごくドロドロしているけれども、今のところ主流である。</p>
+<p>ソフトウェアコーデックとしてはx265があり、<code>libx265</code>として利用可能。 オプションはほぼ<code>libx264</code>と同じ。</p>
+<p>主流だけあって最新のハードウェアなら3メーカーともサポートしており、<code>hevc_vaapi</code>や<code>hevc_nvenc</code>が用意されている。</p>
+<p>コンテナは主にはAACと組み合わせて<code>.mp4</code>。それ以外を使うなら<code>.mkv</code></p>
+<h5 id="vp8">VP8</h5>
+<p>Googleが推進していた、全然流行らなかったコーデック。</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -c:v libvpx -qmin 0 -qmax 50 -crf 5 -b:v 1M -c:a libvorbis outvideo.webm</span></code></pre></div>
+<p>コンテナはOgg Vorbisと組み合わせてWebM。 品質はあまりよくない。</p>
+<h5 id="vp9">VP9</h5>
+<p>Googleが推進するコーデック。 H.265がドロドロしすぎているので、配信なんかでは結構使われている。YouTubeでも使われている。</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1"></a><span class="ex">ffmpeg</span> -i invideo.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 output.webm</span></code></pre></div>
+<p>指定方法がVP8と全然違う。 この方法だと変な品質のができるので</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1"></a><span class="ex">ffmpeg</span> -i input.mp4 -c:v libvpx-vp9 -minrate 500k -b:v 2000k -maxrate 2500k -c:a opus output.webm</span></code></pre></div>
+<p>こっちのほうが安全。</p>
+<p>画質はなぜか相当粗い。そしてサイズが非常に大きい。 あと、めちゃくちゃ遅い。なかなか思うようにコントロールできない。</p>
+<p>コアあたりの速い16コアまでのCPU(具体的にはCore i7あたり)で、<code>-thread 16 -speed 8</code>とかやれば、耐えられないこともないかもしれない。</p>
+<p>H.264のライバルらしいけれど、これをライバルと呼ぶのはちょっと無理がありすぎる。 特に低ビットレートになると差は歴然である。 高ビットレートなら意外といけるらしいが、今度は時間が耐え難い。</p>
+<p>Intel QSVがVP9エンコーダを搭載しているのだけど、そっちを使うと<a href="/archives/livewithlinux/1201">さらにひどいことになる。</a></p>
+<h5 id="av1">AV1</h5>
+<p>待望のH.265のライバルであるフリーなコーデック。</p>
+<p>ffmpeg 4.0からついに投入されたのだけれど、私の手元では耐えるのは不可能な速度だったので、現実味はまったくなかった。 どうもlibx265と比べても時間は10倍ではきかない感じだ。 デコードも超重いらしい。</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1"></a><span class="ex">ffmpeg</span> -i input.mp4 -c:v libaom-av1 -crf 30 -strict experimental av1_test.mkv</span></code></pre></div>
+<p>生ビデオにしてから<code>aomenc</code>でやることはできた。 …といってもだ。</p>
+<pre><code>Pass 1/2 frame 3219/3220  618240B    1536b/f   23040b/s  207846 ms (15.49 fps)
+Pass 2/2 frame   20/1      41244B  212969 ms 5.63 fpm [ETA 190:22:59] 1.771 40.510 45.055 49.142   41244F</code></pre>
+<p>このくっそ軽い動画で、5.63fpm(fpsではない。fpmである)。 190時間エンコードにかけるという。仮にも20コアXeonでだ。(aomencのマルチスレッドはゴミのようなものだが)</p>
+<p>ふざけているのだろうか… libx265の10倍遅い、と言われているが、10倍どころではないだろう。だって、このマシンはlibx265でもだいたい30fpsくらい出るのだから。5fpmといったら、1/360のスピードである。</p>
+<p>最終的には18fpm程度になり、3000フレームほどの動画を約4時間で済ませた(平均0.28fps)。</p>
+<pre><code>% aomenc --psnr --cpu-used=8 --threads=16 --webm --codec=av1 --profile=0 --end-usage=cq --cq-level=32 --target-bitrate=256 --bit-depth=8 -w 1920 -h 1080 -o testav1.webm pageraw.y4m 
+Pass 1/2 frame 3219/3220  618240B    1536b/f   23040b/s  207846 ms (15.49 fps)
+Pass 2/2 frame 3219/3219 3972143B    9871b/f  148065b/s 11605639 ms (0.28 fps)
+Stream 0 PSNR (Overall/Avg/Y/U/V) 52.334 54.061 53.520 55.570 55.670  148076 bps 11605639 ms</code></pre>
+<p>画質は明らかに粗い。とはいえVP9よりはマシ。 今更これを出されても、しかもこんなに重いのでは話にならない…という気がする。 100倍速ければ使う、という感じ。(平均すれば30fps出る程度)</p>
+<h4 id="オーディオ">オーディオ</h4>
+<h5 id="mp3">mp3</h5>
+<p>品質は高くないけれど便利なMP3。</p>
+<p>192kbpsのmp3を作る場合</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1"></a><span class="ex">ffmpeg</span> -i audio.wav -c:a libmp3lame -b:a 192k out.mp3</span></code></pre></div>
+<p><code>-q:a</code>するとVBRになる。小さいほうが高品位。</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1"></a><span class="ex">ffmpeg</span> -i audio.wav -c:a libmp3lame -q:a 2 out.mp3</span></code></pre></div>
+<h5 id="ogg-vorbis">Ogg Vorbis</h5>
+<p>高品位かつフリーなコーデックとして人気のOgg Vorbis。 サポートされていることも多いので有力。<code>vorbis</code>より<code>libvorbis</code>のほうが高品位。</p>
+<p><code>-q</code>ファクターは大きいほうが高品位。これは<code>oggenc</code>の<code>-q</code>にそのまま渡されるらしい。</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1"></a><span class="ex">ffmpeg</span> -i audio.wav -c:a libvorbis -qa 7 out.ogg</span></code></pre></div>
+<p>ポータブルオーディオにはこれが良い。</p>
+<h5 id="ogg-flac">Ogg FLAC</h5>
+<p>こちらもサポートされていることが多いロスレスのオーディオフォーマット。 ロスレスなので音質は損失しない。</p>
+<p>CPUをたくさん使ってより圧縮することができる。 この圧縮レベルは音質には影響しないが、サイズの差は小さい。</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1"></a><span class="ex">ffmpeg</span> -i audio.wav -c:a flac -compression_level 12 out.flac</span></code></pre></div>
+<p>容量に余裕があるなら使っていきたい。</p>
+<h5 id="opus">Opus</h5>
+<p>SILK+CELTがベースになっていて低ビットレートではSILKのようにスピーチ用に可聴音域に特化し、高ビットレートではSILKベースのレイヤーを省いて高品位に再生するオーディオコーデック。</p>
+<p>Opusは低ビットレートのHE-AAC、中ビットレートのAAC、高ビットレートのVorbis, AACと比べてより良い品質を提供する。 しかもフリーである。</p>
+<p>素晴らしいのだけれど、動画では使いようがあるのに対して音声だと再生できるプレイヤーが割と少なくて困る。 WebMが標準でOpusをサポートしているのにAndroidがOpusをサポートしてないあたりもまた困る。</p>
+<p>このため、Opusの出番は</p>
+<ul>
+<li>ヴォイスレコーディング。 だいたい64kか92k。</li>
+<li>もともと品質の高くないlossy audioの再変換。同ビットレートなら損失は微々たるもの</li>
+<li>WebM。VP9との組み合わせが一般的。</li>
+<li>H.264やH.265と組み合わせ、コンテナをMKVにする</li>
+</ul>
+<p>H.265 + Opus の MKV は私の最近のお気に入り。 (<a href="#WebCam">ウェブカム</a>のところを見て欲しい)</p>
+<h3 id="録音-with-pulsealsa">録音 with Pulse/ALSA</h3>
+<p>ffmpegがALSAに対応しているので簡単。</p>
+<p>レコーディングするデバイスや調整は<code>pavucontrol</code>などのPulseAudioミキサーでやると便利。</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1"></a><span class="ex">ffmpeg</span> -f alsa -i pulse -c:a flac record.flac</span></code></pre></div>
+<h3 id="WebCam">ウェブカム録画</h3>
+<p>Video4Linux2を使ってウェブカムからの録画が可能。 次の例ではウェブカメラデバイス<code>/dev/video0</code>から録画している。</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1"></a><span class="ex">ffmpeg</span> -f v4l2 -i /dev/video0 -c:v hevc_nvenc -qp 28 record.mp4</span></code></pre></div>
+<p>音声も録音したいなら組み合わせ</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1"></a><span class="ex">ffmpeg</span> -f v4l2 -i /dev/video0 -c:v hevc_nvenc -qp 28 -f alsa -i pulse -c:a libopus -c:a 192k record.mkv</span></code></pre></div>
+<p>カメラの場合はカメラが撮れるフォーマットでしか撮れない。 まずは確認する。以下は定番のLogicool C270。</p>
+<pre><code>$ v4l2-ctl --list-formats
+ioctl: VIDIOC_ENUM_FMT
+        Index       : 0
+        Type        : Video Capture
+        Pixel Format: &#39;YUYV&#39;
+        Name        : YUYV 4:2:2
+
+        Index       : 1
+        Type        : Video Capture
+        Pixel Format: &#39;MJPG&#39; (compressed)
+        Name        : Motion-JPEG</code></pre>
+<pre><code>% v4l2-ctl --list-formats-ext
+ioctl: VIDIOC_ENUM_FMT
+        Index       : 0
+        Type        : Video Capture
+        Pixel Format: &#39;YUYV&#39;
+        Name        : YUYV 4:2:2
+                Size: Discrete 640x480
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 160x120
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 176x144
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 320x176
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 320x240
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 352x288
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 432x240
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 544x288
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 640x360
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 752x416
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 800x448
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 800x600
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 864x480
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 960x544
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 960x720
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1024x576
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1184x656
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x720
+                        Interval: Discrete 0.133s (7.500 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x960
+                        Interval: Discrete 0.133s (7.500 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+
+        Index       : 1
+        Type        : Video Capture
+        Pixel Format: &#39;MJPG&#39; (compressed)
+        Name        : Motion-JPEG
+                Size: Discrete 640x480
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 160x120
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 176x144
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 320x176
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 320x240
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 352x288
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 432x240
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 544x288
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 640x360
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 752x416
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 800x448
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 800x600
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 864x480
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 960x544
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 960x720
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1024x576
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1184x656
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x720
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)
+                Size: Discrete 1280x960
+                        Interval: Discrete 0.033s (30.000 fps)
+                        Interval: Discrete 0.040s (25.000 fps)
+                        Interval: Discrete 0.050s (20.000 fps)
+                        Interval: Discrete 0.067s (15.000 fps)
+                        Interval: Discrete 0.100s (10.000 fps)
+                        Interval: Discrete 0.200s (5.000 fps)</code></pre>
+<p>センサー自体が4:3なので、一応仕様上は1280x720のカメラだと謳っているけれども、最大は1280x960。</p>
+<p>画質をとってrawvideoの752x416</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1"></a><span class="ex">ffmpeg</span> -f v4l2 -video_size 752x416 -framertate 25 -i /dev/video0 -c:v hevc_nvenc -profile:v main -qp 24 record.mp4</span></code></pre></div>
+<p>あるいは画質は劣悪だけれどもピクセル数重視でMotionJPEG。 もともとデータがMotionJPEGで送られてくるので再エンコードはいらない。</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1"></a><span class="ex">ffmpeg</span> -f v4l2 -input_format mjpeg -video_size 1280x960 -framerate 30 -i /dev/video0 -c:v copy record.avi</span></code></pre></div>
+<p>音声も録音するならOpusでMKVかな</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1"></a><span class="ex">ffmpeg</span> -f v4l2 -input_format mjpeg -video_size 1280x960 -framerate 30 -i /dev/video0 -c:v copy -f alsa -i pulse -c:a libopus -b:a 96k record.mkv</span></code></pre></div>
+<h3 id="スクリーンキャスティング-x-server">スクリーンキャスティング (X server)</h3>
+<p>XのAPIを使って画面の録画ができる。</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1"></a><span class="ex">ffmpeg</span> -re -f x11grab -framerate 30 -i <span class="va">$DISPLAY</span> -c:v h264_nvenc -qp 24 record.mp4</span></code></pre></div>
+<p>300x300のウィンドウを左上から200x200のオフセットで録画する場合</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1"></a><span class="ex">ffmpeg</span> -re -f x11grab -video_size 300x300 -framerate 30 -i <span class="va">$DISPLAY</span>+200,200 -c:v h264_nvenc -qp 24 record.mp4</span></code></pre></div>
+<p>さらに録画領域を表示する場合</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1"></a><span class="ex">ffmpeg</span> -show_region 1 -re -f x11grab -video_size 300x300 -framerate 30 -i <span class="va">$DISPLAY</span>+200,200 -c:v h264_nvenc -qp 24 record.mp4</span></code></pre></div>
+<p>クリックしたウィンドウを録画する(zshスクリプト)。 さらにマイク録音も加えた。</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode zsh"><code class="sourceCode zsh"><span id="cb62-1"><a href="#cb62-1"></a><span class="ot">xwininfo=$(</span>xwininfo -frame<span class="ot">)</span></span>
+<span id="cb62-2"><a href="#cb62-2"></a><span class="ot">geo=$(</span><span class="kw">perl</span> -n -e <span class="st">&#39;/geometry (\d+x\d+)/; print $1;&#39;</span> <span class="kw">&lt;&lt;&lt;</span> <span class="st">&quot;</span><span class="ot">$xwininfo</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="kw">perl</span> -n -e <span class="st">&#39;/(\d+)(.)(\d+)/; print( $1 % 2 == 0 ? $1 : $1 - 1 ); print $2; print( $3 % 2 == 0 ? $3 : $3 - 1 )&#39;</span><span class="ot">)</span> </span>
+<span id="cb62-3"><a href="#cb62-3"></a><span class="ot">corn=$(</span><span class="kw">perl</span> -n -e  <span class="st">&#39;/Corners:\s+\+(\d+)\+(\d+)/ &amp;&amp; print $1 . &quot;,&quot; . $2;&#39;</span> <span class="kw">&lt;&lt;&lt;</span> <span class="st">&quot;</span><span class="ot">$xwininfo</span><span class="st">&quot;</span><span class="ot">)</span> </span>
+<span id="cb62-4"><a href="#cb62-4"></a>ffmpeg -show_region 1 -f x11grab -video_size <span class="ot">$geo</span> -framerate 60 -i <span class="st">&quot;</span><span class="ot">$DISPLAY</span><span class="st">+</span><span class="ot">$corn</span><span class="st">&quot;</span> -f alsa -i pulse -c:v hevc_nvenc -profile:v main -preset:v default -qp 28 -c:a libopus -b:a 192k <span class="st">&quot;record-</span><span class="ot">$(</span><span class="kw">date</span> +<span class="st">&quot;%y%m%d%H%M%S&quot;</span><span class="ot">)</span><span class="st">&quot;</span>.mkv</span></code></pre></div>
+<p>コンピュータの音とマイクの音両方を録音したい場合。 環境に依存する箇所が多いので注意。</p>
+<p>まずは確認。</p>
+<pre><code>$ pacmd list-sources</code></pre>
+<p>あとはこんな感じ</p>
+<pre><code>$ pacmd load-module module-null-sink sink_name=mixmic
+$ pacmd load-module module-loopback source=alsa_output.pci-0000_00_1f.3.analog-stereo.monitor sink=mixmic
+$ pacmd load-module module-loopback source=alsa_input.usb-046d_0825_D457DB60-02.analog-mono sink=mixmic</code></pre>
+<p>ちなみに、WindowsでもDirectShowを使って</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb65-1"><a href="#cb65-1"></a><span class="ex">ffmpeg</span> -f dshow -i video=<span class="st">&quot;screen-capture-recorder&quot;</span> outfile.mkv</span></code></pre></div>
+<p>みたいなことができるし、これよりはお勧めできる方法として</p>
+<div class="sourceCode" id="cb66"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1"></a><span class="ex">ffmpeg</span> -f gdigrab -i desktop outfile.mkv</span></code></pre></div>
+<p>もできる。<code>-offset_x</code>, <code>-offset_y</code>も効くし、<code>-video_size</code>も効く。</p>
+<p>Macの場合は</p>
+<div class="sourceCode" id="cb67"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1"></a><span class="ex">ffmpeg</span> -f avfoundation -i <span class="st">&quot;fooscreen:fooaudio&quot;</span> output.mkv</span></code></pre></div>
+<p>みたいにできる。 実際のデバイス名は</p>
+<div class="sourceCode" id="cb68"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1"></a><span class="ex">ffmpeg</span> -f avfoundation -list_devices true -i <span class="st">&quot;&quot;</span></span></code></pre></div>
+<p>でリストできたり。</p>
+<h3 id="スクリーンキャスティングしている内容を仮想カメラにする-v4l2-loopback">スクリーンキャスティングしている内容を仮想カメラにする (v4l2 loopback)</h3>
+<p>スクリーンキャスティング機能のないメッセンジャーで通話しているときにカメラとして使えることでスクリーンを写せるというメリットがある。</p>
+<p>要v4l2loopback カーネルモジュール。</p>
+<pre><code>$ sudo modprobe v4l2 video_nr=1
+$ ffmpeg -re -f x11grab -video_size hd1080 -i $DISPLAY -f v4l2 -r 60 -vcodec rawvideo -pix_fmt yuv420p /dev/video1</code></pre>
+<p><code>video_nr</code>で作成するデバイス番号を指定している。 <code>video_nr=1</code>なので<code>/dev/video1</code>。4から6を作成したいなら <code>video_nr=4,5,6</code></p>
+<p><code>hd1080</code>ってなんぞ、ということについては<a href="http://ffmpeg.org/ffmpeg-utils.html#Video-size">公式ドキュメント参照のこと</a>。</p>
+
+<!-- PBSEARCH_RESULT -->
+        </article>
+    </section>
+    <footer id="InfoFooter">
+      <ul>
+        <li>© Masaki Haruka 2003.</li>
+        <li>Generated by <a href="https://gitlab.com/reasonset/pbsimply-wpimporter">PureBuilder Simply WP Importer</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>
